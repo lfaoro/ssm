@@ -1,0 +1,17 @@
+# comment test
+Host *
+	  AddKeysToAgent no
+	  hello
+	  world
+
+host publiccarpet
+    User root
+    HostName adm.segfault.net
+    IdentityFile ~/.ssh/id_sf-adm-segfault-net
+    SetEnv SECRET=zXMEmeCBnJTEKfkqjEkXwVOA
+    LocalForward 5900 0:5900
+host helloworld
+    User user
+    HostName adm.segfault.net
+    SetEnv SECRET=zXMEmeCBnJTEKfkqjEkXwVOA
+    LocalForward 5900 0:5900
