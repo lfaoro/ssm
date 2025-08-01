@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/v2/key"
 	"github.com/charmbracelet/bubbles/v2/spinner"
 	"github.com/charmbracelet/bubbles/v2/textinput"
 	"github.com/charmbracelet/bubbles/v2/viewport"
@@ -31,8 +32,45 @@ func RunCmdModel(base tea.Model) tea.Model {
 	// using double main model viewport width because it use half of screenwidth
 	cmdInput.SetWidth(previousModel.vp.Width()*2 - 3)
 	vp.SetWidth(previousModel.vp.Width() * 2)
-
+	vp.MouseWheelEnabled = true
 	vp.SetHeight(previousModel.vp.Height() - lipgloss.Height(cmdInput.View()) - 2) // - 2 to accommodate the bar, since we can't get the Height
+
+	vpKeyMap := viewport.KeyMap{
+		PageDown: key.NewBinding(
+			key.WithKeys("pgdown", "space"),
+			key.WithHelp("pgdn", "page down"),
+		),
+		PageUp: key.NewBinding(
+			key.WithKeys("pgup"),
+			key.WithHelp("pgup", "page up"),
+		),
+		HalfPageUp: key.NewBinding(
+			key.WithKeys("u", "ctrl+u"),
+			key.WithHelp("u", "½ page up"),
+		),
+		HalfPageDown: key.NewBinding(
+			key.WithKeys("d", "ctrl+d"),
+			key.WithHelp("d", "½ page down"),
+		),
+		Up: key.NewBinding(
+			key.WithKeys("up"),
+			key.WithHelp("↑", "up"),
+		),
+		Down: key.NewBinding(
+			key.WithKeys("down"),
+			key.WithHelp("↓", "down"),
+		),
+		Left: key.NewBinding(
+			key.WithKeys("left"),
+			key.WithHelp("←", "move left"),
+		),
+		Right: key.NewBinding(
+			key.WithKeys("right"),
+			key.WithHelp("→", "move right"),
+		),
+	}
+
+	vp.KeyMap = vpKeyMap
 	vp.SetContent("(no output) ...")
 
 	s := spinner.New()
@@ -61,6 +99,7 @@ type cmdModel struct {
 	ready         bool
 	running       bool
 	spinner       spinner.Model
+	currentCmd    *exec.Cmd
 }
 
 func (m *cmdModel) Init() tea.Cmd {
@@ -70,9 +109,11 @@ func (m *cmdModel) Init() tea.Cmd {
 func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
-	var inputCmd tea.Cmd
+	var inputCmd, viewportCmd tea.Cmd
 	m.input, inputCmd = m.input.Update(msg)
-	cmds = append(cmds, inputCmd)
+	m.viewport, viewportCmd = m.viewport.Update(msg)
+
+	cmds = append(cmds, inputCmd, viewportCmd)
 
 	if m.running {
 		cmds = append(cmds, m.spinner.Tick)
@@ -127,6 +168,20 @@ func (m *cmdModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			case 'l':
 				m.commands = nil
 				m.viewport.SetContent("")
+			case 'c':
+				if m.running && m.currentCmd != nil && m.currentCmd.Process != nil {
+					_ = m.currentCmd.Process.Kill()
+					m.commands = append(m.commands, "[command cancelled]")
+					m.viewport.SetContent(strings.Join(m.commands, "\n"))
+					m.viewport.GotoBottom()
+					m.running = false
+					m.input.Focus()
+					m.currentCmd = nil
+				} else {
+					m.commands = append(m.commands, "[no running command to cancel]")
+					m.viewport.SetContent(strings.Join(m.commands, "\n"))
+					m.viewport.GotoBottom()
+				}
 			}
 		}
 	}
@@ -178,11 +233,12 @@ func (m cmdModel) Bar() string {
 
 	windowName := renderPrimaryBar("Run Command", pm.theme.selectedTitleColor)
 	status := renderPrimaryBar("SSM", pm.theme.selectedTitleColor)
+	viewportScrollPercent := renderPrimaryBar(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100), pm.theme.mainTitleColor)
 
-	availableWidth := m.viewport.Width() - lipgloss.Width(windowName) - lipgloss.Width(status)
+	availableWidth := m.viewport.Width() - lipgloss.Width(windowName) - lipgloss.Width(status) - lipgloss.Width(viewportScrollPercent)
 	host := renderSecondaryBar(selectedItem.Description(), availableWidth)
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, windowName, host, status)
+	return lipgloss.JoinHorizontal(lipgloss.Top, windowName, host, viewportScrollPercent, status)
 }
 
 func renderPrimaryBar(content string, bgColor string) string {
@@ -226,10 +282,12 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 
 		cmd := exec.Command(prev.Cmd.String(), args...)
 
+		m.currentCmd = cmd
 		var out bytes.Buffer
 		cmd.Stdout = &out
 		cmd.Stderr = &out
 		err := cmd.Run()
+		m.currentCmd = nil
 
 		return cmdResultMsg{output: out.String(), err: err}
 	}
