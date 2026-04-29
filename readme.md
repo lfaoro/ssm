@@ -1,149 +1,155 @@
 # Secure Shell Manager
 
-> Streamline SSH connections with a simple Terminal UI
+> Streamline SSH connections with a simple terminal UI
 
 [![version][version-badge]](changelog.md)
 [![license][license-badge]](license)
-[![go report card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
-[![follow on x][x-badge]](https://x.com/intent/follow?screen_name=leonardofaoro)
+[![CI](https://github.com/lfaoro/ssm/actions/workflows/go-tests.yml/badge.svg)](https://github.com/lfaoro/ssm/actions/workflows/go-tests.yml)
+[![Go report card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
+[![Go version](https://img.shields.io/badge/Go-1.26-00ADD8.svg)](go.mod)
 
-[version-badge]: https://img.shields.io/badge/version-0.4.0-blue.svg
+[version-badge]: https://img.shields.io/badge/version-0.4.2-blue.svg
 [license-badge]: https://img.shields.io/badge/license-BSD3-blue
-[x-badge]: https://img.shields.io/twitter/follow/leonardofaoro?label=follow&style=social
 
-Scratching my own itch: `ssm` is an SSH connection manager designed to connect, filter, tag, and much more from a simple terminal interface. Works on top of installed command-line programs and does not require any setup on remote systems.
+`ssm` is an SSH connection manager that works on top of your existing SSH config and installed `ssh`/`mosh` binaries. No setup required on remote systems.
 
-**tl;dr** - [Install](#Install)
+**tl;dr** — [Install](#install)
 
-See [HELP](data/help) for CLI flags. \
-See [CHANGELOG](changelog.md) for dev info.
+---
+
+## Features
+
+- **Tag-based filtering** — `#tag: admin,vpn` comments in your SSH config become searchable metadata
+- **Fuzzy search** — find hosts by name, hostname, user, or tag
+- **SSH/MOSH dual protocol** — switch with `TAB`
+- **Live config editing** — `ctrl+e` opens `$EDITOR`, auto-reloads on save
+- **Run remote commands** — `ctrl+r` opens a command prompt, runs via `ssh -T`
+- **Config inspection** — `ctrl+v` shows all params in a side panel
+- **`--exit` flag** — connect and hand off the terminal, no lingering process
+- **Theming** — `--theme sky|matrix`, extensible via `themes.go`
+
+## Demo
 
 ![demo](data/thc.png)
 
-## Features
-- vim keys: jkhl, ctrl+d/u, g/G
-- emacs keys: ctrl+p/n/b/f
-- `ctrl+r` run commands without spawning a TTY
-- `ctrl+e` edit the loaded config
-- config will automatically reload on change
-- `ctrl+v` show config next to servers
-- filter through all your servers: /
-- switch between SSH and MOSH with TAB
-- CLI short-flags support e.g. `ssm -seo` enables `--show`, `--exit`, and `--order`
-- group servers using tags e.g. `#tag: admin`
-- show only admin tagged servers `ssm admin`
-- use `#tagorder` key to prioritize tagged hosts in list-view
-- use `--theme` to change color scheme
-- edit [themes.go](pkg/tui/themes.go) to add more
+## Usage
+
+```bash
+ssm                    # launch the TUI
+ssm admin              # filter by #tag: admin
+ssm -se vpn            # --show --exit, filter by vpn tags
+ssm -c ~/.ssh/other    # use a custom config file
+ssm -o                 # show tagged hosts first
+ssm --theme sky        # blue color scheme
+ssm -d                 # debug mode with verbose logs
+```
+
+| Flag | Short | Description |
+|---|---|---|
+| `--show` | `-s` | show config in side panel on launch |
+| `--exit` | `-e` | exit after connecting (hand off terminal) |
+| `--order` | `-o` | show tagged hosts first |
+| `--config` | `-c` | custom SSH config path |
+| `--theme` | `-t` | color theme: `sky` or `matrix` |
+| `--debug` | `-d` | debug mode with verbose log |
+
+All flags support env vars: `SSM_SHOW`, `SSM_EXIT`, `SSM_ORDER`, `SSM_SSH_CONFIG_PATH`, `SSM_THEME`, `SSM_DEBUG`.
 
 ## Keys
-```
-<enter↵>       connect to selected host
-<ctrl+e>       edit ssh config
-<ctrl+v>       show all config params in sideview
-<ctrl+r>       run commands on host w/o starting a tty 
-<tab>          switch between SSH/MOSH
-< / >          filter hosts
-<q or esc>     quit
 
-# under development (coming soon)
-ctrl+s         sftp upload/download files to/from server 
-ctrl+g         port-forwarding UI 
-space␣         select multiple hosts to interact with
-```
+| Key | Action |
+|---|---|
+| `enter` | connect to selected host |
+| `ctrl+e` | edit SSH config in `$EDITOR` |
+| `ctrl+v` | toggle config side panel |
+| `ctrl+r` | run commands on host (no TTY) |
+| `ctrl+c` | clear filter / quit |
+| `tab` | switch between SSH and MOSH |
+| `/` | filter hosts |
+| `q` / `esc` | quit / exit filter |
 
 ## Quickstart
-> If you're not accustomed to ssh config start here otherwise skip to [Install](#install)
+
+> New to SSH config? Start here. Otherwise skip to [Install](#install).
+
 - [SSH config manual](https://man.openbsd.org/ssh_config.5)
+
 ```bash
 # backup any existing config
 [ -f ~/.ssh/config ] && cp ~/.ssh/config ~/.ssh/config.bak
-# create ssh config
-cat <<EOF >>~/.ssh/config
-# This is an example config for SSH
 
-#tagorder is a key used to prioritize #tag: hosts in list-view
+# create a config
+cat <<'EOF' >> ~/.ssh/config
+#tagorder            # prioritize tagged hosts in list-view
 
-Host hostname1
-#tag: tagValue1,tagValue2,tagValueN
-    User user
-    HostName hello.world
+Host myserver
+#tag: production,web
+    User admin
+    HostName 10.0.0.5
     Port 2222
     IdentityFile ~/.ssh/id_rsa
-
-Host segfault.net
-#tag: research
-    User root
-    HostName segfault.net
 
 Host terminalcoffee
 #tag: shops
     User adam
     HostName terminal.shop
 EOF
-# file must have 600 perms for security
+
 chmod 600 ~/.ssh/config
 ```
 
 ## Install
-Download `ssm` binary from [releases](https://github.com/lfaoro/ssm/releases)
-> available for [Linux, MacOS, FreeBSD, NetBSD, OpenBSD, Solaris] \
-> on [x86_64, i386, arm64, arm] architectures,
-_need more? just ask_
+
+Download a binary from [releases](https://github.com/lfaoro/ssm/releases), or install via script/brew:
 
 ```bash
-# verify the binary is signed with my key
-gpg --verify ssm_sig ssm
-```
-
-```bash
-# bash script install for linux|macos|freebsd|netbsd|openbsd|solaris
+# shell script (linux, macos, freebsd, netbsd, openbsd, solaris)
 curl -sSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
-wget -qO- https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
 
-# we don't pay Apple for a signing key, therefore you might need to run
-xattr -d com.apple.quarantine ssm # on MacOS
-
-# brew tap for macos/linux
+# homebrew (macos, linux)
 brew install lfaoro/tap/ssm
+
+# macos quarantine workaround (no paid signing key)
+xattr -d com.apple.quarantine /path/to/ssm
 ```
 
-<!-- See [install](install.md) for more... -->
+Available for **6 OSes** × **4 architectures**: x86_64, i386, arm64, arm.
 
 ## Build
-> requires [Go](https://go.dev/doc/install)
+
+> Requires [Go](https://go.dev/doc/install) 1.26+
 
 ```bash
-# bootstrap
 go install github.com/lfaoro/ssm@latest
 
-# build
-git clone https://github.com/lfaoro/ssm.git \
-  && cd ssm \
-  && make \
-  && bin/ssm
+# or clone and build
+git clone https://github.com/lfaoro/ssm.git && cd ssm && make && bin/ssm
 
-# build from sr.ht mirror
-git clone https://git.sr.ht/~faoro/ssm \
-  && cd ssm \
-  && make \
-  && bin/ssm
-
-make clean
-# clean everything even caches
-make distclean
+# sourcehut mirror
+git clone https://git.sr.ht/~faoro/ssm && cd ssm && make && bin/ssm
 ```
 
-## Help
+## Development
+
+```bash
+go build ./...          # check compilation
+go vet ./...            # static analysis
+go test -race ./...     # tests with race detection
+make build-static       # static binary (CGO_ENABLED=0)
+make release-dev        # goreleaser snapshot (dry run)
+```
+
+## Resources
+
+- [CLI flags reference](data/help)
 - [SSH config example](data/config_example)
-- [message me on Telegram](https://t.me/leonarth)
-- [tag me on X](https://x.com/leonardofaoro)
+- [Changelog](changelog.md)
 
 ## Contributors
+
 [See all](https://github.com/lfaoro/ssm/graphs/contributors)
 
-Pull requests are very welcome and will be merged. \
-Report a bug or request a new feature, feel free to open a [new issue](https://github.com/lfaoro/ssm/issues).
+Pull requests are welcome. Report a bug or request a feature by opening a [new issue](https://github.com/lfaoro/ssm/issues).
 
 ## Show support
 
@@ -152,7 +158,7 @@ Report a bug or request a new feature, feel free to open a [new issue](https://g
 - **star the repo**
 - **tell your friends**
 
-- [GitHub sponsor](https://github.com/sponsors/lfaoro)
-- [BTC sponsor](https://mempool.space/address/bc1qzaqeqwklaq86uz8h2lww87qwfpnyh9fveyh3hs)
-- [XMR sponsor](https://xmrchain.net/search?value=89XCyahmZiQgcVwjrSZTcJepPqCxZgMqwbABvzPKVpzC7gi8URDme8H6UThpCqX69y5i1aA81AKq57Wynjovy7g4K9MeY5c)
-- [FIAT sponsor](https://checkout.revolut.com/pay/1122870b-1836-42e7-942b-90a99ef5e457)
+[GitHub sponsor](https://github.com/sponsors/lfaoro) ·
+[BTC](https://mempool.space/address/bc1qzaqeqwklaq86uz8h2lww87qwfpnyh9fveyh3hs) ·
+[XMR](https://xmrchain.net/search?value=89XCyahmZiQgcVwjrSZTcJepPqCxZgMqwbABvzPKVpzC7gi8URDme8H6UThpCqX69y5i1aA81AKq57Wynjovy7g4K9MeY5c) ·
+[FIAT](https://checkout.revolut.com/pay/1122870b-1836-42e7-942b-90a99ef5e457)
