@@ -3,6 +3,9 @@ on:
   push:
     branches: [main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   install_on_linux_x86:
     runs-on: ubuntu-latest
