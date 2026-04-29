@@ -1,9 +1,9 @@
 module github.com/lfaoro/ssm
 
-go 1.26.0
+go 1.26.2
 
 require (
-	github.com/google/go-github v17.0.0+incompatible
+	github.com/google/go-github/v69 v69.2.0
 	github.com/thalesfsp/go-common-types v0.2.6
 	github.com/urfave/cli/v3 v3.8.0
 	golang.org/x/term v0.42.0

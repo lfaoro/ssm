@@ -1,4 +1,28 @@
-# [0.4.2] next
+# [1.0.0] Apr 29, 2026
+
+## Security Audit & Hardening
+- audit all injection vectors, file access, secrets, concurrency, and logging
+- filter sensitive SSH keys (identityfile, proxycommand, etc.) from config viewport
+- add `--` delimiter before hostname in all SSH/mosh/syscall invocations
+- resolve symlinks on config paths, add Include recursion depth limit + cycle detection
+- check config file permissions, warn if not 0600
+- strip ANSI escape sequences from remote command output
+- sanitize SSH stderr before displaying (truncate at 500 chars)
+- don't collect debug log entries when debug mode is disabled
+- track version-check goroutine in WaitGroup to prevent leak
+- lock all Config read paths (GetHost, GetParamFor, GetHosts)
+- migrate google/go-github v17 → v69 (8yr stale dep)
+- upgrade Go to 1.26.2 (resolves 7 stdlib CVEs)
+
+## All 0.4.x changes
+- migrate charmbracelet bubbletea/bubbles/lipgloss from github.com to charm.land
+- remove segfault.net hardcoded password and special-case logic
+- add table-driven tests: parser, log, themes
+- replace O(n²) list insertion with O(n) SetItems
+- add CI workflow: go vet, go test -race, go build
+- update dependencies, fix bugs, remove dead code
+
+# [0.4.2] Apr 29, 2026
 - migrate charmbracelet bubbletea/bubbles/lipgloss from github.com to charm.land
 - upgrade View() from string to tea.View, rewrite Init() commands
 - update Go to 1.26, upgrade all dependencies to latest
@@ -113,3 +137,4 @@
 [0.4.0]: https://github.com/lfaoro/ssm/compare/0.3.5...0.4.0
 [0.4.1]: https://github.com/lfaoro/ssm/compare/0.4.0...0.4.1
 [0.4.2]: https://github.com/lfaoro/ssm/compare/0.4.1...0.4.2
+[1.0.0]: https://github.com/lfaoro/ssm/compare/0.4.2...1.0.0

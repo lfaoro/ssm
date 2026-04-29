@@ -54,8 +54,9 @@ func listFrom(config *sshconf.Config, theme theme) list.Model {
 	li.SetStatusBarItemName("host", "hosts")
 	li.Title = fmt.Sprintf("SSH servers (%v)", config.GetPath())
 
-	items := make([]list.Item, 0, len(config.Hosts))
-	for _, host := range config.Hosts {
+	hosts := config.GetHosts()
+	items := make([]list.Item, 0, len(hosts))
+	for _, host := range hosts {
 		items = append(items, formatHost(host))
 	}
 	li.SetItems(items)

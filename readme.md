@@ -6,9 +6,9 @@
 [![license][license-badge]](license)
 [![CI](https://github.com/lfaoro/ssm/actions/workflows/go-tests.yml/badge.svg)](https://github.com/lfaoro/ssm/actions/workflows/go-tests.yml)
 [![Go report card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
-[![Go version](https://img.shields.io/badge/Go-1.26-00ADD8.svg)](go.mod)
+[![Go version](https://img.shields.io/badge/Go-1.26.2-00ADD8.svg)](go.mod)
 
-[version-badge]: https://img.shields.io/badge/version-0.4.2-blue.svg
+[version-badge]: https://img.shields.io/badge/version-1.0.0-blue.svg
 [license-badge]: https://img.shields.io/badge/license-BSD3-blue
 
 `ssm` is an SSH connection manager that works on top of your existing SSH config and installed `ssh`/`mosh` binaries. No setup required on remote systems.

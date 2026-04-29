@@ -99,11 +99,12 @@ func (l Log) Init() tea.Cmd {
 func (l Log) Update(msg tea.Msg) (Log, tea.Cmd) {
 	switch msg := msg.(type) {
 	case DebugMsg:
+		if !l.debugActive {
+			return l, nil
+		}
 		l.debugCount++
 		msgLog := fmt.Sprintf("%d: %s", l.debugCount, msg.Log)
-		if l.debugActive {
-			l.debugLogs = append(l.debugLogs, msgLog)
-		}
+		l.debugLogs = append(l.debugLogs, msgLog)
 		if len(l.debugLogs) > l.debugHistory {
 			l.debugLogs = l.debugLogs[len(l.debugLogs)-l.debugHistory:]
 		}

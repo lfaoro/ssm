@@ -8,6 +8,7 @@ package sshconf
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,10 +18,9 @@ import (
 )
 
 type Config struct {
-	// protects Hosts
 	mu             sync.Mutex
-	Hosts          []Host // higher priority
-	secondaryHosts []Host // lower priority
+	Hosts          []Host
+	secondaryHosts []Host
 
 	order Order
 	path  string
@@ -31,7 +31,6 @@ type Host struct {
 	Options *som.SafeOrderedMap[string]
 }
 
-// Order defines how hosts are organized when parsed.
 type Order int
 
 const (
@@ -46,19 +45,14 @@ func (c *Config) SetOrder(o Order) {
 	c.order = o
 }
 
-// Parse parses SSH config files from default known locations.
-// User: ~/.ssh/config
-// System: /etc/ssh/ssh_config
-// Parse also follows `Include` statements via recursion.
 func (c *Config) Parse() error {
 	path, err := defaultConfigPath()
 	if err != nil {
 		return err
 	}
-	return c.parse(path)
+	return c.parse(path, 0, nil)
 }
 
-// Parse parses SSH config file from custom location.
 func (c *Config) ParsePath(s string) error {
 	if !strings.HasPrefix(s, "/") {
 		wd, err := os.Getwd()
@@ -67,10 +61,17 @@ func (c *Config) ParsePath(s string) error {
 		}
 		s = filepath.Join(wd, s)
 	}
-	return c.parse(s)
+	resolved, err := filepath.EvalSymlinks(s)
+	if err != nil {
+		resolved = s
+	}
+	s = resolved
+	return c.parse(s, 0, nil)
 }
 
 func (c *Config) GetHost(name string) Host {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	for _, h := range c.Hosts {
 		if h.Name == name {
 			return h
@@ -80,6 +81,8 @@ func (c *Config) GetHost(name string) Host {
 }
 
 func (c *Config) GetParamFor(host Host, key string) string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	for _, h := range c.Hosts {
 		if h.Name == host.Name {
 			val, ok := h.Options.Get(key)
@@ -92,6 +95,14 @@ func (c *Config) GetParamFor(host Host, key string) string {
 	return ""
 }
 
+func (c *Config) GetHosts() []Host {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	out := make([]Host, len(c.Hosts))
+	copy(out, c.Hosts)
+	return out
+}
+
 func (c *Config) GetPath() string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -102,14 +113,28 @@ const (
 	commentPrefix  = "#"
 	tagPrefix      = "#tag:"
 	tagOrderPrefix = "#tagorder"
+
+	maxIncludeDepth = 10
 )
 
-func (c *Config) parse(path string) error {
+func (c *Config) parse(path string, depth int, visited map[string]bool) error {
+	if depth > maxIncludeDepth {
+		return fmt.Errorf("sshconf: max Include depth (%d) exceeded at %s", maxIncludeDepth, path)
+	}
+	if visited == nil {
+		visited = make(map[string]bool)
+	}
+	absPath, err := filepath.Abs(path)
+	if err == nil {
+		if visited[absPath] {
+			return fmt.Errorf("sshconf: cyclic Include detected: %s", path)
+		}
+		visited[absPath] = true
+	}
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// clear hosts in case parse is
-	// called multiple times.
 	c.Hosts = []Host{}
 	c.secondaryHosts = []Host{}
 
@@ -118,6 +143,13 @@ func (c *Config) parse(path string) error {
 		return err
 	}
 	defer f.Close()
+
+	info, err := f.Stat()
+	if err == nil {
+		if perm := info.Mode().Perm(); perm&0077 != 0 {
+			fmt.Fprintf(os.Stderr, "ssm: warning: %s has insecure permissions %04o (should be 0600)\n", path, perm)
+		}
+	}
 	c.path = path
 	scanner := bufio.NewScanner(f)
 	var tagOrder bool
@@ -125,7 +157,6 @@ func (c *Config) parse(path string) error {
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 
-		// set orderbyTag
 		if line == tagOrderPrefix {
 			tagOrder = true
 		}
@@ -133,45 +164,39 @@ func (c *Config) parse(path string) error {
 			tagOrder = true
 		}
 
-		// ignore empty or comment line
 		if line == "" ||
 			strings.HasPrefix(line, commentPrefix) &&
 				!strings.HasPrefix(line, tagPrefix) {
 			continue
 		}
 		parts := strings.Fields(line)
-		// malformed line, skip
 		if len(parts) < 2 {
 			continue
 		}
 		k, v := strings.ToLower(parts[0]), strings.Join(parts[1:], " ")
-		// remove comment suffixes
-		// when not a tag
 		if !strings.HasPrefix(line, tagPrefix) {
 			k = removeComments(k)
 			v = removeComments(v)
 		}
-		// recurse include files
 		if k == "include" {
 			if !strings.HasPrefix(v, "/") {
-				path = filepath.Dir(path)
-				v = filepath.Join(path, v)
+				dir := filepath.Dir(path)
+				v = filepath.Join(dir, v)
 			}
 			paths, err := filepath.Glob(v)
 			if err != nil {
 				return err
 			}
 
-			for _, path := range paths {
+			for _, incPath := range paths {
 				cfg := New()
-				err := cfg.parse(path) // recursion
+				err := cfg.parse(incPath, depth+1, visited)
 				if err != nil {
 					return err
 				}
 				c.Hosts = append(c.Hosts, cfg.Hosts...)
 			}
 		}
-		// all blocks must start with Host key
 		if k == "host" {
 			if strings.Contains(v, "*") {
 				continue
@@ -185,7 +210,6 @@ func (c *Config) parse(path string) error {
 			}
 			continue
 		}
-		// if not a host key must be an option
 		if currentHost != nil {
 			currentHost.Options.Add(k, v)
 		}
@@ -213,10 +237,8 @@ func newHost(tagOrder bool, currentHost *Host, config *Config) {
 }
 
 func removeComments(input string) string {
-	// find index of '#' and take substring up to that point
 	if index := strings.Index(input, "#"); index != -1 {
 		return strings.TrimSpace(input[:index])
 	}
-	// if no '#' found, return trimmed input
 	return strings.TrimSpace(input)
 }

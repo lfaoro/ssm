@@ -14,7 +14,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v69/github"
 	"github.com/lfaoro/ssm/pkg/sshconf"
 	"github.com/lfaoro/ssm/pkg/tui"
 	"github.com/urfave/cli/v3"
@@ -193,7 +193,7 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 				fmt.Printf("can't find `%s` cmd in your path: %v\n", m.Cmd, err)
 				os.Exit(1)
 			}
-			err = syscall.Exec(sshPath, []string{"ssh", "-F", config.GetPath(), m.ExitHost}, os.Environ())
+			err = syscall.Exec(sshPath, []string{"ssh", "-F", config.GetPath(), "--", m.ExitHost}, os.Environ())
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -223,7 +223,9 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 	}
 
 	// inform user when new version is available
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		tag, err := latestTag()
 		if err != nil {
 			if cmd.Bool("debug") {
