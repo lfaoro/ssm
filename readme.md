@@ -6,7 +6,7 @@
 [![license][license-badge]](license)
 [![CI](https://github.com/lfaoro/ssm/actions/workflows/go-tests.yml/badge.svg)](https://github.com/lfaoro/ssm/actions/workflows/go-tests.yml)
 [![Go report card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/lfaoro/ssm/badge)](https://scorecard.dev/viewer/?uri=github.com/lfaoro/ssm)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/lfaoro/ssm/badge)](https://scorecard.dev/viewer/?uri=github.com/lfaoro/ssm)
 [![Go version](https://img.shields.io/badge/Go-1.26.2-00ADD8.svg)](go.mod)
 
 [version-badge]: https://img.shields.io/badge/version-1.0.0-blue.svg

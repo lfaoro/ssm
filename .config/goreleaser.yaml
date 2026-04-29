@@ -124,8 +124,17 @@ snapcrafts:
           - $HOME/.ssh/
 
 
-# binary_signs:
-#   - signature: "${artifact}_sig"  
+# GPG signing requires GPG_PRIVATE_KEY secret configured in the repo.
+signs:
+  - cmd: gpg
+    signature: "${artifact}.asc"
+    output: true
+    artifacts: all
+    args:
+      - --detach-sign
+      - --armor
+      - --batch
+      - "${artifact}"  
 
 release:
   disable: false
