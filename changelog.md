@@ -1,4 +1,7 @@
 # [0.4.1] Apr 29, 2026
+- migrate charmbracelet bubbletea/bubbles/lipgloss from github.com to charm.land
+- upgrade View() from string to tea.View, rewrite Init() commands
+- remove segfault.net hardcoded password and special-case logic
 - fix relative path fallback in config discovery
 - fix inverted debug view (messages now shown when debug active)
 - remove dead code: state.go, run.go, keywords.go, styles.go
@@ -9,7 +12,7 @@
 - only fire tick loop in debug mode
 - fix runcmd window resize to account for bar height
 - add ci workflow: go vet, go test -race, go build
-- update Go to 1.26, upgrade dependencies
+- update Go to 1.26, upgrade all dependencies to latest
 
 # [0.4.0] Jul 29, 2025
 - add run command feature (ctrl+r)
