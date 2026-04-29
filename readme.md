@@ -159,6 +159,7 @@ Pull requests are welcome. Report a bug or request a feature by opening a [new i
 
 - **star the repo**
 - **tell your friends**
+- **buy a VM** on [vibee.sh](https://vibee.sh)
 
 [GitHub sponsor](https://github.com/sponsors/lfaoro) ·
 [BTC](https://mempool.space/address/bc1qzaqeqwklaq86uz8h2lww87qwfpnyh9fveyh3hs) ·
