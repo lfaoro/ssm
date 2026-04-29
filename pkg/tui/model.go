@@ -269,6 +269,7 @@ func (m *Model) connect() tea.Cmd {
 		sshFlag := fmt.Sprintf("--ssh='ssh -F %s'", m.config.GetPath())
 		cmd = exec.Command(
 			cmdPath,
+			"--",
 			host.title,
 			sshFlag,
 		)
@@ -280,7 +281,7 @@ func (m *Model) connect() tea.Cmd {
 			AddError(
 				fmt.Errorf("connection closed: %v, err: %v", host.title, err),
 			),
-			AddError(fmt.Errorf("%s", m.errbuf.String())),
+			AddError(fmt.Errorf("%s", sanitizeStderr(m.errbuf.String()))),
 		)
 	})
 	return execmd
@@ -288,15 +289,45 @@ func (m *Model) connect() tea.Cmd {
 
 func (m *Model) setConfig() {
 	i := m.li.GlobalIndex()
-	host := m.config.Hosts[i]
+	hosts := m.config.GetHosts()
+	if i < 0 || i >= len(hosts) {
+		return
+	}
+	host := hosts[i]
 	var out string
 	keyStyle := lg.NewStyle().
 		Foreground(lg.Color("#4682b4"))
 	for i, k := range host.Options.Keys() {
+		if isSensitiveKey(k) {
+			continue
+		}
 		k = keyStyle.Render(k)
 		out += fmt.Sprintf("%s %s\n", k, host.Options.Values()[i])
 	}
 	m.vp.SetContent(out)
+}
+
+var sensitiveKeys = map[string]bool{
+	"identityfile":            true,
+	"certificatefile":         true,
+	"proxycommand":            true,
+	"pkcs11provider":          true,
+	"controlpath":             true,
+	"userknownhostsfile":      true,
+	"revokedhostkeys":         true,
+	"globalknownhostsfile":    true,
+}
+
+func isSensitiveKey(k string) bool {
+	return sensitiveKeys[k]
+}
+
+func sanitizeStderr(s string) string {
+	const maxStderrLen = 500
+	if len(s) > maxStderrLen {
+		s = s[:maxStderrLen] + "..."
+	}
+	return strings.TrimSpace(s)
 }
 
 func (m *Model) View() tea.View {
