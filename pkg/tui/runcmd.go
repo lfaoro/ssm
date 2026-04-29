@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"charm.land/bubbles/v2/key"
@@ -273,6 +274,7 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 		args := []string{
 			"-T",
 			"-F", prev.config.GetPath(),
+			"--",
 			selected.title,
 			command,
 		}
@@ -286,6 +288,12 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 		err := cmd.Run()
 		m.currentCmd = nil
 
-		return cmdResultMsg{output: out.String(), err: err}
+		return cmdResultMsg{output: sanitizeOutput(out.String()), err: err}
 	}
+}
+
+var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]|\x1b\].*?\x07|\x1b[PX^_].*?\x1b\\|\x1b\[\?[0-9;]*[hl]|\r`)
+
+func sanitizeOutput(s string) string {
+	return ansiRegex.ReplaceAllString(s, "")
 }

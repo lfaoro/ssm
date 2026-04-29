@@ -15,6 +15,5 @@ Host terminalcoffee
 
 Host segfault.net
 #tag: research
-#pass: segfault
     User root
     HostName segfault.net
