@@ -12,7 +12,7 @@ import (
 func defaultConfigPath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return filepath.Join("etc", "ssh", "config"), nil
+		return filepath.Join("/", "etc", "ssh", "ssh_config"), nil
 	}
 	// home config
 	path := filepath.Join(home, ".ssh", "config")

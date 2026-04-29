@@ -33,13 +33,6 @@ func listFrom(config *sshconf.Config, theme theme) list.Model {
 		Padding(0, 0, 0, 1)
 	d.Styles.SelectedDesc = d.Styles.SelectedTitle.
 		Foreground(lightDark(lg.Color("#F79F3F"), lg.Color(c.selectedDescriptionColor)))
-	// d.Styles.SelectedTitle = lg.NewStyle().
-	// 	Border(lg.NormalBorder(), false, false, false, true).
-	// 	BorderForeground(lightDark(lg.Color("#F79F3F"), lg.Color("#00bfff"))).
-	// 	Foreground(lightDark(lg.Color("#F79F3F"), lg.Color("#00bfff"))).
-	// 	Padding(0, 0, 0, 1)
-	// d.Styles.SelectedDesc = d.Styles.SelectedTitle.
-	// 	Foreground(lightDark(lg.Color("#F79F3F"), lg.Color("#4682b4")))
 
 	li = list.New(
 		[]list.Item{},
@@ -68,19 +61,11 @@ func listFrom(config *sshconf.Config, theme theme) list.Model {
 	li.SetStatusBarItemName("host", "hosts")
 	li.Title = fmt.Sprintf("SSH servers (%v)", config.GetPath())
 
-	// add segfault.net (free root server provider)
-	// segfaultHost := sshconf.Host{
-	// 	Name:    "create free research root server",
-	// 	Options: safeorderedmap.New[string](),
-	// }
-	// segfaultHost.Options.Add("hostname", "segfault.net")
-	// segfaultHost.Options.Add("user", "root")
-	// config.Hosts = append(config.Hosts, segfaultHost)
-
+	items := make([]list.Item, 0, len(config.Hosts))
 	for _, host := range config.Hosts {
-		newitem := formatHost(host)
-		li.InsertItem(len(config.Hosts), newitem)
+		items = append(items, formatHost(host))
 	}
+	li.SetItems(items)
 	return li
 }
 

@@ -191,7 +191,7 @@ func (m *cmdModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m *cmdModel) handleWindowSize(msg tea.WindowSizeMsg) {
 	m.input.SetWidth(msg.Width - 3)
 	m.viewport.SetWidth(msg.Width)
-	m.viewport.SetHeight(msg.Height)
+	m.viewport.SetHeight(msg.Height - lipgloss.Height(m.input.View()) - 4)
 }
 
 func (m *cmdModel) handleCommandResult(msg cmdResultMsg) {
@@ -209,7 +209,7 @@ func (m *cmdModel) handleCommandResult(msg cmdResultMsg) {
 	m.input.Focus()
 }
 
-func (m cmdModel) View() string {
+func (m *cmdModel) View() string {
 	var builder strings.Builder
 	builder.WriteString(m.Bar() + "\n\n")
 	if m.running {
@@ -221,7 +221,7 @@ func (m cmdModel) View() string {
 	return builder.String()
 }
 
-func (m cmdModel) Bar() string {
+func (m *cmdModel) Bar() string {
 	pm, ok := m.previousModel.(*Model)
 	if !ok {
 		return "invalid model"
@@ -274,8 +274,6 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 		args := []string{
 			"-T",
 			"-F", prev.config.GetPath(),
-			// "-o", "PreferredAuthentications=publickey",
-			// "-o", "PasswordAuthentication=no",
 			selected.title,
 			command,
 		}

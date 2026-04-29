@@ -61,14 +61,14 @@ func (m *Model) Init() tea.Cmd {
 		tea.EnableBracketedPaste,
 		tea.EnableReportFocus,
 		tea.SetBackgroundColor(color.Black),
-		// tea.EnableMouseAllMotion,
-		// tea.EnableMouseCellMotion,
 	}
 	if m.debug {
 		cmds = append(cmds, AddLog("debug: isdarkbg %v", m.isDark))
 	}
 	m.li.NewStatusMessage(fmt.Sprintf("[%s]", m.Cmd))
-	cmds = append(cmds, tick())
+	if m.debug {
+		cmds = append(cmds, tick())
+	}
 	return tea.Batch(cmds...)
 }
 
@@ -92,8 +92,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.vp.SetHeight(m.li.Height())
 		m.vp.SetWidth(msg.Width / 2)
 
-		// m.ta.SetWidth(msg.Width)
-		// m.ta.SetHeight(msg.Height / 2)
 		if m.log.err != nil {
 			cmds = append(cmds, tea.RequestWindowSize)
 		}
@@ -103,17 +101,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case AppMsg:
 		return m, AddError(fmt.Errorf("%s", msg.Text))
 	case LivenessCheckMsg:
-		// TODO: not implemented
-		return m, AddLog("liveness check")
-		for _, h := range m.config.Hosts {
-			host, _ := h.Options.Get("hostname")
-			// resolve host
-			// ping server
-			_ = host
-			h.Options.Add("alive", "yes")
-		}
-		m.li = listFrom(m.config, m.theme)
-		return m, nil
+		return m, AddLog("liveness check: not yet implemented")
 	case ExitOnConnMsg:
 		m.ExitOnCmd = true
 		return m, AddLog("exit true")
@@ -290,19 +278,7 @@ func (m *Model) connect() tea.Cmd {
 			sshFlag,
 		)
 	}
-	if host.title == "create free research root server" {
-		host.desc = strings.TrimSpace(host.desc)
-		_cmdPath, err := exec.LookPath("sshpass")
-		if err != nil {
-			_cmdPath, err = exec.LookPath("ssh")
-			if err != nil {
-				return AddError(fmt.Errorf("can't find `%s` cmd in your path: %v", m.Cmd, err))
-			}
-			cmd = exec.Command(_cmdPath, host.title, "-F", m.config.GetPath())
-		} else {
-			cmd = exec.Command(_cmdPath, "-p", "segfault", "ssh", host.desc)
-		}
-	}
+
 	cmd.Stderr = &m.errbuf
 	execmd := tea.ExecProcess(cmd, func(err error) tea.Msg {
 		return tea.Batch(
@@ -330,11 +306,6 @@ func (m *Model) setConfig() {
 
 func (m *Model) View() string {
 	var out string
-	// style := lg.NewStyle().
-	// 	Margin(1, 0, 0, 1).
-	// 	Render
-	// out += style(m.li.View())
-	// out += style(m.log.View())
 	vertView := lg.JoinVertical(0, m.li.View(), m.log.View())
 	if m.debug {
 		border := lg.NewStyle().Border(lg.RoundedBorder(), true)

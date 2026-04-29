@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"sync"
 	"syscall"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/google/go-github/github"
@@ -56,8 +57,7 @@ func main() {
 			}
 		},
 
-		Before: func(c context.Context, cmd *cli.Command) (context.Context, error) {
-			_ = cmd
+		Before: func(c context.Context, _ *cli.Command) (context.Context, error) {
 			return c, nil
 		},
 
@@ -265,7 +265,10 @@ func latestTag() (string, error) {
 	owner := "lfaoro"
 	repo := "ssm"
 
-	tags, _, err := client.Repositories.ListTags(context.Background(), owner, repo, &github.ListOptions{PerPage: 1})
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	tags, _, err := client.Repositories.ListTags(ctx, owner, repo, &github.ListOptions{PerPage: 1})
 	if err != nil {
 		return "", fmt.Errorf("failed to list tags: %v", err)
 	}

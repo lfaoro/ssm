@@ -138,7 +138,7 @@ func (l Log) View() string {
 		return out
 	}
 	var out string
-	if !l.debugActive {
+	if l.debugActive {
 		out = errMsg() + "\n" + debugMsg()
 	} else {
 		out = errMsg()
