@@ -1,5 +1,15 @@
-# [0.4.1] next
-- add show comments for keys in view mode
+# [0.4.1] Apr 29, 2026
+- fix relative path fallback in config discovery
+- fix inverted debug view (messages now shown when debug active)
+- remove dead code: state.go, run.go, keywords.go, styles.go
+- clean up commented-out code blocks
+- add table-driven tests: parser (9 subtests), log (11 subtests), themes (3)
+- replace O(n²) list insertion with O(n) SetItems
+- add 5s context timeout to GitHub API version check
+- only fire tick loop in debug mode
+- fix runcmd window resize to account for bar height
+- add ci workflow: go vet, go test -race, go build
+- update Go to 1.26, upgrade dependencies
 
 # [0.4.0] Jul 29, 2025
 - add run command feature (ctrl+r)
@@ -94,3 +104,4 @@
 [0.3.4]: https://github.com/lfaoro/ssm/compare/0.3.3...0.3.4
 [0.3.5]: https://github.com/lfaoro/ssm/compare/0.3.4...0.3.5
 [0.4.0]: https://github.com/lfaoro/ssm/compare/0.3.5...0.4.0
+[0.4.1]: https://github.com/lfaoro/ssm/compare/0.4.0...0.4.1
