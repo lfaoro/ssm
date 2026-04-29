@@ -1,5 +1,7 @@
 name: Install tests
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
 
 jobs:
   install_on_linux_x86:
@@ -24,4 +26,4 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     - name: Run install script
-      run:  brew install lfaoro/tap/ssm
+      run: brew install lfaoro/tap/ssm

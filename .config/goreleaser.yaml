@@ -124,8 +124,8 @@ snapcrafts:
           - $HOME/.ssh/
 
 
-binary_signs:
-  - signature: "${artifact}_sig"  
+# binary_signs:
+#   - signature: "${artifact}_sig"  
 
 release:
   disable: false
