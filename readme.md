@@ -28,9 +28,9 @@
 - **`--exit` flag** — connect and hand off the terminal, no lingering process
 - **Theming** — `--theme sky|matrix`, extensible via `themes.go`
 
-## Demo
+## Shoutout
 
-![demo](data/thc.png)
+**[@hackerschoice](https://x.com/hackerschoice/status/1920899798837711279)** on X
 
 ## Usage
 
