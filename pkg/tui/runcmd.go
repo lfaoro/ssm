@@ -6,12 +6,12 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/v2/key"
-	"github.com/charmbracelet/bubbles/v2/spinner"
-	"github.com/charmbracelet/bubbles/v2/textinput"
-	"github.com/charmbracelet/bubbles/v2/viewport"
-	tea "github.com/charmbracelet/bubbletea/v2"
-	"github.com/charmbracelet/lipgloss/v2"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/spinner"
+	"charm.land/bubbles/v2/textinput"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 func RunCmdModel(base tea.Model) tea.Model {
@@ -27,7 +27,6 @@ func RunCmdModel(base tea.Model) tea.Model {
 	cmdInput.Prompt = "> "
 	cmdInput.CharLimit = 256
 	cmdInput.Focus()
-	cmdInput.VirtualCursor = true
 
 	// using double main model viewport width because it use half of screenwidth
 	cmdInput.SetWidth(previousModel.vp.Width()*2 - 3)
@@ -209,7 +208,7 @@ func (m *cmdModel) handleCommandResult(msg cmdResultMsg) {
 	m.input.Focus()
 }
 
-func (m *cmdModel) View() string {
+func (m *cmdModel) View() tea.View {
 	var builder strings.Builder
 	builder.WriteString(m.Bar() + "\n\n")
 	if m.running {
@@ -218,7 +217,7 @@ func (m *cmdModel) View() string {
 		builder.WriteString(m.input.View() + "\n\n")
 	}
 	builder.WriteString(m.viewport.View())
-	return builder.String()
+	return tea.NewView(builder.String())
 }
 
 func (m *cmdModel) Bar() string {

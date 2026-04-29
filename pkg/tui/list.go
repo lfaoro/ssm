@@ -3,11 +3,9 @@ package tui
 import (
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/v2/key"
-	"github.com/charmbracelet/bubbles/v2/list"
-	"github.com/charmbracelet/bubbles/v2/textinput"
-	tea "github.com/charmbracelet/bubbletea/v2"
-	lg "github.com/charmbracelet/lipgloss/v2"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/list"
+	lg "charm.land/lipgloss/v2"
 	"github.com/lfaoro/ssm/pkg/sshconf"
 )
 
@@ -45,12 +43,7 @@ func listFrom(config *sshconf.Config, theme theme) list.Model {
 	}
 	li.FilterInput.Prompt = "Search: "
 	li.FilterInput.CharLimit = 12
-	li.FilterInput.VirtualCursor = true
 	li.FilterInput.Placeholder = "hostName or tagName"
-	li.FilterInput.Styles.Cursor = textinput.CursorStyle{
-		Color: lg.BrightBlue,
-		Shape: tea.CursorBlock,
-	}
 	li.Styles.StatusBar = lg.NewStyle().
 		Foreground(lightDark(lg.Color("#A49FA5"), lg.Color("#777777"))).
 		Padding(0, 0, 1, 2) //nolint:mnd

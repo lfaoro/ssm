@@ -14,10 +14,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/v2/list"
-	"github.com/charmbracelet/bubbles/v2/viewport"
-	tea "github.com/charmbracelet/bubbletea/v2"
-	lg "github.com/charmbracelet/lipgloss/v2"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	lg "charm.land/lipgloss/v2"
 	"github.com/lfaoro/ssm/pkg/sshconf"
 )
 
@@ -55,12 +55,7 @@ func NewModel(config *sshconf.Config, debug bool) *Model {
 
 func (m *Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
-		tea.SetWindowTitle("SSM | Secure Shell Manager"),
-		tea.RequestKeyboardEnhancements(),
-		tea.EnterAltScreen,
-		tea.EnableBracketedPaste,
-		tea.EnableReportFocus,
-		tea.SetBackgroundColor(color.Black),
+		tea.RequestCapability("keyboard_enhancements"),
 	}
 	if m.debug {
 		cmds = append(cmds, AddLog("debug: isdarkbg %v", m.isDark))
@@ -304,7 +299,7 @@ func (m *Model) setConfig() {
 	m.vp.SetContent(out)
 }
 
-func (m *Model) View() string {
+func (m *Model) View() tea.View {
 	var out string
 	vertView := lg.JoinVertical(0, m.li.View(), m.log.View())
 	if m.debug {
@@ -321,7 +316,12 @@ func (m *Model) View() string {
 	} else {
 		out += vertView
 	}
-	return out
+	v := tea.NewView(out)
+	v.AltScreen = true
+	v.WindowTitle = "SSM | Secure Shell Manager"
+	v.ReportFocus = true
+	v.BackgroundColor = color.Black
+	return v
 }
 
 func tick() tea.Cmd {

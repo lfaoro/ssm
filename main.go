@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea/v2"
+	tea "charm.land/bubbletea/v2"
 	"github.com/google/go-github/github"
 	"github.com/lfaoro/ssm/pkg/sshconf"
 	"github.com/lfaoro/ssm/pkg/tui"
