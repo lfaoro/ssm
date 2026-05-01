@@ -135,6 +135,7 @@ aurs:
     commit_author:
       name: bot
       email: bot@leonardofaoro.com
+    git_ssh_command: 'ssh -o StrictHostKeyChecking=accept-new'
     skip_upload: false
 
 signs:
