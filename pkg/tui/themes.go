@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Leonardo Faoro & authors
+// SPDX-License-Identifier: BSD-3-Clause
+
 package tui
 
 // theme provides the colors for the properties.
