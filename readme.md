@@ -8,6 +8,7 @@
 [![Go report card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/lfaoro/ssm/badge)](https://scorecard.dev/viewer/?uri=github.com/lfaoro/ssm)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/12709/badge)](https://bestpractices.coreinfrastructure.org/projects/12709)
+[![Downloads](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/lfaoro/ssm/main/data/stats.json&query=$.total&label=downloads&color=blue)](https://github.com/lfaoro/ssm/releases)
 [![Go version](https://img.shields.io/badge/Go-1.26.2-00ADD8.svg)](go.mod)
 
 [version-badge]: https://img.shields.io/badge/version-1.0.0-blue.svg
@@ -105,17 +106,20 @@ chmod 600 ~/.ssh/config
 Download a binary from [releases](https://github.com/lfaoro/ssm/releases), or install via script/brew:
 
 ```bash
-# shell script (linux, macos, freebsd, netbsd, openbsd, solaris)
+# shell script (linux, macos, freebsd, openbsd)
 curl -sSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
 
 # homebrew (macos, linux)
 brew install lfaoro/tap/ssm
 
+# arch linux (AUR)
+yay -S ssm-bin
+
 # macos quarantine workaround (no paid signing key)
 xattr -d com.apple.quarantine /path/to/ssm
 ```
 
-Available for **6 OSes** × **4 architectures**: x86_64, i386, arm64, arm.
+Available for **4 OSes** × **2 architectures**: x86_64, arm64.
 
 ## Build
 

@@ -66,8 +66,7 @@ fi
 raw_os="$(uname -s)"
 goos="$(echo "$raw_os" | tr '[:upper:]' '[:lower:]')"
 case "$goos" in
-	linux|darwin|freebsd|netbsd|openbsd) ;;
-	sunos) goos="solaris" ;;
+	linux|darwin|freebsd|openbsd) ;;
 	*) error "unsupported operating system: $raw_os" ;;
 esac
 
@@ -76,12 +75,7 @@ esac
 raw_arch="$(uname -m)"
 case "$raw_arch" in
 	x86_64|amd64)                  go_arch="x86_64" ;;
-	i86pc)                         go_arch="x86_64" ;;  # Solaris x86-64
 	aarch64|arm64)                 go_arch="arm64" ;;
-	i386|i486|i586|i686)           go_arch="i386" ;;
-	armv5*)                        go_arch="armv5" ;;
-	armv6*)                        go_arch="armv6" ;;
-	armv7*)                        go_arch="armv7" ;;
 	*) error "unsupported architecture: $raw_arch" ;;
 esac
 

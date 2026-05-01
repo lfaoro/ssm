@@ -34,6 +34,9 @@ pre:
 	@go mod tidy
 	# @go fmt ./... && go vet ./...
 
+stats:
+	@python3 scripts/stats.py
+
 update:
 	go get -u .
 
