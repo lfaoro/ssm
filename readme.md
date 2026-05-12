@@ -150,4 +150,4 @@ Pull requests are welcome. Report a bug or request a feature by opening a [new i
 
 ## Show support
 
-If `ssm` is useful to you, give it a ⭐ — [sponsor](https://github.com/sponsors/lfaoro) · [BTC](https://mempool.space/address/bc1qzaqeqwklaq86uz8h2lww87qwfpnyh9fveyh3hs)
+If `ssm` is useful to you, give it a ⭐ — [GitHub sponsor](https://github.com/sponsors/lfaoro) · [BTC](https://mempool.space/address/bc1qzaqeqwklaq86uz8h2lww87qwfpnyh9fveyh3hs) · [XMR](https://xmrchain.net/search?value=89XCyahmZiQgcVwjrSZTcJepPqCxZgMqwbABvzPKVpzC7gi8URDme8H6UThpCqX69y5i1aA81AKq57Wynjovy7g4K9MeY5c) · [FIAT](https://revolut.me/matrix)
