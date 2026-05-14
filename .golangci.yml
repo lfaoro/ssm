@@ -1,0 +1,19 @@
+version: "2"
+run:
+  timeout: 5m
+  skip-dirs:
+    - data/
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - revive
+    - ineffassign
+    - unused
+    - gosec
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
