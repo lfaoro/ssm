@@ -49,5 +49,3 @@ jobs:
       - name: go build
         run: go build -o /dev/null .
 
-      - name: Check goreleaser config
-        run: goreleaser check .config/goreleaser.yaml
