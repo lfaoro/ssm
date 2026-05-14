@@ -1,8 +1,6 @@
 version: "2"
 run:
   timeout: 5m
-  exclude-dirs:
-    - data/
 
 linters:
   enable:
@@ -13,7 +11,3 @@ linters:
     - ineffassign
     - unused
     - gosec
-
-issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
