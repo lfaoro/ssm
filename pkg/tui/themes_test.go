@@ -47,8 +47,8 @@ func TestThemes(t *testing.T) {
 	})
 
 	t.Run("matrix and sky have distinct colors", func(t *testing.T) {
-		matrixTh, _ := themes["matrix"]
-		skyTh, _ := themes["sky"]
+		matrixTh := themes["matrix"]
+		skyTh := themes["sky"]
 
 		if matrixTh.mainTitleColor == skyTh.mainTitleColor {
 			t.Error("matrix and sky mainTitleColor should differ")

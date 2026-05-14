@@ -3,6 +3,7 @@
 
 package tui
 
+// SysCmd represents a system command (ssh, mosh, etc.).
 type SysCmd string
 
 func (s SysCmd) String() string {

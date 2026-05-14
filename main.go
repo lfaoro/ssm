@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Leonardo Faoro & authors
 // SPDX-License-Identifier: BSD-3-Clause
 
+// Package main implements the ssm (Secure Shell Manager) CLI entry point.
 package main
 
 import (
@@ -193,7 +194,7 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 				fmt.Printf("can't find `%s` cmd in your path: %v\n", m.Cmd, err)
 				os.Exit(1)
 			}
-			err = syscall.Exec(sshPath, []string{"ssh", "-F", config.GetPath(), "--", m.ExitHost}, os.Environ())
+			err = syscall.Exec(sshPath, []string{"ssh", "-F", config.GetPath(), "--", m.ExitHost}, os.Environ()) //nolint:gosec
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -248,7 +249,7 @@ var testCmd = &cli.Command{
 	Action: testAction,
 	Hidden: true,
 }
-var testAction = func(_ context.Context, cmd *cli.Command) error {
+var testAction = func(_ context.Context, _ *cli.Command) error {
 	return nil
 }
 
@@ -258,7 +259,7 @@ var generateCmd = &cli.Command{
 	Action:  generateAction,
 	Hidden:  true,
 }
-var generateAction = func(_ context.Context, cmd *cli.Command) error {
+var generateAction = func(_ context.Context, _ *cli.Command) error {
 	return nil
 }
 

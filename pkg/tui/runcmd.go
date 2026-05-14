@@ -18,6 +18,7 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
+// RunCmdModel wraps the base model in a run-command sub-model.
 func RunCmdModel(base tea.Model) tea.Model {
 	previousModel, ok := base.(*Model)
 	if !ok {
@@ -282,7 +283,7 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 			command,
 		}
 
-		cmd := exec.Command(prev.Cmd.String(), args...)
+		cmd := exec.Command(prev.Cmd.String(), args...) //nolint:gosec
 
 		m.currentCmd = cmd
 		var out bytes.Buffer

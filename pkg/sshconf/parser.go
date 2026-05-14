@@ -17,6 +17,7 @@ import (
 	som "github.com/thalesfsp/go-common-types/safeorderedmap"
 )
 
+// Config holds parsed SSH config data and provides thread-safe access.
 type Config struct {
 	mu             sync.Mutex
 	Hosts          []Host
@@ -26,25 +27,31 @@ type Config struct {
 	path  string
 }
 
+// Host represents a single SSH host entry with its options.
 type Host struct {
 	Name    string
 	Options *som.SafeOrderedMap[string]
 }
 
+// Order defines host ordering strategies.
 type Order int
 
 const (
+	// TagOrder prioritises hosts with #tag: comments.
 	TagOrder Order = iota + 1
 )
 
+// New returns a new Config ready for parsing.
 func New() *Config {
 	return &Config{}
 }
 
+// SetOrder configures the host ordering strategy.
 func (c *Config) SetOrder(o Order) {
 	c.order = o
 }
 
+// Parse loads and parses the default SSH config file.
 func (c *Config) Parse() error {
 	path, err := defaultConfigPath()
 	if err != nil {
@@ -53,6 +60,7 @@ func (c *Config) Parse() error {
 	return c.parse(path, 0, nil)
 }
 
+// ParsePath loads and parses the SSH config file at the given path.
 func (c *Config) ParsePath(s string) error {
 	if !strings.HasPrefix(s, "/") {
 		wd, err := os.Getwd()
@@ -69,6 +77,7 @@ func (c *Config) ParsePath(s string) error {
 	return c.parse(s, 0, nil)
 }
 
+// GetHost returns the host entry matching the given name.
 func (c *Config) GetHost(name string) Host {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -80,6 +89,7 @@ func (c *Config) GetHost(name string) Host {
 	return Host{}
 }
 
+// GetParamFor returns the value of a config key for the given host.
 func (c *Config) GetParamFor(host Host, key string) string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -95,6 +105,7 @@ func (c *Config) GetParamFor(host Host, key string) string {
 	return ""
 }
 
+// GetHosts returns a copy of all parsed hosts.
 func (c *Config) GetHosts() []Host {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -103,6 +114,7 @@ func (c *Config) GetHosts() []Host {
 	return out
 }
 
+// GetPath returns the path of the parsed SSH config file.
 func (c *Config) GetPath() string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -138,11 +150,13 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 	c.Hosts = []Host{}
 	c.secondaryHosts = []Host{}
 
-	f, err := os.Open(path)
+	f, err := os.Open(path) //nolint:gosec
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	info, err := f.Stat()
 	if err == nil {

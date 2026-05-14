@@ -21,6 +21,7 @@ import (
 	"github.com/lfaoro/ssm/pkg/sshconf"
 )
 
+// Model is the main Bubbletea application model.
 type Model struct {
 	config     *sshconf.Config
 	showConfig bool
@@ -40,6 +41,7 @@ type Model struct {
 	isDark bool
 }
 
+// NewModel creates a new application Model.
 func NewModel(config *sshconf.Config, debug bool) *Model {
 	m := &Model{}
 	m.debug = debug
@@ -53,6 +55,7 @@ func NewModel(config *sshconf.Config, debug bool) *Model {
 	return m
 }
 
+// Init initialises the model and returns the initial commands.
 func (m *Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
 		tea.RequestCapability("keyboard_enhancements"),
@@ -67,6 +70,7 @@ func (m *Model) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
+// Update handles all messages and returns the updated model.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	cmds := []tea.Cmd{}
@@ -195,7 +199,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if editorPath == "" {
 					return m, AddError(fmt.Errorf("env EDITOR not set, nor any %v found in PATH", knownEditors[1:]))
 				}
-				cmd := exec.Command(editorPath, confFile)
+				cmd := exec.Command(editorPath, confFile) //nolint:gosec
 				cmd.Dir = filepath.Dir(confFile)
 				cmd.Stderr = &m.errbuf
 				execCmd := tea.ExecProcess(cmd, func(err error) tea.Msg {
@@ -264,10 +268,10 @@ func (m *Model) connect() tea.Cmd {
 	}
 
 	var cmd *exec.Cmd
-	cmd = exec.Command(cmdPath, host.title, "-F", m.config.GetPath())
+	cmd = exec.Command(cmdPath, host.title, "-F", m.config.GetPath()) //nolint:gosec
 	if m.Cmd == moshCmd {
 		sshFlag := fmt.Sprintf("--ssh='ssh -F %s'", m.config.GetPath())
-		cmd = exec.Command(
+		cmd = exec.Command( //nolint:gosec
 			cmdPath,
 			"--",
 			host.title,
@@ -330,6 +334,7 @@ func sanitizeStderr(s string) string {
 	return strings.TrimSpace(s)
 }
 
+// View renders the application UI.
 func (m *Model) View() tea.View {
 	var out string
 	vertView := lg.JoinVertical(0, m.li.View(), m.log.View())
