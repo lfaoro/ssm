@@ -105,19 +105,6 @@ nix:
       - ssh
     skip_upload: false
 
-snapcrafts:
-  - description: "SSM | Secure Shell Manager"
-    summary: "SSM | Secure Shell Manager"
-    hooks:
-      install:
-        - network
-    confinement: classic
-    plugs:
-      personal-files:
-        read:
-          - $HOME/.ssh/
-
-
 # GPG signing requires GPG_PRIVATE_KEY secret configured in the repo.
 aurs:
   - name: ssm-bin
