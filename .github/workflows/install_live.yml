@@ -42,7 +42,7 @@ jobs:
   install_nix:
     runs-on: ubuntu-latest
     steps:
-    - uses: cachix/install-nix-action@f36e630f13f91e0a1f4a17e1b7bb59f77c66d54a  # v30
+    - uses: cachix/install-nix-action@v30
     - run: nix profile install github:lfaoro/tap#ssm
     - run: ssm --version
 
