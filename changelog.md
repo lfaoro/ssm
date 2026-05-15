@@ -1,3 +1,10 @@
+# [1.0.2] May 15, 2026
+
+## Fix
+- Fix Escape key quitting app when filter not active
+- Update readme keys table split `q` (quit) and `esc` (exit filter)
+- Expand `data/config_example` with real-world host groups
+
 # [1.0.1] May 14, 2026
 
 ## Release
@@ -148,3 +155,4 @@
 [0.4.2]: https://github.com/lfaoro/ssm/compare/0.4.1...0.4.2
 [1.0.0]: https://github.com/lfaoro/ssm/compare/0.4.2...1.0.0
 [1.0.1]: https://github.com/lfaoro/ssm/compare/1.0.0...1.0.1
+[1.0.2]: https://github.com/lfaoro/ssm/compare/1.0.1...1.0.2
