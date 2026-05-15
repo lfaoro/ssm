@@ -6,6 +6,10 @@ on:
 
 permissions: read-all
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  NODE_OPTIONS: "--no-deprecation"
+
 jobs:
   install_on_macos_arm:
     runs-on: macos-latest
