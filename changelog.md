@@ -1,3 +1,12 @@
+# [1.0.1] May 14, 2026
+
+## Release
+- Reduce release matrix to 4 OSes × 2 arches (drop netbsd, solaris, 386, arm)
+- Add AUR package support
+- Add download stats badge to readme
+- Add `make stats` target and `scripts/stats.py`
+- Add copyright headers to all `.go` files
+
 # [1.0.0] Apr 29, 2026
 
 ## Security Audit & Hardening
@@ -138,3 +147,4 @@
 [0.4.1]: https://github.com/lfaoro/ssm/compare/0.4.0...0.4.1
 [0.4.2]: https://github.com/lfaoro/ssm/compare/0.4.1...0.4.2
 [1.0.0]: https://github.com/lfaoro/ssm/compare/0.4.2...1.0.0
+[1.0.1]: https://github.com/lfaoro/ssm/compare/1.0.0...1.0.1

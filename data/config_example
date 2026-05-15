@@ -1,19 +1,104 @@
-# Example SSH config
-# $ man ssh_config
+# SSM — Secure Shell Manager example config
+# Place this in ~/.ssh/config and run `ssm` to see tagged hosts
+#
+# Features demonstrated:
+#   #tagorder   — show tagged hosts first in the TUI list
+#   #tag:       — comma-separated metadata for filtering/searching
+#   Include     — SSM supports recursive Include (depth limit 10)
 
-Host hostname1
-#tag: tagValue1,tagValue2,tagValueN
-    User user
-    HostName hello.world
+#tagorder
+
+Include ~/.ssh/config.d/*
+
+# ── Production ──────────────────────────────────────────────
+
+Host prod-api
+#tag: production,api
+    User deploy
+    HostName api.example.com
+    Port 22
+    IdentityFile ~/.ssh/prod_ed25519
+    ServerAliveInterval 30
+
+Host prod-db
+#tag: production,database
+    User admin
+    HostName db.example.com
+    Port 5432
+    ProxyJump prod-api
+
+# ── Staging ─────────────────────────────────────────────────
+
+Host staging-web
+#tag: staging,web
+    User dev
+    HostName staging.example.com
     Port 2222
-    IdentityFile ~/.ssh/id_rsa
+    IdentityFile ~/.ssh/staging_ed25519
+
+Host staging-redis
+#tag: staging,cache
+    User dev
+    HostName 10.0.1.50
+    Port 6379
+    ProxyJump staging-web
+
+# ── Development ─────────────────────────────────────────────
+
+Host dev-box
+#tag: dev
+    User user
+    HostName 192.168.1.100
+    Port 22
+    IdentityFile ~/.ssh/id_ed25519
+    LocalForward 8080 localhost:8080
+
+Host raspi
+#tag: dev,iot
+    User pi
+    HostName 192.168.1.42
+    Port 22
+    IdentityFile ~/.ssh/raspi_ed25519
+
+# ── Personal ────────────────────────────────────────────────
 
 Host terminalcoffee
 #tag: shops
     User adam
     HostName terminal.shop
+    Port 22
+
+Host homelab
+#tag: homelab
+    User root
+    HostName home.example.com
+    Port 2222
+    IdentityFile ~/.ssh/home_ed25519
+
+Host vibee.sh
+    User server
+    HostName vibee.sh
+    Port 22
+
+# ── Research (no tag — appears after tagged hosts) ──────────
 
 Host segfault.net
-#tag: research
     User root
     HostName segfault.net
+    Port 22
+
+Host gw.arch
+    User arch
+    HostName archlinux.org
+    Port 22
+
+# ── Wildcard defaults ──────────────────────────────────────
+
+Host *
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    TCPKeepAlive yes
+    Compression yes
+    ControlMaster auto
+    ControlPath ~/.ssh/control:%h:%p:%r
+    ControlPersist 10m

@@ -110,7 +110,8 @@ All flags support env vars: `SSM_SHOW`, `SSM_EXIT`, `SSM_ORDER`, `SSM_SSH_CONFIG
 | `ctrl+c` | clear filter / quit |
 | `tab` | switch between SSH and MOSH |
 | `/` | filter hosts |
-| `q` / `esc` | quit / exit filter |
+| `q` | quit |
+| `esc` | exit filter |
 
 ## Build
 

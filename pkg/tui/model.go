@@ -146,7 +146,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				conncmd,
 				AddError(fmt.Errorf("%s", m.errbuf.String())),
 			)
-		case tea.KeyBackspace:
+		case tea.KeyEsc, tea.KeyBackspace:
 			if m.li.FilteringEnabled() {
 				m.li.ResetFilter()
 				return m, nil
