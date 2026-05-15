@@ -45,9 +45,3 @@ jobs:
     - uses: cachix/install-nix-action@v30
     - run: nix profile install github:lfaoro/tap#ssm
     - run: ssm --version
-
-  install_snap:
-    runs-on: ubuntu-latest
-    steps:
-    - run: sudo snap install ssm
-    - run: ssm --version
