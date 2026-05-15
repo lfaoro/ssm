@@ -17,8 +17,8 @@ func TestParse(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		if len(cfg.Hosts) != 3 {
-			t.Fatalf("expected 3 hosts, got %d", len(cfg.Hosts))
+		if len(cfg.Hosts) != 11 {
+			t.Fatalf("expected 11 hosts, got %d", len(cfg.Hosts))
 		}
 
 		tests := []struct {
@@ -29,25 +29,25 @@ func TestParse(t *testing.T) {
 			wantPort string
 		}{
 			{
-				name:     "hostname1",
-				hostName: "hostname1",
-				wantUser: "user",
-				wantHost: "hello.world",
-				wantPort: "2222",
+				name:     "prod-api",
+				hostName: "prod-api",
+				wantUser: "deploy",
+				wantHost: "api.example.com",
+				wantPort: "22",
 			},
 			{
 				name:     "terminalcoffee",
 				hostName: "terminalcoffee",
 				wantUser: "adam",
 				wantHost: "terminal.shop",
-				wantPort: "",
+				wantPort: "22",
 			},
 			{
 				name:     "segfault.net",
 				hostName: "segfault.net",
 				wantUser: "root",
 				wantHost: "segfault.net",
-				wantPort: "",
+				wantPort: "22",
 			},
 		}
 
@@ -99,9 +99,9 @@ func TestParseTags(t *testing.T) {
 			wantTags string
 		}{
 			{
-				name:     "hostname1 tags",
-				hostName: "hostname1",
-				wantTags: "tagValue1,tagValue2,tagValueN",
+				name:     "prod-api tags",
+				hostName: "prod-api",
+				wantTags: "production,api",
 			},
 			{
 				name:     "terminalcoffee tags",
@@ -109,9 +109,9 @@ func TestParseTags(t *testing.T) {
 				wantTags: "shops",
 			},
 			{
-				name:     "segfault.net tags",
-				hostName: "segfault.net",
-				wantTags: "research",
+				name:     "dev-box tags",
+				hostName: "dev-box",
+				wantTags: "dev",
 			},
 		}
 
@@ -139,14 +139,17 @@ func TestTagOrder(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		if len(cfg.Hosts) != 3 {
-			t.Fatalf("expected 3 hosts, got %d", len(cfg.Hosts))
+		if len(cfg.Hosts) != 11 {
+			t.Fatalf("expected 11 hosts, got %d", len(cfg.Hosts))
 		}
 
-		for _, h := range cfg.Hosts {
-			_, ok := h.Options.Get("#tag:")
-			if !ok {
-				t.Errorf("expected host %q to have tags in tag-order mode", h.Name)
+		for i, h := range cfg.Hosts {
+			_, hasTag := h.Options.Get("#tag:")
+			if i < 8 && !hasTag {
+				t.Errorf("expected host %q to have tags (tagged hosts first)", h.Name)
+			}
+			if i >= 8 && hasTag {
+				t.Errorf("expected host %q to be untagged (untagged hosts last)", h.Name)
 			}
 		}
 	})
@@ -160,7 +163,7 @@ func TestGetParamFor(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		host := cfg.GetHost("hostname1")
+		host := cfg.GetHost("staging-web")
 		port := cfg.GetParamFor(host, "port")
 		if port != "2222" {
 			t.Errorf("port = %q, want %q", port, "2222")
@@ -174,7 +177,7 @@ func TestGetParamFor(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		host := cfg.GetHost("hostname1")
+		host := cfg.GetHost("staging-web")
 		val := cfg.GetParamFor(host, "nonexistent")
 		if val != "" {
 			t.Errorf("expected empty string for unknown key, got %q", val)
