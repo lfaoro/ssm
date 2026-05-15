@@ -37,6 +37,15 @@ pre:
 stats:
 	@python3 scripts/stats.py
 
+test:
+	go test -race -count=1 ./...
+
+vet:
+	go vet ./...
+
+build:
+	go build ./...
+
 update:
 	go get -u .
 
