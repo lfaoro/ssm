@@ -2,5 +2,5 @@ bin/
 build/
 tmp/
 _*
-todo
+TODO
 AGENTS.md

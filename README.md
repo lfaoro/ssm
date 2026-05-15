@@ -141,7 +141,7 @@ make release-dev        # goreleaser snapshot (dry run)
 
 - [CLI flags reference](data/help)
 - [SSH config example](data/config_example)
-- [Changelog](changelog.md)
+- [Changelog](CHANGELOG.md)
 
 Pull requests are welcome. Report a bug or request a feature by opening a [new issue](https://github.com/lfaoro/ssm/issues).
 
