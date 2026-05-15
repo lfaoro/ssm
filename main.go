@@ -1,5 +1,5 @@
 // Copyright (c) 2025 Leonardo Faoro & authors
-// SPDX-License-Identifier: BSD-3-Clause
+// SPDX-License-Identifier: MIT
 
 // Package main implements the ssm (Secure Shell Manager) CLI entry point.
 package main

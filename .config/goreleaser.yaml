@@ -71,7 +71,7 @@ nfpms:
     formats:
       - deb
       - rpm
-    license: BSD 3-clause
+    license: MIT
     dependencies:
       - ssh
     suggests:
@@ -112,7 +112,7 @@ aurs:
     description: "SSH connection manager with a TUI"
     maintainers:
       - "Leonardo Faoro <ssm@leonardofaoro.com>"
-    license: "BSD-3-Clause"
+    license: "MIT"
     provides:
       - ssm
     conflicts:
