@@ -1,4 +1,4 @@
-# Secure Shell Manager
+# Secure Shell Manager 🐚
 
 > Streamline SSH connections with a simple terminal UI
 
