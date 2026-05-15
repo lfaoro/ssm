@@ -38,11 +38,11 @@ jobs:
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
     - run: |
-        fake_uname=$(mktemp)
-        printf '#!/bin/sh\necho Windows_NT\n' > "$fake_uname"
-        chmod +x "$fake_uname"
+        fake_dir=$(mktemp -d)
+        printf '#!/bin/sh\necho Windows_NT\n' > "$fake_dir/uname"
+        chmod +x "$fake_dir/uname"
         set +e
-        output=$(PATH="$(dirname "$fake_uname"):$PATH" bash scripts/get.sh 2>&1)
+        output=$(PATH="$fake_dir:$PATH" bash scripts/get.sh 2>&1)
         rc=$?
         set -e
         if ! echo "$output" | grep -q "unsupported operating system"; then
