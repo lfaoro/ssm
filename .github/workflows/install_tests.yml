@@ -45,6 +45,13 @@ jobs:
         output=$(PATH="$(dirname "$fake_uname"):$PATH" bash scripts/get.sh 2>&1)
         rc=$?
         set -e
-        echo "$output" | grep -q "unsupported operating system"
-        [ $rc -ne 0 ]
+        if ! echo "$output" | grep -q "unsupported operating system"; then
+          echo "expected error message not found, got:"
+          echo "$output"
+          exit 1
+        fi
+        if [ $rc -eq 0 ]; then
+          echo "expected non-zero exit code, got $rc"
+          exit 1
+        fi
       shell: bash
