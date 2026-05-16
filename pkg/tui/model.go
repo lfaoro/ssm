@@ -59,9 +59,6 @@ func (m *Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
 		tea.RequestCapability("keyboard_enhancements"),
 	}
-	if m.debug {
-		cmds = append(cmds, AddLog("debug: isdarkbg %v", m.isDark))
-	}
 	m.li.NewStatusMessage(fmt.Sprintf("[%s]", m.Cmd))
 	if m.debug {
 		cmds = append(cmds, tick())
@@ -77,6 +74,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.BackgroundColorMsg:
 		m.isDark = msg.IsDark()
+		if m.debug {
+			cmds = append(cmds, AddLog("debug: isdarkbg %v", m.isDark))
+		}
 	case tea.WindowSizeMsg:
 		var errSize = 1
 		if m.log.err != nil {
@@ -219,9 +219,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return RunCmdModel(m), nil
 			case 's':
 				return m, AddError(fmt.Errorf("sftp: not yet implemented"))
-			case 'v':
-				m.showConfig = !m.showConfig
-				m.setConfig()
+		case 'v':
+			m.showConfig = !m.showConfig
 			default:
 				return m, AddError(fmt.Errorf("that's an interesting key combo! %s", msg))
 			}
