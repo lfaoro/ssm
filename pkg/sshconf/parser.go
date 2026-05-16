@@ -256,3 +256,18 @@ func removeComments(input string) string {
 	}
 	return strings.TrimSpace(input)
 }
+
+var sensitiveKeys = map[string]bool{
+	"identityfile":         true,
+	"certificatefile":      true,
+	"proxycommand":         true,
+	"pkcs11provider":       true,
+	"controlpath":          true,
+	"userknownhostsfile":   true,
+	"revokedhostkeys":      true,
+	"globalknownhostsfile": true,
+}
+
+func isSensitiveKey(k string) bool {
+	return sensitiveKeys[k]
+}

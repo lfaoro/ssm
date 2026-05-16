@@ -12,6 +12,7 @@ import (
 func defaultConfigPath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
+		//nolint:nilerr // fallback to system-wide config when $HOME is unavailable
 		return filepath.Join("/", "etc", "ssh", "ssh_config"), nil
 	}
 	// home config
@@ -37,4 +38,15 @@ func fileExists(path string) bool {
 	}
 	// file exists
 	return true
+}
+
+// RemoveComments strips inline comments from SSH config directives.
+func RemoveComments(input string) string {
+	return removeComments(input)
+}
+
+// IsSensitiveKey reports whether k is a sensitive SSH config key
+// that should be hidden from the config viewport.
+func IsSensitiveKey(k string) bool {
+	return isSensitiveKey(k)
 }

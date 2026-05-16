@@ -301,28 +301,13 @@ func (m *Model) setConfig() {
 	keyStyle := lg.NewStyle().
 		Foreground(lg.Color("#4682b4"))
 	for i, k := range host.Options.Keys() {
-		if isSensitiveKey(k) {
+		if sshconf.IsSensitiveKey(k) {
 			continue
 		}
 		k = keyStyle.Render(k)
 		out += fmt.Sprintf("%s %s\n", k, host.Options.Values()[i])
 	}
 	m.vp.SetContent(out)
-}
-
-var sensitiveKeys = map[string]bool{
-	"identityfile":         true,
-	"certificatefile":      true,
-	"proxycommand":         true,
-	"pkcs11provider":       true,
-	"controlpath":          true,
-	"userknownhostsfile":   true,
-	"revokedhostkeys":      true,
-	"globalknownhostsfile": true,
-}
-
-func isSensitiveKey(k string) bool {
-	return sensitiveKeys[k]
 }
 
 func sanitizeStderr(s string) string {

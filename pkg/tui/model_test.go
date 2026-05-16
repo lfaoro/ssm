@@ -11,6 +11,7 @@ import (
 
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
+	"github.com/lfaoro/ssm/pkg/sshconf"
 )
 
 func updateModel(m *Model, msg tea.Msg) *Model {
@@ -437,8 +438,8 @@ func TestIsSensitiveKey(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.key, func(t *testing.T) {
-			if got := isSensitiveKey(tt.key); got != tt.want {
-				t.Errorf("isSensitiveKey(%q) = %v, want %v", tt.key, got, tt.want)
+			if got := sshconf.IsSensitiveKey(tt.key); got != tt.want {
+				t.Errorf("IsSensitiveKey(%q) = %v, want %v", tt.key, got, tt.want)
 			}
 		})
 	}
