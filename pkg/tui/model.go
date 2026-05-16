@@ -280,12 +280,14 @@ func (m *Model) connect() tea.Cmd {
 
 	cmd.Stderr = &m.errbuf
 	execmd := tea.ExecProcess(cmd, func(err error) tea.Msg {
-		return tea.Batch(
-			AddError(
-				fmt.Errorf("connection closed: %v, err: %v", host.title, err),
-			),
-			AddError(fmt.Errorf("%s", sanitizeStderr(m.errbuf.String()))),
-		)
+		msg := fmt.Sprintf("connection closed: %v", host.title)
+		if err != nil {
+			msg += fmt.Sprintf(", err: %v", err)
+		}
+		if sanitized := sanitizeStderr(m.errbuf.String()); sanitized != "" {
+			msg += "\n" + sanitized
+		}
+		return ErrorMsg{Err: fmt.Errorf("%s", msg)}
 	})
 	return execmd
 }
