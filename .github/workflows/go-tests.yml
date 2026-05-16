@@ -1,0 +1,51 @@
+name: Go Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  NODE_OPTIONS: "--no-deprecation"
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.26", "stable"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+
+      - name: go mod tidy check
+        run: |
+          go mod tidy
+          git diff --exit-code
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test
+        run: go test -race -count=1 -shuffle=on ./...
+
+      - name: govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          go-version-input: ${{ matrix.go }}
+
+      - name: go build
+        run: go build -o /dev/null .
+

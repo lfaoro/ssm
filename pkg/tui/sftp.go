@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/v2/list"
-	tea "github.com/charmbracelet/bubbletea/v2"
-	lg "github.com/charmbracelet/lipgloss/v2"
+	"charm.land/bubbles/v2/list"
+	tea "charm.land/bubbletea/v2"
+	lg "charm.land/lipgloss/v2"
 	"github.com/lfaoro/ssm/pkg/sshconf"
 	"github.com/pkg/sftp"
 )
@@ -294,21 +294,20 @@ func (s *sftpModel) syncPaneSizes(width, height int) {
 	s.remote.list.SetSize(paneWidth, paneHeight)
 }
 
-func (s *sftpModel) View() string {
-	top := lg.NewStyle().
-		Foreground(lg.Color("8")).
-		Render(fmt.Sprintf("sftp  %s  |  tab switch  |  enter open/transfer  |  esc back", s.status))
-
-	localView := s.renderPane(s.local, s.activePane == localPane)
-	remoteView := s.renderPane(s.remote, s.activePane == remotePane)
-	separator := lg.NewStyle().Foreground(lg.Color("8")).Render("│")
-
-	return lg.JoinVertical(
+func (s *sftpModel) View() tea.View {
+	v := lg.JoinVertical(
 		lg.Left,
-		top,
+		lg.NewStyle().
+			Foreground(lg.Color("8")).
+			Render(fmt.Sprintf("sftp  %s  |  tab switch  |  enter open/transfer  |  esc back", s.status)),
 		"",
-		lg.JoinHorizontal(lg.Top, localView, separator, remoteView),
+		lg.JoinHorizontal(lg.Top,
+			s.renderPane(s.local, s.activePane == localPane),
+			lg.NewStyle().Foreground(lg.Color("8")).Render("│"),
+			s.renderPane(s.remote, s.activePane == remotePane),
+		),
 	)
+	return tea.NewView(v)
 }
 
 func (s *sftpModel) renderPane(p filePane, focused bool) string {

@@ -1,5 +1,5 @@
 // Copyright (c) 2025 Leonardo Faoro & authors
-// SPDX-License-Identifier: BSD-3-Clause
+// SPDX-License-Identifier: MIT
 
 // Package tui defines the terminal user interface of this application.
 package tui
@@ -7,20 +7,20 @@ package tui
 import (
 	"bytes"
 	"fmt"
-	"image/color"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/v2/list"
-	"github.com/charmbracelet/bubbles/v2/viewport"
-	tea "github.com/charmbracelet/bubbletea/v2"
-	lg "github.com/charmbracelet/lipgloss/v2"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	lg "charm.land/lipgloss/v2"
 	"github.com/lfaoro/ssm/pkg/sshconf"
 )
 
+// Model is the main Bubbletea application model.
 type Model struct {
 	config     *sshconf.Config
 	showConfig bool
@@ -40,6 +40,7 @@ type Model struct {
 	isDark bool
 }
 
+// NewModel creates a new application Model.
 func NewModel(config *sshconf.Config, debug bool) *Model {
 	m := &Model{}
 	m.debug = debug
@@ -53,25 +54,19 @@ func NewModel(config *sshconf.Config, debug bool) *Model {
 	return m
 }
 
+// Init initialises the model and returns the initial commands.
 func (m *Model) Init() tea.Cmd {
 	cmds := []tea.Cmd{
-		tea.SetWindowTitle("SSM | Secure Shell Manager"),
-		tea.RequestKeyboardEnhancements(),
-		tea.EnterAltScreen,
-		tea.EnableBracketedPaste,
-		tea.EnableReportFocus,
-		tea.SetBackgroundColor(color.Black),
-		// tea.EnableMouseAllMotion,
-		// tea.EnableMouseCellMotion,
-	}
-	if m.debug {
-		cmds = append(cmds, AddLog("debug: isdarkbg %v", m.isDark))
+		tea.RequestCapability("keyboard_enhancements"),
 	}
 	m.li.NewStatusMessage(fmt.Sprintf("[%s]", m.Cmd))
-	cmds = append(cmds, tick())
+	if m.debug {
+		cmds = append(cmds, tick())
+	}
 	return tea.Batch(cmds...)
 }
 
+// Update handles all messages and returns the updated model.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	cmds := []tea.Cmd{}
@@ -79,6 +74,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.BackgroundColorMsg:
 		m.isDark = msg.IsDark()
+		if m.debug {
+			cmds = append(cmds, AddLog("debug: isdarkbg %v", m.isDark))
+		}
 	case tea.WindowSizeMsg:
 		var errSize = 1
 		if m.log.err != nil {
@@ -92,8 +90,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.vp.SetHeight(m.li.Height())
 		m.vp.SetWidth(msg.Width / 2)
 
-		// m.ta.SetWidth(msg.Width)
-		// m.ta.SetHeight(msg.Height / 2)
 		if m.log.err != nil {
 			cmds = append(cmds, tea.RequestWindowSize)
 		}
@@ -103,17 +99,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case AppMsg:
 		return m, AddError(fmt.Errorf("%s", msg.Text))
 	case LivenessCheckMsg:
-		// TODO: not implemented
-		return m, AddLog("liveness check")
-		for _, h := range m.config.Hosts {
-			host, _ := h.Options.Get("hostname")
-			// resolve host
-			// ping server
-			_ = host
-			h.Options.Add("alive", "yes")
-		}
-		m.li = listFrom(m.config, m.theme)
-		return m, nil
+		return m, AddLog("liveness check: not yet implemented")
 	case ExitOnConnMsg:
 		m.ExitOnCmd = true
 		return m, AddLog("exit true")
@@ -159,13 +145,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				conncmd,
 				AddError(fmt.Errorf("%s", m.errbuf.String())),
 			)
-		case tea.KeyBackspace:
+		case tea.KeyEsc, tea.KeyBackspace:
 			if m.li.FilteringEnabled() {
 				m.li.ResetFilter()
 				return m, nil
 			}
 		case 'q':
-			if m.li.FilterState() != 1 {
+			if m.li.FilterState() != list.Filtering {
 				return m, tea.Quit
 			}
 		}
@@ -194,25 +180,25 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 'e':
 				confFile := m.config.GetPath()
 				editorPath := os.Getenv("EDITOR")
-				knownEditors := [...]string{
-					editorPath,
-					"vim",
-					"vi",
-					"nano",
-					"ed",
-				}
-				for _, cmd := range knownEditors {
-					path, err := exec.LookPath(cmd)
-					if err != nil {
-						continue
+				if editorPath != "" {
+					if path, err := exec.LookPath(editorPath); err == nil {
+						editorPath = path
+					} else {
+						editorPath = ""
 					}
-					editorPath = path
-					break
 				}
 				if editorPath == "" {
-					return m, AddError(fmt.Errorf("env EDITOR not set, nor any %v found in PATH", knownEditors[1:]))
+					for _, cmd := range []string{"vim", "vi", "nano", "ed"} {
+						if path, err := exec.LookPath(cmd); err == nil {
+							editorPath = path
+							break
+						}
+					}
 				}
-				cmd := exec.Command(editorPath, confFile)
+				if editorPath == "" {
+					return m, AddError(fmt.Errorf("env EDITOR not set, nor any editor found in PATH"))
+				}
+				cmd := exec.Command(editorPath, confFile) //nolint:gosec
 				cmd.Dir = filepath.Dir(confFile)
 				cmd.Stderr = &m.errbuf
 				execCmd := tea.ExecProcess(cmd, func(err error) tea.Msg {
@@ -233,9 +219,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return RunCmdModel(m), nil
 			case 's':
 				return SftpModel(m), nil
-			case 'v':
-				m.showConfig = !m.showConfig
-				m.setConfig()
+		case 'v':
+			m.showConfig = !m.showConfig
 			default:
 				return m, AddError(fmt.Errorf("that's an interesting key combo! %s", msg))
 			}
@@ -281,60 +266,61 @@ func (m *Model) connect() tea.Cmd {
 	}
 
 	var cmd *exec.Cmd
-	cmd = exec.Command(cmdPath, host.title, "-F", m.config.GetPath())
+	cmd = exec.Command(cmdPath, "-F", m.config.GetPath(), "--", host.title) //nolint:gosec
 	if m.Cmd == moshCmd {
-		sshFlag := fmt.Sprintf("--ssh='ssh -F %s'", m.config.GetPath())
-		cmd = exec.Command(
+		cmd = exec.Command( //nolint:gosec
 			cmdPath,
+			"--",
 			host.title,
-			sshFlag,
+			"--ssh=ssh -F "+m.config.GetPath(),
 		)
 	}
-	if host.title == "create free research root server" {
-		host.desc = strings.TrimSpace(host.desc)
-		_cmdPath, err := exec.LookPath("sshpass")
-		if err != nil {
-			_cmdPath, err = exec.LookPath("ssh")
-			if err != nil {
-				return AddError(fmt.Errorf("can't find `%s` cmd in your path: %v", m.Cmd, err))
-			}
-			cmd = exec.Command(_cmdPath, host.title, "-F", m.config.GetPath())
-		} else {
-			cmd = exec.Command(_cmdPath, "-p", "segfault", "ssh", host.desc)
-		}
-	}
+
 	cmd.Stderr = &m.errbuf
 	execmd := tea.ExecProcess(cmd, func(err error) tea.Msg {
-		return tea.Batch(
-			AddError(
-				fmt.Errorf("connection closed: %v, err: %v", host.title, err),
-			),
-			AddError(fmt.Errorf("%s", m.errbuf.String())),
-		)
+		msg := fmt.Sprintf("connection closed: %v", host.title)
+		if err != nil {
+			msg += fmt.Sprintf(", err: %v", err)
+		}
+		if sanitized := sanitizeStderr(m.errbuf.String()); sanitized != "" {
+			msg += "\n" + sanitized
+		}
+		return ErrorMsg{Err: fmt.Errorf("%s", msg)}
 	})
 	return execmd
 }
 
 func (m *Model) setConfig() {
 	i := m.li.GlobalIndex()
-	host := m.config.Hosts[i]
+	hosts := m.config.GetHosts()
+	if i < 0 || i >= len(hosts) {
+		return
+	}
+	host := hosts[i]
 	var out string
 	keyStyle := lg.NewStyle().
 		Foreground(lg.Color("#4682b4"))
 	for i, k := range host.Options.Keys() {
+		if sshconf.IsSensitiveKey(k) {
+			continue
+		}
 		k = keyStyle.Render(k)
 		out += fmt.Sprintf("%s %s\n", k, host.Options.Values()[i])
 	}
 	m.vp.SetContent(out)
 }
 
-func (m *Model) View() string {
+func sanitizeStderr(s string) string {
+	const maxStderrLen = 500
+	if len(s) > maxStderrLen {
+		s = s[:maxStderrLen] + "..."
+	}
+	return strings.TrimSpace(s)
+}
+
+// View renders the application UI.
+func (m *Model) View() tea.View {
 	var out string
-	// style := lg.NewStyle().
-	// 	Margin(1, 0, 0, 1).
-	// 	Render
-	// out += style(m.li.View())
-	// out += style(m.log.View())
 	vertView := lg.JoinVertical(0, m.li.View(), m.log.View())
 	if m.debug {
 		border := lg.NewStyle().Border(lg.RoundedBorder(), true)
@@ -350,7 +336,11 @@ func (m *Model) View() string {
 	} else {
 		out += vertView
 	}
-	return out
+	v := tea.NewView(out)
+	v.AltScreen = true
+	v.WindowTitle = "SSM | Secure Shell Manager"
+	v.ReportFocus = true
+	return v
 }
 
 func tick() tea.Cmd {

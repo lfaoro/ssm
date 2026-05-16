@@ -1,13 +1,17 @@
+// Copyright (c) 2025 Leonardo Faoro & authors
+// SPDX-License-Identifier: MIT
+
 package tui
 
 import (
 	"fmt"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea/v2"
-	"github.com/charmbracelet/lipgloss/v2"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
+// Log implements a Bubbletea component for displaying error and debug messages.
 type Log struct {
 	err          error
 	debugLogs    []string
@@ -19,28 +23,34 @@ type Log struct {
 	DebugStyle lipgloss.Style
 }
 
+// DebugMsg is sent by AddLog to display a debug message.
 type DebugMsg struct {
 	Log string
 }
 
+// ErrorMsg is sent by AddError to display an error message.
 type ErrorMsg struct {
 	Err error
 }
 
+// LogOption configures a Log component.
 type LogOption func(*Log)
 
+// WithDebug enables or disables debug logging.
 func WithDebug(debug bool) LogOption {
 	return func(l *Log) {
 		l.debugActive = debug
 	}
 }
 
+// WithDebugHistory sets the number of debug messages retained.
 func WithDebugHistory(length int) LogOption {
 	return func(l *Log) {
 		l.debugHistory = length
 	}
 }
 
+// NewLog creates a new Log component with the given options.
 func NewLog(opts ...LogOption) Log {
 	l := Log{
 		debugLogs:    make([]string, 0),
@@ -59,6 +69,7 @@ func NewLog(opts ...LogOption) Log {
 	return l
 }
 
+// AddLog sends a DebugMsg to the log component.
 func AddLog(format string, args ...any) tea.Cmd {
 	return func() tea.Msg {
 		return DebugMsg{
@@ -67,23 +78,14 @@ func AddLog(format string, args ...any) tea.Cmd {
 	}
 }
 
+// AddError sends an ErrorMsg to the log component.
 func AddError(err error) tea.Cmd {
 	return func() tea.Msg {
 		return ErrorMsg{Err: err}
 	}
 }
 
-func ClearDebug() tea.Cmd {
-	return tea.Batch(
-		func() tea.Msg {
-			return ErrorMsg{Err: nil}
-		},
-		func() tea.Msg {
-			return DebugMsg{Log: ""}
-		},
-	)
-}
-
+// ClearError sends a message to clear the current error state.
 func ClearError() tea.Cmd {
 	return tea.Batch(
 		func() tea.Msg {
@@ -92,18 +94,24 @@ func ClearError() tea.Cmd {
 	)
 }
 
+// Init initialises the log component.
 func (l Log) Init() tea.Cmd {
-	return AddLog("log: debug activated")
+	if l.debugActive {
+		return AddLog("log: debug activated")
+	}
+	return nil
 }
 
+// Update handles DebugMsg and ErrorMsg for the log component.
 func (l Log) Update(msg tea.Msg) (Log, tea.Cmd) {
 	switch msg := msg.(type) {
 	case DebugMsg:
+		if !l.debugActive {
+			return l, nil
+		}
 		l.debugCount++
 		msgLog := fmt.Sprintf("%d: %s", l.debugCount, msg.Log)
-		if l.debugActive {
-			l.debugLogs = append(l.debugLogs, msgLog)
-		}
+		l.debugLogs = append(l.debugLogs, msgLog)
 		if len(l.debugLogs) > l.debugHistory {
 			l.debugLogs = l.debugLogs[len(l.debugLogs)-l.debugHistory:]
 		}
@@ -113,6 +121,7 @@ func (l Log) Update(msg tea.Msg) (Log, tea.Cmd) {
 	return l, nil
 }
 
+// View renders the log component.
 func (l Log) View() string {
 	errMsg := func() string {
 		if l.err != nil {
@@ -125,20 +134,12 @@ func (l Log) View() string {
 		if !l.debugActive {
 			return ""
 		}
-		out := ""
-		for i, log := range l.debugLogs {
-			if len(l.debugLogs)-1 == i {
-				// if last log, don't add a newline
-				out += log
-			} else {
-				out += fmt.Sprintf("%s\n", log)
-			}
-		}
+		out := strings.Join(l.debugLogs, "\n")
 		out = l.DebugStyle.Render(out)
 		return out
 	}
 	var out string
-	if !l.debugActive {
+	if l.debugActive {
 		out = errMsg() + "\n" + debugMsg()
 	} else {
 		out = errMsg()

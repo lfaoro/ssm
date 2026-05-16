@@ -1,0 +1,47 @@
+name: Install tests (live)
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  NODE_OPTIONS: "--no-deprecation"
+
+jobs:
+  install_on_macos_arm:
+    runs-on: macos-latest
+    steps:
+    - run: brew install lfaoro/tap/ssm
+    - run: ssm --version
+
+  install_on_macos_brew_upgrade:
+    runs-on: macos-latest
+    steps:
+    - run: brew install lfaoro/tap/ssm
+    - run: brew upgrade lfaoro/tap/ssm
+    - run: ssm --version
+
+  install_aur:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+    - run: |
+        pacman -Syu --noconfirm base-devel git sudo
+        useradd -m builder
+        printf 'builder ALL=(ALL) NOPASSWD: ALL\n' >> /etc/sudoers
+        su - builder -c "
+          git clone https://aur.archlinux.org/ssm-bin.git /tmp/ssm-bin
+          cd /tmp/ssm-bin
+          makepkg -si --noconfirm
+          ssm --version
+        "
+
+  install_nix:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: cachix/install-nix-action@v30
+    - run: nix profile install github:lfaoro/tap#ssm
+    - run: ssm --version

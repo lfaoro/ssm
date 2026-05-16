@@ -1,0 +1,30 @@
+{
+  "total": 2416,
+  "platforms": {
+    "linux/x86_64": 685,
+    "linux/arm64": 396,
+    "darwin/all": 351,
+    "linux/amd64": 125,
+    "linux/arm": 114,
+    "linux/386": 110,
+    "freebsd/arm64": 50,
+    "freebsd/x86_64": 50,
+    "solaris/x86_64": 42,
+    "linux/armv6": 40,
+    "netbsd/arm64": 39,
+    "freebsd/armv6": 38,
+    "netbsd/i386": 38,
+    "openbsd/i386": 38,
+    "openbsd/arm64": 37,
+    "netbsd/armv6": 37,
+    "freebsd/i386": 36,
+    "linux/i386": 36,
+    "openbsd/armv6": 36,
+    "openbsd/x86_64": 35,
+    "netbsd/x86_64": 35,
+    "windows/arm64": 13,
+    "windows/x86_64": 13,
+    "darwin/x86_64": 12,
+    "darwin/arm64": 10
+  }
+}

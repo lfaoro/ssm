@@ -1,13 +1,14 @@
+// Copyright (c) 2025 Leonardo Faoro & authors
+// SPDX-License-Identifier: MIT
+
 package tui
 
 import (
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/v2/key"
-	"github.com/charmbracelet/bubbles/v2/list"
-	"github.com/charmbracelet/bubbles/v2/textinput"
-	tea "github.com/charmbracelet/bubbletea/v2"
-	lg "github.com/charmbracelet/lipgloss/v2"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/list"
+	lg "charm.land/lipgloss/v2"
 	"github.com/lfaoro/ssm/pkg/sshconf"
 )
 
@@ -33,13 +34,6 @@ func listFrom(config *sshconf.Config, theme theme) list.Model {
 		Padding(0, 0, 0, 1)
 	d.Styles.SelectedDesc = d.Styles.SelectedTitle.
 		Foreground(lightDark(lg.Color("#F79F3F"), lg.Color(c.selectedDescriptionColor)))
-	// d.Styles.SelectedTitle = lg.NewStyle().
-	// 	Border(lg.NormalBorder(), false, false, false, true).
-	// 	BorderForeground(lightDark(lg.Color("#F79F3F"), lg.Color("#00bfff"))).
-	// 	Foreground(lightDark(lg.Color("#F79F3F"), lg.Color("#00bfff"))).
-	// 	Padding(0, 0, 0, 1)
-	// d.Styles.SelectedDesc = d.Styles.SelectedTitle.
-	// 	Foreground(lightDark(lg.Color("#F79F3F"), lg.Color("#4682b4")))
 
 	li = list.New(
 		[]list.Item{},
@@ -52,12 +46,7 @@ func listFrom(config *sshconf.Config, theme theme) list.Model {
 	}
 	li.FilterInput.Prompt = "Search: "
 	li.FilterInput.CharLimit = 12
-	li.FilterInput.VirtualCursor = true
 	li.FilterInput.Placeholder = "hostName or tagName"
-	li.FilterInput.Styles.Cursor = textinput.CursorStyle{
-		Color: lg.BrightBlue,
-		Shape: tea.CursorBlock,
-	}
 	li.Styles.StatusBar = lg.NewStyle().
 		Foreground(lightDark(lg.Color("#A49FA5"), lg.Color("#777777"))).
 		Padding(0, 0, 1, 2) //nolint:mnd
@@ -68,19 +57,12 @@ func listFrom(config *sshconf.Config, theme theme) list.Model {
 	li.SetStatusBarItemName("host", "hosts")
 	li.Title = fmt.Sprintf("SSH servers (%v)", config.GetPath())
 
-	// add segfault.net (free root server provider)
-	// segfaultHost := sshconf.Host{
-	// 	Name:    "create free research root server",
-	// 	Options: safeorderedmap.New[string](),
-	// }
-	// segfaultHost.Options.Add("hostname", "segfault.net")
-	// segfaultHost.Options.Add("user", "root")
-	// config.Hosts = append(config.Hosts, segfaultHost)
-
-	for _, host := range config.Hosts {
-		newitem := formatHost(host)
-		li.InsertItem(len(config.Hosts), newitem)
+	hosts := config.GetHosts()
+	items := make([]list.Item, 0, len(hosts))
+	for _, host := range hosts {
+		items = append(items, formatHost(host))
 	}
+	li.SetItems(items)
 	return li
 }
 

@@ -1,23 +1,28 @@
+// Copyright (c) 2025 Leonardo Faoro & authors
+// SPDX-License-Identifier: MIT
+
 package tui
 
 import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/v2/key"
-	"github.com/charmbracelet/bubbles/v2/spinner"
-	"github.com/charmbracelet/bubbles/v2/textinput"
-	"github.com/charmbracelet/bubbles/v2/viewport"
-	tea "github.com/charmbracelet/bubbletea/v2"
-	"github.com/charmbracelet/lipgloss/v2"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/spinner"
+	"charm.land/bubbles/v2/textinput"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
+// RunCmdModel wraps the base model in a run-command sub-model.
 func RunCmdModel(base tea.Model) tea.Model {
 	previousModel, ok := base.(*Model)
 	if !ok {
-		panic("failed to cast tea.Model to Model")
+		return base
 	}
 
 	cmdInput := textinput.New()
@@ -27,7 +32,6 @@ func RunCmdModel(base tea.Model) tea.Model {
 	cmdInput.Prompt = "> "
 	cmdInput.CharLimit = 256
 	cmdInput.Focus()
-	cmdInput.VirtualCursor = true
 
 	// using double main model viewport width because it use half of screenwidth
 	cmdInput.SetWidth(previousModel.vp.Width()*2 - 3)
@@ -191,7 +195,7 @@ func (m *cmdModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m *cmdModel) handleWindowSize(msg tea.WindowSizeMsg) {
 	m.input.SetWidth(msg.Width - 3)
 	m.viewport.SetWidth(msg.Width)
-	m.viewport.SetHeight(msg.Height)
+	m.viewport.SetHeight(msg.Height - lipgloss.Height(m.input.View()) - 4)
 }
 
 func (m *cmdModel) handleCommandResult(msg cmdResultMsg) {
@@ -209,7 +213,7 @@ func (m *cmdModel) handleCommandResult(msg cmdResultMsg) {
 	m.input.Focus()
 }
 
-func (m cmdModel) View() string {
+func (m *cmdModel) View() tea.View {
 	var builder strings.Builder
 	builder.WriteString(m.Bar() + "\n\n")
 	if m.running {
@@ -218,10 +222,10 @@ func (m cmdModel) View() string {
 		builder.WriteString(m.input.View() + "\n\n")
 	}
 	builder.WriteString(m.viewport.View())
-	return builder.String()
+	return tea.NewView(builder.String())
 }
 
-func (m cmdModel) Bar() string {
+func (m *cmdModel) Bar() string {
 	pm, ok := m.previousModel.(*Model)
 	if !ok {
 		return "invalid model"
@@ -274,13 +278,12 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 		args := []string{
 			"-T",
 			"-F", prev.config.GetPath(),
-			// "-o", "PreferredAuthentications=publickey",
-			// "-o", "PasswordAuthentication=no",
+			"--",
 			selected.title,
 			command,
 		}
 
-		cmd := exec.Command(prev.Cmd.String(), args...)
+		cmd := exec.Command(prev.Cmd.String(), args...) //nolint:gosec
 
 		m.currentCmd = cmd
 		var out bytes.Buffer
@@ -289,6 +292,12 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 		err := cmd.Run()
 		m.currentCmd = nil
 
-		return cmdResultMsg{output: out.String(), err: err}
+		return cmdResultMsg{output: sanitizeOutput(out.String()), err: err}
 	}
+}
+
+var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]|\x1b\].*?\x07|\x1b[PX^_].*?\x1b\\|\x1b\[\?[0-9;]*[hl]|\r`)
+
+func sanitizeOutput(s string) string {
+	return ansiRegex.ReplaceAllString(s, "")
 }

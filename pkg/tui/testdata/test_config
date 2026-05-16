@@ -1,0 +1,31 @@
+# Test SSH config for TUI tests
+
+Host test-server
+#tag: test
+    User testuser
+    HostName 10.0.0.1
+    Port 2222
+    IdentityFile ~/.ssh/test_key
+
+Host no-tag-host
+    User admin
+    HostName 192.168.1.1
+
+Host sensitive-keys
+#tag: secure
+    User root
+    HostName secure.example.com
+    IdentityFile ~/.ssh/id_rsa
+    ProxyCommand nc %h %p
+    CertificateFile ~/.ssh/cert
+    PKCS11Provider /usr/lib/pkcs11.so
+
+Host default-port
+#tag: web
+    User www
+    HostName web.example.com
+    Port 22
+
+Host no-hostname
+#tag: minimal
+    User deploy

@@ -1,8 +1,10 @@
+// Copyright (c) 2025 Leonardo Faoro & authors
+// SPDX-License-Identifier: MIT
+
 package tui
 
 // theme provides the colors for the properties.
 // you can use ANSI, ANSI256 or Hex colors.
-// https://html-color.code
 type theme struct {
 	mainTitleColor           string
 	selectedBorderColor      string

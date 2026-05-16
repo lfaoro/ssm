@@ -18,14 +18,10 @@ builds:
       - linux
       - darwin
       - freebsd
-      - netbsd
       - openbsd
-      - solaris
     goarch:
       - amd64
-      - "386"
       - arm64
-      - arm
     tags:
       - netgo
       - osusergo
@@ -48,9 +44,7 @@ archives:
       {{- .Version}}_
       {{- .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
-      {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
     # use zip for windows archives
     format_overrides:
       - goos: windows
@@ -77,7 +71,7 @@ nfpms:
     formats:
       - deb
       - rpm
-    license: BSD 3-clause
+    license: MIT
     dependencies:
       - ssh
     suggests:
@@ -111,21 +105,36 @@ nix:
       - ssh
     skip_upload: false
 
-snapcrafts:
-  - description: "SSM | Secure Shell Manager"
-    summary: "SSM | Secure Shell Manager"
-    hooks:
-      install:
-        - network
-    confinement: classic
-    plugs:
-      personal-files:
-        read:
-          - $HOME/.ssh/
+# GPG signing requires GPG_PRIVATE_KEY secret configured in the repo.
+aurs:
+  - name: ssm-bin
+    homepage: "https://github.com/lfaoro/ssm"
+    description: "SSH connection manager with a TUI"
+    maintainers:
+      - "Leonardo Faoro <ssm@leonardofaoro.com>"
+    license: "MIT"
+    provides:
+      - ssm
+    conflicts:
+      - ssm
+    depends:
+      - openssh
+    commit_author:
+      name: bot
+      email: bot@leonardofaoro.com
+    git_ssh_command: 'ssh -o StrictHostKeyChecking=accept-new'
+    skip_upload: false
 
-
-binary_signs:
-  - signature: "${artifact}_sig"  
+signs:
+  - cmd: gpg
+    signature: "${artifact}.asc"
+    output: true
+    artifacts: all
+    args:
+      - --detach-sign
+      - --armor
+      - --batch
+      - "${artifact}"  
 
 release:
   disable: false

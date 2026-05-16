@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Leonardo Faoro & authors
-// SPDX-License-Identifier: BSD-3-Clause
+// SPDX-License-Identifier: MIT
 
+// Package main implements the ssm (Secure Shell Manager) CLI entry point.
 package main
 
 import (
@@ -11,9 +12,10 @@ import (
 	"os/exec"
 	"sync"
 	"syscall"
+	"time"
 
-	tea "github.com/charmbracelet/bubbletea/v2"
-	"github.com/google/go-github/github"
+	tea "charm.land/bubbletea/v2"
+	"github.com/google/go-github/v69/github"
 	"github.com/lfaoro/ssm/pkg/sshconf"
 	"github.com/lfaoro/ssm/pkg/tui"
 	"github.com/urfave/cli/v3"
@@ -56,8 +58,7 @@ func main() {
 			}
 		},
 
-		Before: func(c context.Context, cmd *cli.Command) (context.Context, error) {
-			_ = cmd
+		Before: func(c context.Context, _ *cli.Command) (context.Context, error) {
 			return c, nil
 		},
 
@@ -193,7 +194,7 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 				fmt.Printf("can't find `%s` cmd in your path: %v\n", m.Cmd, err)
 				os.Exit(1)
 			}
-			err = syscall.Exec(sshPath, []string{"ssh", "-F", config.GetPath(), m.ExitHost}, os.Environ())
+			err = syscall.Exec(sshPath, []string{"ssh", "-F", config.GetPath(), "--", m.ExitHost}, os.Environ()) //nolint:gosec
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -223,7 +224,9 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 	}
 
 	// inform user when new version is available
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		tag, err := latestTag()
 		if err != nil {
 			if cmd.Bool("debug") {
@@ -246,7 +249,7 @@ var testCmd = &cli.Command{
 	Action: testAction,
 	Hidden: true,
 }
-var testAction = func(_ context.Context, cmd *cli.Command) error {
+var testAction = func(_ context.Context, _ *cli.Command) error {
 	return nil
 }
 
@@ -256,7 +259,7 @@ var generateCmd = &cli.Command{
 	Action:  generateAction,
 	Hidden:  true,
 }
-var generateAction = func(_ context.Context, cmd *cli.Command) error {
+var generateAction = func(_ context.Context, _ *cli.Command) error {
 	return nil
 }
 
@@ -265,7 +268,10 @@ func latestTag() (string, error) {
 	owner := "lfaoro"
 	repo := "ssm"
 
-	tags, _, err := client.Repositories.ListTags(context.Background(), owner, repo, &github.ListOptions{PerPage: 1})
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	tags, _, err := client.Repositories.ListTags(ctx, owner, repo, &github.ListOptions{PerPage: 1})
 	if err != nil {
 		return "", fmt.Errorf("failed to list tags: %v", err)
 	}

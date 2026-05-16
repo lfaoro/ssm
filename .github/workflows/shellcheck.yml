@@ -1,11 +1,17 @@
 name: ShellCheck
 on: [push, pull_request]
 
+permissions: read-all
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  NODE_OPTIONS: "--no-deprecation"
+
 jobs:
   shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
     - name: Run ShellCheck
       run: shellcheck scripts/*.sh
