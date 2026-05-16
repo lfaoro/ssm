@@ -96,7 +96,10 @@ func ClearError() tea.Cmd {
 
 // Init initialises the log component.
 func (l Log) Init() tea.Cmd {
-	return AddLog("log: debug activated")
+	if l.debugActive {
+		return AddLog("log: debug activated")
+	}
+	return nil
 }
 
 // Update handles DebugMsg and ErrorMsg for the log component.
