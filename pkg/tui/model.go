@@ -268,14 +268,13 @@ func (m *Model) connect() tea.Cmd {
 	}
 
 	var cmd *exec.Cmd
-	cmd = exec.Command(cmdPath, host.title, "-F", m.config.GetPath()) //nolint:gosec
+	cmd = exec.Command(cmdPath, "-F", m.config.GetPath(), "--", host.title) //nolint:gosec
 	if m.Cmd == moshCmd {
-		sshFlag := fmt.Sprintf("--ssh='ssh -F %s'", m.config.GetPath())
 		cmd = exec.Command( //nolint:gosec
 			cmdPath,
 			"--",
 			host.title,
-			sshFlag,
+			"--ssh=ssh -F "+m.config.GetPath(),
 		)
 	}
 
