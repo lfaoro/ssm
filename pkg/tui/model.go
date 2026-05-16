@@ -7,7 +7,6 @@ package tui
 import (
 	"bytes"
 	"fmt"
-	"image/color"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -357,7 +356,6 @@ func (m *Model) View() tea.View {
 	v.AltScreen = true
 	v.WindowTitle = "SSM | Secure Shell Manager"
 	v.ReportFocus = true
-	v.BackgroundColor = color.Black
 	return v
 }
 
