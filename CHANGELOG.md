@@ -12,11 +12,16 @@
 - Fix tag order test threshold (8 tagged hosts)
 
 ## Refactor
+- Move `sensitiveKeys` map and `isSensitiveKey` from `pkg/tui/model.go` to `pkg/sshconf/parser.go`
+- Add exported `sshconf.RemoveComments()` and `sshconf.IsSensitiveKey()` wrappers for benchmarking
 - Simplify debug log joining with `strings.Join` instead of manual loop
 - Replace custom `contains`/`searchSubstring` with `strings.Contains` in tests
 
 ## Add
 - `make lint` target (golangci-lint if available, fallback to go fmt + go vet)
+- `make bench`, `make bench-cpu`, `make bench-mem`, `make bench-compare` targets
+- Benchmark suite for `sshconf` (ParsePath, GetHost, GetHosts, GetParamFor, RemoveComments, IsSensitiveKey)
+- Benchmark suite for `tui` (setConfig, formatHost, sanitizeOutput, sanitizeStderr)
 
 ## Test
 - Add comprehensive TUI test suite (92 tests, 85% coverage)
