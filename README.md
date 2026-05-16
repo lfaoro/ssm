@@ -6,7 +6,7 @@ Pain-Point: tired of digging through `~/.ssh/config` and typing hostnames & acro
 
 `ssm` is a tiny terminal UI that sits on top of your existing SSH config. No changes needed on your servers. Just better everything.
 
-[Watch 30-second demo](#demo) • [Install](#install)
+[Watch 30-second demo](#demo) • [Install](#install-30-seconds)
 
 Built in Go + Bubble Tea. Feels native.
 
@@ -19,8 +19,8 @@ Built in Go + Bubble Tea. Feels native.
 | `ctrl+r`  | Run command on host              |
 | `ctrl+v`  | Toggle config inspector          |
 | `tab`     | Switch SSH ↔ MOSH                |
-| `/`       | Filter                           |
-| `q` / `esc` | Quit                           |
+| `/`       | Fuzzy search                     |
+| `q`       | Quit                             |
 
 Full list in the app with `?`
 
@@ -28,10 +28,13 @@ Full list in the app with `?`
 
 ```bash
 # macOS / Linux
-curl -sSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
-
+curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
+# macOS quarantine workaround (I don't pay for a signing key)
+xattr -d com.apple.quarantine /path/to/ssm
 # or
 brew install lfaoro/tap/ssm
+# Arch
+yay -S ssm-bin
 ```
 
 Other options: [Releases](https://github.com/lfaoro/ssm/releases) • Arch (AUR) • Build from source
