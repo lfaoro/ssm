@@ -326,7 +326,7 @@ func TestRunCmdModel_PanicsOnInvalidModel(t *testing.T) {
 type invalidModel struct{}
 
 func (m *invalidModel) Init() tea.Cmd                              { return nil }
-func (m *invalidModel) Update(msg tea.Msg) (tea.Model, tea.Cmd)    { return m, nil }
+func (m *invalidModel) Update(_ tea.Msg) (tea.Model, tea.Cmd)    { return m, nil }
 func (m *invalidModel) View() tea.View                             { return tea.NewView("") }
 
 func TestCmdModel_Update_EnterWithCommand(t *testing.T) {

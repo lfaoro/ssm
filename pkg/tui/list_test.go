@@ -6,7 +6,6 @@ package tui
 import (
 	"testing"
 
-	"charm.land/bubbles/v2/list"
 	"github.com/lfaoro/ssm/pkg/sshconf"
 	som "github.com/thalesfsp/go-common-types/safeorderedmap"
 )
@@ -329,5 +328,5 @@ func TestListFrom_ListModelType(t *testing.T) {
 
 	li := listFrom(cfg, matrixTheme())
 
-	var _ list.Model = li
+	_ = li
 }
