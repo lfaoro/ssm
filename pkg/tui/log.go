@@ -143,15 +143,7 @@ func (l Log) View() string {
 		if !l.debugActive {
 			return ""
 		}
-		out := ""
-		for i, log := range l.debugLogs {
-			if len(l.debugLogs)-1 == i {
-				// if last log, don't add a newline
-				out += log
-			} else {
-				out += fmt.Sprintf("%s\n", log)
-			}
-		}
+		out := strings.Join(l.debugLogs, "\n")
 		out = l.DebugStyle.Render(out)
 		return out
 	}
