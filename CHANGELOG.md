@@ -1,3 +1,24 @@
+# [Unreleased]
+
+## Security
+- Add `--` delimiter before hostname in SSH command to prevent flag injection
+- Fix mosh `--ssh` flag quoting (remove single quotes that broke parsing)
+
+## Fix
+- Fix `tea.Batch` type mismatch in `ExecProcess` callback (returned `tea.Cmd` instead of `tea.Msg`)
+- Replace magic number `1` with `list.Filtering` constant for filter state comparison
+- Fix editor lookup to respect `EDITOR` env var (was overwritten by first editor found in PATH)
+- Remove hardcoded black background color (broke light terminal themes)
+- Fix tag order test threshold (8 tagged hosts)
+
+## Refactor
+- Simplify debug log joining with `strings.Join` instead of manual loop
+- Replace custom `contains`/`searchSubstring` with `strings.Contains` in tests
+
+## Test
+- Add comprehensive TUI test suite (92 tests, 85% coverage)
+- Add `testdata/test_config` fixture and shared test helpers
+
 # [1.0.2] May 15, 2026
 
 ## Fix
@@ -156,3 +177,4 @@
 [1.0.0]: https://github.com/lfaoro/ssm/compare/0.4.2...1.0.0
 [1.0.1]: https://github.com/lfaoro/ssm/compare/1.0.0...1.0.1
 [1.0.2]: https://github.com/lfaoro/ssm/compare/1.0.1...1.0.2
+[Unreleased]: https://github.com/lfaoro/ssm/compare/1.0.2...HEAD
