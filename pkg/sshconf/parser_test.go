@@ -198,3 +198,58 @@ func TestGetParamFor(t *testing.T) {
 		}
 	})
 }
+
+func TestGetHost(t *testing.T) {
+	cfg := sshconf.New()
+	err := cfg.ParsePath("../../data/config_example")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	t.Run("returns matching host", func(t *testing.T) {
+		host := cfg.GetHost("prod-api")
+		if host.Name != "prod-api" {
+			t.Errorf("host.Name = %q, want %q", host.Name, "prod-api")
+		}
+	})
+
+	t.Run("returns empty host for unknown name", func(t *testing.T) {
+		host := cfg.GetHost("nonexistent")
+		if host.Name != "" {
+			t.Errorf("expected empty host, got %q", host.Name)
+		}
+	})
+}
+
+func TestGetHosts(t *testing.T) {
+	cfg := sshconf.New()
+	err := cfg.ParsePath("../../data/config_example")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	hosts := cfg.GetHosts()
+	if len(hosts) != 11 {
+		t.Fatalf("expected 11 hosts, got %d", len(hosts))
+	}
+
+	// verify it's a copy, not the same slice
+	hosts[0].Name = "modified"
+	original := cfg.GetHost("prod-api")
+	if original.Name == "modified" {
+		t.Error("GetHosts should return a copy, mutations should not affect original")
+	}
+}
+
+func TestGetPath(t *testing.T) {
+	cfg := sshconf.New()
+	err := cfg.ParsePath("../../data/config_example")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	path := cfg.GetPath()
+	if path == "" {
+		t.Error("expected non-empty path after ParsePath")
+	}
+}

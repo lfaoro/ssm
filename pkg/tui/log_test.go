@@ -180,3 +180,29 @@ func TestClearError(t *testing.T) {
 		}
 	})
 }
+
+func TestLog_Init(t *testing.T) {
+	t.Run("returns nil when debug inactive", func(t *testing.T) {
+		l := NewLog()
+		cmd := l.Init()
+		if cmd != nil {
+			t.Error("expected nil cmd when debug is inactive")
+		}
+	})
+
+	t.Run("returns AddLog when debug active", func(t *testing.T) {
+		l := NewLog(WithDebug(true))
+		cmd := l.Init()
+		if cmd == nil {
+			t.Fatal("expected non-nil cmd when debug is active")
+		}
+		msg := cmd()
+		debugMsg, ok := msg.(DebugMsg)
+		if !ok {
+			t.Fatalf("expected DebugMsg, got %T", msg)
+		}
+		if debugMsg.Log != "log: debug activated" {
+			t.Errorf("log = %q, want %q", debugMsg.Log, "log: debug activated")
+		}
+	})
+}
