@@ -85,18 +85,6 @@ func AddError(err error) tea.Cmd {
 	}
 }
 
-// ClearDebug sends messages to clear both debug and error state.
-func ClearDebug() tea.Cmd {
-	return tea.Batch(
-		func() tea.Msg {
-			return ErrorMsg{Err: nil}
-		},
-		func() tea.Msg {
-			return DebugMsg{Log: ""}
-		},
-	)
-}
-
 // ClearError sends a message to clear the current error state.
 func ClearError() tea.Cmd {
 	return tea.Batch(
