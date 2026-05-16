@@ -78,7 +78,7 @@ If you live in the terminal and manage more than a couple servers, this thing ju
 
 Star it if it helps → https://github.com/lfaoro/ssm
 
-Made with ❤️and too much SSH pain.
+Made with ❤️ and too much SSH pain.
 
 If `ssm` actually made your life better:
 
@@ -87,4 +87,4 @@ If `ssm` actually made your life better:
 - XMR: `89XCyahmZiQgcVwjrSZTcJepPqCxZgMqwbABvzPKVpzC7gi8URDme8H6UThpCqX69y5i1aA81AKq57Wynjovy7g4K9MeY5c`
 - FIAT: [Revolut](https://revolut.me/matrix)
 
-or just ⭐the repo. Appreciate it either way.
+or just ⭐ the repo. Appreciate it either way.
