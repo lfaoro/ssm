@@ -10,6 +10,17 @@ Pain-Point: tired of digging through `~/.ssh/config` and typing hostnames & acro
 
 Built in Go + Bubble Tea. Feels native.
 
+[![version][version-badge]](changelog.md)
+[![license][license-badge]](license)
+[![go report card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
+
+[version-badge]: https://img.shields.io/badge/version-0.4.1-blue.svg
+[license-badge]: https://img.shields.io/badge/license-MIT-lue
+
+## Demo
+
+![demo](data/demo.png)
+
 ## Keys you'll actually use
 
 | Key       | What it does                     |
@@ -66,11 +77,16 @@ The more tags you use, the better it gets.
 
 ## Build / Contribute
 
+Requires [Go](https://go.dev/doc/install).
+
 ```bash
-go install github.com/lfaoro/ssm@latest
+git clone https://github.com/lfaoro/ssm.git \
+  && cd ssm \
+  && make build \
+  && bin/ssm
 ```
 
-or clone and `make`. PRs welcome.
+or `go install github.com/lfaoro/ssm@latest`. PRs welcome.
 
 **That's it.**
 
@@ -86,5 +102,6 @@ If `ssm` actually made your life better:
 - BTC: `bc1qzaqeqwklaq86uz8h2lww87qwfpnyh9fveyh3hs`
 - XMR: `89XCyahmZiQgcVwjrSZTcJepPqCxZgMqwbABvzPKVpzC7gi8URDme8H6UThpCqX69y5i1aA81AKq57Wynjovy7g4K9MeY5c`
 - FIAT: [Revolut](https://revolut.me/matrix)
+- [message me on Telegram](https://t.me/leonarth)
 
 or just ⭐ the repo. Appreciate it either way.
