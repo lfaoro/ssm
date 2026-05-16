@@ -15,6 +15,9 @@
 - Simplify debug log joining with `strings.Join` instead of manual loop
 - Replace custom `contains`/`searchSubstring` with `strings.Contains` in tests
 
+## Add
+- `make lint` target (golangci-lint if available, fallback to go fmt + go vet)
+
 ## Test
 - Add comprehensive TUI test suite (92 tests, 85% coverage)
 - Add `testdata/test_config` fixture and shared test helpers
