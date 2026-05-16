@@ -222,7 +222,9 @@ func (m *cmdModel) View() tea.View {
 		builder.WriteString(m.input.View() + "\n\n")
 	}
 	builder.WriteString(m.viewport.View())
-	return tea.NewView(builder.String())
+	v := tea.NewView(builder.String())
+	v.AltScreen = true
+	return v
 }
 
 func (m *cmdModel) Bar() string {

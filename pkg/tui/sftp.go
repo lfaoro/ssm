@@ -102,6 +102,7 @@ type sftpModel struct {
 	status     string
 }
 
+// SftpModel wraps the base model in an SFTP browser sub-model.
 func SftpModel(base tea.Model) tea.Model {
 	previous, ok := base.(*Model)
 	if !ok {
@@ -307,7 +308,9 @@ func (s *sftpModel) View() tea.View {
 			s.renderPane(s.remote, s.activePane == remotePane),
 		),
 	)
-	return tea.NewView(v)
+	view := tea.NewView(v)
+	view.AltScreen = true
+	return view
 }
 
 func (s *sftpModel) renderPane(p filePane, focused bool) string {
@@ -377,17 +380,17 @@ func connectRemoteCmd(host sshconf.Host, configPath string) tea.Cmd {
 
 func uploadFileCmd(client *sftp.Client, localPath, remotePath string) tea.Cmd {
 	return func() tea.Msg {
-		src, err := os.Open(localPath)
+		src, err := os.Open(localPath) //nolint:gosec
 		if err != nil {
 			return sftpTransferMsg{err: err}
 		}
-		defer src.Close()
+		defer func() { _ = src.Close() }()
 
 		dst, err := client.Create(remotePath)
 		if err != nil {
 			return sftpTransferMsg{err: err}
 		}
-		defer dst.Close()
+		defer func() { _ = dst.Close() }()
 
 		if _, err := io.Copy(dst, src); err != nil {
 			return sftpTransferMsg{err: err}
@@ -406,13 +409,13 @@ func downloadFileCmd(client *sftp.Client, remotePath, localPath string) tea.Cmd 
 		if err != nil {
 			return sftpTransferMsg{err: err}
 		}
-		defer src.Close()
+		defer func() { _ = src.Close() }()
 
-		dst, err := os.Create(localPath)
+		dst, err := os.Create(localPath) //nolint:gosec
 		if err != nil {
 			return sftpTransferMsg{err: err}
 		}
-		defer dst.Close()
+		defer func() { _ = dst.Close() }()
 
 		if _, err := io.Copy(dst, src); err != nil {
 			return sftpTransferMsg{err: err}
@@ -506,7 +509,7 @@ func connectSFTP(host sshconf.Host, configPath string) (*exec.Cmd, *bytes.Buffer
 		return nil, nil, nil, "", fmt.Errorf("ssh not found in PATH: %w", err)
 	}
 
-	cmd := exec.Command(sshPath, "-F", configPath, host.Name, "-s", "sftp")
+	cmd := exec.Command(sshPath, "-F", configPath, host.Name, "-s", "sftp") //nolint:gosec
 	stderr := &bytes.Buffer{}
 	cmd.Stderr = stderr
 
@@ -565,11 +568,4 @@ func humanSize(size int64) string {
 	}
 	value := float64(size) / float64(div)
 	return strconv.FormatFloat(value, 'f', 1, 64) + string("KMGTPE"[exp]) + "B"
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
