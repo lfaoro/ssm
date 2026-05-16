@@ -22,7 +22,7 @@ import (
 func RunCmdModel(base tea.Model) tea.Model {
 	previousModel, ok := base.(*Model)
 	if !ok {
-		panic("failed to cast tea.Model to Model")
+		return base
 	}
 
 	cmdInput := textinput.New()

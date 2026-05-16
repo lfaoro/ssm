@@ -313,14 +313,13 @@ func TestCmdModel_Bar_WithTheme(t *testing.T) {
 	}
 }
 
-func TestRunCmdModel_PanicsOnInvalidModel(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("expected panic for invalid model type")
-		}
-	}()
+func TestRunCmdModel_ReturnsBaseOnInvalidModel(t *testing.T) {
+	invalid := &invalidModel{}
+	result := RunCmdModel(invalid)
 
-	RunCmdModel(&invalidModel{})
+	if result != invalid {
+		t.Error("expected base model to be returned for invalid model type")
+	}
 }
 
 type invalidModel struct{}
