@@ -181,23 +181,23 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 'e':
 				confFile := m.config.GetPath()
 				editorPath := os.Getenv("EDITOR")
-				knownEditors := [...]string{
-					editorPath,
-					"vim",
-					"vi",
-					"nano",
-					"ed",
-				}
-				for _, cmd := range knownEditors {
-					path, err := exec.LookPath(cmd)
-					if err != nil {
-						continue
+				if editorPath != "" {
+					if path, err := exec.LookPath(editorPath); err == nil {
+						editorPath = path
+					} else {
+						editorPath = ""
 					}
-					editorPath = path
-					break
 				}
 				if editorPath == "" {
-					return m, AddError(fmt.Errorf("env EDITOR not set, nor any %v found in PATH", knownEditors[1:]))
+					for _, cmd := range []string{"vim", "vi", "nano", "ed"} {
+						if path, err := exec.LookPath(cmd); err == nil {
+							editorPath = path
+							break
+						}
+					}
+				}
+				if editorPath == "" {
+					return m, AddError(fmt.Errorf("env EDITOR not set, nor any editor found in PATH"))
 				}
 				cmd := exec.Command(editorPath, confFile) //nolint:gosec
 				cmd.Dir = filepath.Dir(confFile)
