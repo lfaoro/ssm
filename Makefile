@@ -40,6 +40,22 @@ stats:
 test:
 	go test -race -count=1 ./...
 
+bench:
+	go test -bench=. -benchmem -count=10 ./pkg/...
+
+bench-cpu:
+	go test -bench=. -benchmem -count=10 -cpuprofile=cpu.prof ./pkg/...
+
+bench-mem:
+	go test -bench=. -benchmem -count=10 -memprofile=mem.prof ./pkg/...
+
+bench-compare:
+	@if [ ! -f bench-old.txt ] || [ ! -f bench-new.txt ]; then \
+		echo "usage: run benchmarks, save as bench-old.txt and bench-new.txt"; \
+		exit 1; \
+	fi
+	benchstat bench-old.txt bench-new.txt
+
 vet:
 	go vet ./...
 
@@ -61,7 +77,7 @@ stop:
 	@pkill -9 inotify ||:
 	@pkill -9 ssm ||:
 
-.PHONY: help
+.PHONY: help test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked update stop clean distclean release release-check release-prod release-dev pre stats backup
 help:
 	build/ssm_linux_amd64_v1/ssm --help >data/help
 
