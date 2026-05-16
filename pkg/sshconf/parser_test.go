@@ -145,10 +145,10 @@ func TestTagOrder(t *testing.T) {
 
 		for i, h := range cfg.Hosts {
 			_, hasTag := h.Options.Get("#tag:")
-			if i < 8 && !hasTag {
+			if i < 9 && !hasTag {
 				t.Errorf("expected host %q to have tags (tagged hosts first)", h.Name)
 			}
-			if i >= 8 && hasTag {
+			if i >= 9 && hasTag {
 				t.Errorf("expected host %q to be untagged (untagged hosts last)", h.Name)
 			}
 		}
