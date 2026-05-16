@@ -33,11 +33,11 @@ curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
 xattr -d com.apple.quarantine /path/to/ssm
 # or
 brew install lfaoro/tap/ssm
-# Arch
+# Arch (AUR)
 yay -S ssm-bin
 ```
 
-Other options: [Releases](https://github.com/lfaoro/ssm/releases) • Arch (AUR) • Build from source
+Other options: [Releases](https://github.com/lfaoro/ssm/releases) • Build from source
 
 ## Quick start
 
