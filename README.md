@@ -6,15 +6,15 @@ Pain-Point: tired of digging through `~/.ssh/config` and typing hostnames & acro
 
 `ssm` is a tiny terminal UI that sits on top of your existing SSH config. No changes needed on your servers. Just better everything.
 
-[Watch 30-second demo](#demo) • [Install](#install-30-seconds)
+[Install](#install-30-seconds)
 
-Built in Go + Bubble Tea. Feels native.
+Built in Go + Bubble Tea.
 
-[![version][version-badge]](changelog.md)
-[![license][license-badge]](license)
+[![version][version-badge]](CHANGELOG.md)
+[![license][license-badge]](LICENSE)
 [![go report card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
 
-[version-badge]: https://img.shields.io/badge/version-0.4.1-blue.svg
+[version-badge]: https://img.shields.io/badge/version-1.0.2-blue.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-lue
 
 ## Demo
