@@ -43,6 +43,13 @@ test:
 vet:
 	go vet ./...
 
+lint:
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		golangci-lint run ./...; \
+	else \
+		go fmt ./... && go vet ./...; \
+	fi
+
 build:
 	go build ./...
 
