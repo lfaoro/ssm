@@ -575,24 +575,14 @@ func TestModel_Update_CtrlB_CtrlF(t *testing.T) {
 	}
 }
 
-func TestModel_Update_CtrlS_NotImplemented(t *testing.T) {
+func TestModel_Update_CtrlS_SftpModel(t *testing.T) {
 	m := newTestModel(t, false)
-	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 's', Mod: tea.ModCtrl})
+	result, _ := m.Update(tea.KeyPressMsg{Code: 's', Mod: tea.ModCtrl})
 
-	if cmd == nil {
-		t.Error("expected command for sftp error")
-	}
-
-	msg := cmd()
-	errMsg, ok := msg.(ErrorMsg)
+	_, ok := result.(*sftpModel)
 	if !ok {
-		t.Fatalf("expected ErrorMsg, got %T", msg)
+		t.Fatalf("expected *sftpModel, got %T", result)
 	}
-	if errMsg.Err == nil {
-		t.Error("expected error for sftp not implemented")
-	}
-
-	_ = m2
 }
 
 func TestModel_Update_UnknownCtrlKey(t *testing.T) {

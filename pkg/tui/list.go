@@ -124,9 +124,19 @@ func initKeys() []key.Binding {
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "connect"),
 	)
+	sftpKey := key.NewBinding(
+		key.WithKeys("ctrl+s"),
+		key.WithHelp("ctrl+s", "sftp"),
+	)
+	runCmdKey := key.NewBinding(
+		key.WithKeys("ctrl+r"),
+		key.WithHelp("ctrl+r", "run command"),
+	)
 	return []key.Binding{
 		connectKey,
 		switchKey,
+		sftpKey,
+		runCmdKey,
 		editKey,
 		showKey,
 	}
