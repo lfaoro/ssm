@@ -1,62 +1,109 @@
-# Secure Shell Manager 🐚
+# SSM 🐚
 
-**Your SSH config on TUI-roids**
+[![Go](https://img.shields.io/github/go-mod/go-version/lfaoro/ssm?logo=go)](https://github.com/lfaoro/ssm)
+[![Release](https://img.shields.io/github/v/release/lfaoro/ssm?logo=github)](https://github.com/lfaoro/ssm/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/lfaoro/ssm/go-tests.yml?branch=main&label=CI&logo=github)](https://github.com/lfaoro/ssm/actions)
+[![Downloads](https://img.shields.io/github/downloads/lfaoro/ssm/total?logo=github)](https://github.com/lfaoro/ssm/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
+[![License](https://img.shields.io/github/license/lfaoro/ssm)](LICENSE)
+
+Secure Shell Manager -- **Your SSH config on TUI-roids.**
 
 `ssm` is a tiny terminal UI that sits on top of your existing SSH config. No changes needed on your servers.
-
-[Install](#install-30-seconds)
-
-[![version][version-badge]](CHANGELOG.md)
-[![license][license-badge]](LICENSE)
-[![go report card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
-
-[version-badge]: https://img.shields.io/badge/version-2.0.0-blue.svg
-[license-badge]: https://img.shields.io/badge/license-MIT-lue
 
 ## Demo
 
 ![demo](data/demo.png)
 
-## Keys you'll actually use
-
-| Key       | What it does                     |
-|-----------|----------------------------------|
-| `enter`   | Connect                          |
-| `ctrl+e`  | Edit config live                 |
-| `ctrl+r`  | Run command on host              |
-| `ctrl+s`  | SFTP file browser                |
-| `ctrl+v`  | Toggle config inspector          |
-| `tab`     | Switch SSH ↔ MOSH                |
-| `/`       | Fuzzy search                     |
-| `q`       | Quit                             |
-
-Full list in the app with `?`
-
-## Install (30 seconds)
+## Quick Start
 
 ```bash
-# macOS / Linux
-curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
-# macOS quarantine workaround (I don't pay for a signing key)
-xattr -d com.apple.quarantine /path/to/ssm
-# or
-brew install lfaoro/tap/ssm
-# Arch (AUR)
-yay -S ssm-bin
-```
-
-Other options: [Releases](https://github.com/lfaoro/ssm/releases) • Build from source
-
-## Quick start
-
-```bash
-ssm                    # launch
+ssm                    # launch TUI
 ssm production         # filter by tag
 ssm -se vpn            # show config + exit after connect
 ssm --theme matrix     # green hacker vibes
 ssm --theme sky        # soft blue vibes
-# CTA: please add more themes
 ```
+
+## Install
+
+### One-liner
+
+```bash
+curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
+# macOS quarantine workaround
+xattr -d com.apple.quarantine /path/to/ssm
+```
+
+### Package Managers
+
+| Platform | Command |
+|---|---|
+| macOS / Linux | `brew install lfaoro/tap/ssm` |
+| Arch Linux | `yay -S ssm-bin` (AUR) |
+| Nix | `nix profile install github:lfaoro/tap#ssm` |
+| Go | `go install github.com/lfaoro/ssm@latest` |
+| deb / rpm | Download from [Releases](https://github.com/lfaoro/ssm/releases) |
+
+### Pre-built Binaries
+
+Download the latest archive for your platform from the [releases page](https://github.com/lfaoro/ssm/releases), then:
+
+```bash
+tar xzf ssm_*.tar.gz
+sudo mv ssm /usr/local/bin/
+```
+
+## Keys You'll Actually Use
+
+| Key | What it does |
+|---|---|
+| `enter` | Connect |
+| `ctrl+e` | Edit config live |
+| `ctrl+r` | Run command on host |
+| `ctrl+s` | SFTP file browser |
+| `ctrl+v` | Toggle config inspector |
+| `tab` | Switch SSH ↔ MOSH |
+| `/` | Fuzzy search |
+| `q` | Quit |
+
+Full list in the app with `?`
+
+## Usage
+
+```
+ssm [command] [flags]
+
+Commands:
+  (none — ssm launches directly into the TUI)
+
+Flags:
+  -s, --show          Show config viewport on launch
+  -e, --exit          Exit after connecting (uses syscall.Exec)
+  --theme <name>      Color theme: sky (default), matrix
+  --config <path>     Custom SSH config path
+  --debug             Enable debug logging
+  -v, --version       Show version
+  -h, --help          Show help
+```
+
+### Tag Filtering
+
+Pass a positional argument to filter hosts by tag on launch:
+
+```bash
+ssm production    # show only hosts tagged "production"
+ssm web           # show only hosts tagged "web"
+```
+
+### Themes
+
+```bash
+ssm --theme matrix    # green on black
+ssm --theme sky       # soft blue
+```
+
+Want more themes? PRs welcome.
 
 ## SSH Config Tips
 
@@ -71,6 +118,8 @@ Host myserver
 ```
 
 The more tags you use, the better it gets.
+
+`ssm` also respects `Include` directives (recurses up to depth 10 with cycle detection) and `#tagorder` for custom host sorting.
 
 ## Architecture
 
@@ -91,18 +140,27 @@ ssm
         └── themes.go    # Color themes (sky, matrix)
 ```
 
-## Build / Contribute
+## Development
 
-Requires [Go](https://go.dev/doc/install).
+Requires [Go 1.26+](https://go.dev/doc/install).
 
 ```bash
-git clone https://github.com/lfaoro/ssm.git \
-  && cd ssm \
-  && make build \
-  && bin/ssm
+git clone https://github.com/lfaoro/ssm.git && cd ssm
+make build              # compile binary to ./bin/ssm
+make test               # run all tests with race detection
+make lint               # golangci-lint (or go fmt + go vet)
+make bench              # run benchmarks
+make release-dev        # goreleaser snapshot (dry run)
 ```
 
-or `go install github.com/lfaoro/ssm@latest`. PRs welcome.
+## Security
+
+- Config file permissions checked (warns if not `0600`)
+- SSH stderr sanitized (truncated to 500 chars)
+- ANSI escape sequences stripped from remote output
+- Sensitive keys (identityfile, proxycommand, etc.) filtered from config viewport
+- SFTP uses `BatchMode=yes` + `RequestTTY=no` to prevent interactive prompts
+- `--` delimiter before hostname in all SSH/mosh/syscall invocations (anti-injection)
 
 **That's it.**
 

@@ -1,5 +1,5 @@
 {
-  "total": 2521,
+  "total": 2527,
   "platforms": {
     "darwin/all": 367,
     "darwin/arm64": 10,
@@ -11,10 +11,10 @@
     "linux/386": 111,
     "linux/amd64": 126,
     "linux/arm": 115,
-    "linux/arm64": 424,
+    "linux/arm64": 426,
     "linux/armv6": 40,
     "linux/i386": 36,
-    "linux/x86_64": 743,
+    "linux/x86_64": 747,
     "netbsd/arm64": 39,
     "netbsd/armv6": 37,
     "netbsd/i386": 38,
