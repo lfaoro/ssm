@@ -36,7 +36,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "stats: %v\n", err)
 		os.Exit(1)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -114,7 +114,7 @@ func main() {
 	}
 	f = append(f, '\n')
 
-	if err := os.WriteFile(outFile, f, 0644); err != nil {
+	if err := os.WriteFile(outFile, f, 0644); err != nil { //nolint:gosec
 		fmt.Fprintf(os.Stderr, "stats: %v\n", err)
 		os.Exit(1)
 	}
