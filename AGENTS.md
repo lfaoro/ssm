@@ -28,7 +28,7 @@ govulncheck ./...       # vulnerability scan
 |---|---|
 | `main.go` | CLI entry, urfave/cli v3 flags, version check goroutine (WaitGroup-tracked, 5s timeout) |
 | `pkg/sshconf/` | Config parsing, thread-safe, `Parse()`/`ParsePath()`, symlink resolution, permission check |
-| `pkg/tui/` | Bubbletea model, host list, run-command sub-model, SFTP file browser sub-model, logging, themes |
+| `pkg/tui/` | Bubbletea model, host list, run-command sub-model, SFTP file browser sub-model, ping, logging, themes |
 
 ## Release
 
@@ -57,7 +57,7 @@ Goreleaser config: `.config/goreleaser.yaml` (v2, 4 OS × 2 arches, deb/rpm/home
 - `pkg/tui/testdata/test_config` — shared test fixture (8 tagged hosts)
 - `pkg/tui/test_helpers.go` — shared test helpers (matrixTheme, newTestConfig, etc.)
 - Target 80%+ coverage; skip tests if external commands missing
-- Current: 132+ tests across 6 files (85%+ coverage)
+- Current: 150+ tests across 8 files (85%+ coverage)
 
 ## Benchmarking
 
@@ -106,3 +106,4 @@ make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
 - SFTP connections use `BatchMode=yes` + `RequestTTY=no` to prevent interactive prompts
 - In-flight SSH process tracked with `sync.Mutex` for safe cancellation on exit
 - Changelog formatted per keepachangelog.com, 1.0.0 semver for hardened v1
+- Ping uses TCP dial to SSH port — no raw sockets, no privileges required, works cross-platform without configuration

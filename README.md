@@ -66,6 +66,8 @@ sudo mv ssm /usr/local/bin/
 | `tab` | Switch SSH ↔ MOSH |
 | `/` | Fuzzy search |
 | `q` | Quit |
+| `p` | Ping selected host |
+| `P` | Ping all hosts |
 
 Full list in the app with `?`
 
@@ -83,6 +85,7 @@ Flags:
   --theme <name>      Color theme: sky (default), matrix
   --config <path>     Custom SSH config path
   --debug             Enable debug logging
+  -p, --ping          Ping all hosts on startup
   -v, --version       Show version
   -h, --help          Show help
 ```

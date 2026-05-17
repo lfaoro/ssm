@@ -1,3 +1,12 @@
+# [2.1.0] May 18, 2026
+
+## Add
+- `p`/`P` key bindings to ping servers via TCP dial to the SSH port
+  - `p` pings the selected host, `P` (Shift+p) pings all hosts in parallel
+  - Shows latency next to each host (e.g. `42ms`, `timeout`, `unreachable`)
+  - No privileges needed — uses `net.Dialer` (same permissions as SSH)
+- `--ping` CLI flag triggers liveness check on all hosts at startup
+
 # [2.0.0] May 17, 2026
 
 ## Security
