@@ -486,10 +486,7 @@ func (s *sftpModel) View() tea.View {
 
 	var footer string
 	if len(s.history) > 0 {
-		show := len(s.history)
-		if show > 3 {
-			show = 3
-		}
+		show := min(len(s.history), 3)
 		recent := s.history[len(s.history)-show:]
 		lines := make([]string, 0, len(recent)+1)
 		lines = append(lines, lg.NewStyle().Foreground(lg.Color(th.mainTitleColor)).Render("─ transfers ─"))

@@ -251,8 +251,8 @@ func newHost(tagOrder bool, currentHost *Host, config *Config) {
 }
 
 func removeComments(input string) string {
-	if index := strings.Index(input, "#"); index != -1 {
-		return strings.TrimSpace(input[:index])
+	if before, _, ok := strings.Cut(input, "#"); ok {
+		return strings.TrimSpace(before)
 	}
 	return strings.TrimSpace(input)
 }

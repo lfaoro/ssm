@@ -771,7 +771,7 @@ func TestSftpModel_history_Limit(t *testing.T) {
 	result, _ := m.Update(tea.KeyPressMsg{Code: 's', Mod: tea.ModCtrl})
 	sftp := result.(*sftpModel)
 
-	for i := 0; i < 60; i++ {
+	for i := range 60 {
 		_, _ = sftp.Update(sftpTransferMsg{
 			text:          fmt.Sprintf("transfer %d", i),
 			refreshRemote: false,

@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -96,8 +96,8 @@ func main() {
 	for k := range platforms {
 		keys = append(keys, k)
 	}
-	sort.Slice(keys, func(i, j int) bool {
-		return platforms[keys[i]] > platforms[keys[j]]
+	slices.SortFunc(keys, func(a, b string) int {
+		return platforms[b] - platforms[a]
 	})
 	for _, k := range keys {
 		sorted[k] = platforms[k]

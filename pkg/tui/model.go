@@ -317,17 +317,19 @@ func (m *Model) setConfig() {
 		return
 	}
 	host := hosts[i]
-	var out string
+	var out strings.Builder
 	keyStyle := lg.NewStyle().
 		Foreground(lg.Color("#4682b4"))
 	for i, k := range host.Options.Keys() {
 		if sshconf.IsSensitiveKey(k) {
 			continue
 		}
-		k = keyStyle.Render(k)
-		out += fmt.Sprintf("%s %s\n", k, host.Options.Values()[i])
+		out.WriteString(keyStyle.Render(k))
+		out.WriteByte(' ')
+		out.WriteString(host.Options.Values()[i])
+		out.WriteByte('\n')
 	}
-	m.vp.SetContent(out)
+	m.vp.SetContent(out.String())
 }
 
 func sanitizeStderr(s string) string {

@@ -172,9 +172,7 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 		m,
 		tea.WithOutput(os.Stderr))
 	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		final, err := p.Run()
 		if err != nil {
 			e := fmt.Errorf("failed to run %v: %w", cmd.Name, err)
@@ -198,7 +196,7 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 				os.Exit(1)
 			}
 		}
-	}()
+	})
 
 	if filterTag != "" {
 		p.Send(tui.FilterTagMsg{
@@ -222,9 +220,7 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 	}
 
 	// inform user when new version is available
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		tag, err := latestTag()
 		if err != nil {
 			if cmd.Bool("debug") {
@@ -236,7 +232,7 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 			msg := fmt.Sprintf("%s: new version %s is available", cmd.Version, tag)
 			p.Send(tui.AppMsg{Text: msg})
 		}
-	}()
+	})
 
 	wg.Wait()
 	return nil

@@ -11,3 +11,8 @@ linters:
     - ineffassign
     - unused
     - gosec
+    - modernize
+    - gocyclo
+  settings:
+    gocyclo:
+      min-complexity: 55
