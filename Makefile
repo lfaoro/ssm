@@ -35,7 +35,7 @@ pre:
 	# @go fmt ./... && go vet ./...
 
 stats:
-	@python3 scripts/stats.py
+	@go run scripts/stats.go
 
 test:
 	go test -race -count=1 ./...

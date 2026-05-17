@@ -48,7 +48,7 @@
 - Reduce release matrix to 4 OSes × 2 arches (drop netbsd, solaris, 386, arm)
 - Add AUR package support
 - Add download stats badge to readme
-- Add `make stats` target and `scripts/stats.py`
+- Add `make stats` target and `scripts/stats.go`
 - Add copyright headers to all `.go` files
 
 # [1.0.0] Apr 29, 2026
