@@ -7,7 +7,7 @@ USAGE:
    example: ssm -se vpn
 
 VERSION:
-   2.1.0
+   2.1.1
 
 DESCRIPTION:
    ssm is a connection manager designed to help organize servers, connect, filter, tag, and much more from a simple terminal interface. It works on top of installed command-line programs and does not require any setup on remote systems.
