@@ -1,3 +1,8 @@
+# [2.1.1] May 18, 2026
+
+## Fix
+- Preserve filter state after ping — `p`/`P` no longer clears filtered host list
+
 # [2.1.0] May 18, 2026
 
 ## Add
