@@ -17,7 +17,7 @@ require (
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
 )
 
 require (

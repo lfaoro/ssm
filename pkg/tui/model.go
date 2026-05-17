@@ -36,6 +36,8 @@ type Model struct {
 	debug bool
 	log   Log
 
+	pingResults map[string]string
+
 	errbuf bytes.Buffer
 	isDark bool
 }
@@ -48,6 +50,7 @@ func NewModel(config *sshconf.Config, debug bool) *Model {
 	m.li = listFrom(m.config, m.theme)
 	m.log = NewLog(WithDebug(debug))
 	m.Cmd = sshCmd // defaults to ssh
+	m.pingResults = make(map[string]string)
 	m.vp = viewport.New()
 	m.vp.SetWidth(40)
 	m.vp.SetHeight(20)
@@ -99,7 +102,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case AppMsg:
 		return m, AddError(fmt.Errorf("%s", msg.Text))
 	case LivenessCheckMsg:
-		return m, AddLog("liveness check: not yet implemented")
+		return m, pingAllCmd(m)
 	case ExitOnConnMsg:
 		m.ExitOnCmd = true
 		return m, AddLog("exit true")
@@ -121,6 +124,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case SetThemeMsg:
 		m.theme = themes[msg.Theme]
 		m.li = listFrom(m.config, m.theme)
+		return m, nil
+	case PingResultMsg:
+		m.pingResults[msg.Host] = msg.Latency
+		refreshList(m)
 		return m, nil
 
 	case tea.KeyPressMsg:
@@ -153,6 +160,19 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case 'q':
 			if m.li.FilterState() != list.Filtering {
 				return m, tea.Quit
+			}
+		case 'p':
+			if m.li.FilterState() != list.Filtering {
+				if msg.Mod == tea.ModShift {
+					return m, pingAllCmd(m)
+				}
+				if msg.Mod == 0 {
+					return m, pingSelectedCmd(m)
+				}
+			}
+		case 'P':
+			if m.li.FilterState() != list.Filtering {
+				return m, pingAllCmd(m)
 			}
 		}
 		switch msg.Mod {
