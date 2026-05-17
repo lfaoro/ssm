@@ -7,7 +7,7 @@ USAGE:
    example: ssm -se vpn
 
 VERSION:
-   2.0.0
+   2.1.0
 
 DESCRIPTION:
    ssm is a connection manager designed to help organize servers, connect, filter, tag, and much more from a simple terminal interface. It works on top of installed command-line programs and does not require any setup on remote systems.
@@ -21,6 +21,7 @@ GLOBAL OPTIONS:
    --order, -o                 show hosts with a tag first [$SSM_ORDER]
    --config string, -c string  custom ssh config file path [$SSM_SSH_CONFIG_PATH]
    --theme string, -t string   define a color theme (default: sky|matrix) [$SSM_THEME]
+   --ping, -p                  ping all hosts and show liveness
    --debug, -d                 enable debug mode with verbose logging [$SSM_DEBUG]
    --help, -h                  show help
    --version, -v               print the version
