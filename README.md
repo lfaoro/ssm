@@ -93,6 +93,10 @@ Star it if it helps → https://github.com/lfaoro/ssm
 
 Made with ❤️ and too much SSH pain.
 
+## Shoutout
+
+**[@hackerschoice](https://x.com/hackerschoice/status/1920899798837711279)** on X
+
 If `ssm` actually made your life better:
 
 - [GitHub Sponsors](https://github.com/sponsors/lfaoro)
