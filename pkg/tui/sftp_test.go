@@ -152,7 +152,7 @@ func TestLoadLocalDir(t *testing.T) {
 	t.Run("valid directory", func(t *testing.T) {
 		tmp := t.TempDir()
 		_ = os.WriteFile(filepath.Join(tmp, "file.txt"), []byte("test"), 0644) //nolint:gosec
-		_ = os.Mkdir(filepath.Join(tmp, "subdir"), 0755) //nolint:gosec
+		_ = os.Mkdir(filepath.Join(tmp, "subdir"), 0755)                       //nolint:gosec
 
 		items, err := loadLocalDir(tmp)
 		if err != nil {

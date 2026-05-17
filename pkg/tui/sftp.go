@@ -38,8 +38,8 @@ const (
 )
 
 type confirmAction struct {
-	mode    sftpMode
-	message string
+	mode       sftpMode
+	message    string
 	localPath  string
 	remotePath string
 }

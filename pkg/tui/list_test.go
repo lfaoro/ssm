@@ -225,11 +225,11 @@ func TestInitKeys(t *testing.T) {
 	}
 
 	expectedKeys := map[string]bool{
-		"enter":   false,
-		"tab":     false,
-		"ctrl+s":  false,
-		"ctrl+r":  false,
-		"ctrl+e":  false,
+		"enter":  false,
+		"tab":    false,
+		"ctrl+s": false,
+		"ctrl+r": false,
+		"ctrl+e": false,
 		"ctrl+v": false,
 	}
 
