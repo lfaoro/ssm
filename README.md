@@ -28,6 +28,7 @@ Built in Go + Bubble Tea.
 | `enter`   | Connect                          |
 | `ctrl+e`  | Edit config live                 |
 | `ctrl+r`  | Run command on host              |
+| `ctrl+s`  | SFTP file browser                |
 | `ctrl+v`  | Toggle config inspector          |
 | `tab`     | Switch SSH ↔ MOSH                |
 | `/`       | Fuzzy search                     |

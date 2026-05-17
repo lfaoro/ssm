@@ -18,14 +18,22 @@
 - Replace custom `contains`/`searchSubstring` with `strings.Contains` in tests
 
 ## Add
+- SFTP file browser (`ctrl+s`) — dual-pane local ↔ remote file transfer using `github.com/pkg/sftp`
+  - Upload/download with file size display and transfer history buffer (50 entries)
+  - Overwrite confirmation dialog and delete operations on both panes
+  - Symlink detection in directory listings
+  - SSH batch mode (`StrictHostKeyChecking=no`, `BatchMode=yes`, `RequestTTY=no`)
+  - Theme-consistent UI with solid background bar headers and adaptive colors
+  - Remote pane starts in `/tmp` by default
 - `make lint` target (golangci-lint if available, fallback to go fmt + go vet)
 - `make bench`, `make bench-cpu`, `make bench-mem`, `make bench-compare` targets
 - Benchmark suite for `sshconf` (ParsePath, GetHost, GetHosts, GetParamFor, RemoveComments, IsSensitiveKey)
 - Benchmark suite for `tui` (setConfig, formatHost, sanitizeOutput, sanitizeStderr)
 
 ## Test
-- Add comprehensive TUI test suite (92 tests, 85% coverage)
+- Add comprehensive TUI test suite (132+ tests, 85%+ coverage)
 - Add `testdata/test_config` fixture and shared test helpers
+- Add SFTP test suite (`sftp_test.go`, 40+ tests covering file items, panes, transfers, confirmations, history limit)
 
 # [1.0.2] May 15, 2026
 

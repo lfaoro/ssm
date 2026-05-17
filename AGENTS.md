@@ -28,7 +28,7 @@ govulncheck ./...       # vulnerability scan
 |---|---|
 | `main.go` | CLI entry, urfave/cli v3 flags, version check goroutine (WaitGroup-tracked, 5s timeout) |
 | `pkg/sshconf/` | Config parsing, thread-safe, `Parse()`/`ParsePath()`, symlink resolution, permission check |
-| `pkg/tui/` | Bubbletea model, host list, run-command sub-model, logging, themes |
+| `pkg/tui/` | Bubbletea model, host list, run-command sub-model, SFTP file browser sub-model, logging, themes |
 
 ## Release
 
@@ -52,11 +52,12 @@ Goreleaser config: `.config/goreleaser.yaml` (v2, 4 OS × 2 arches, deb/rpm/home
 - Table-driven with `t.Run()` subtests, standard library assertions
 - `pkg/sshconf/parser_test.go` — integration tests using `data/config_example`
 - `pkg/tui/model_test.go`, `pkg/tui/list_test.go`, `pkg/tui/runcmd_test.go` — TUI model tests
+- `pkg/tui/sftp_test.go` — SFTP sub-model tests (file items, panes, transfers, confirmations, history)
 - `pkg/tui/log_test.go`, `pkg/tui/themes_test.go` — component tests
 - `pkg/tui/testdata/test_config` — shared test fixture (8 tagged hosts)
 - `pkg/tui/test_helpers.go` — shared test helpers (matrixTheme, newTestConfig, etc.)
 - Target 80%+ coverage; skip tests if external commands missing
-- Current: 85.4% across 92 tests in 5 files
+- Current: 132+ tests across 6 files (85%+ coverage)
 
 ## Benchmarking
 
@@ -92,6 +93,7 @@ make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
 - **`x/ansi@v0.9.2`, `colorprofile@v0.3.1`** pinned — newer versions break lipgloss compatibility
 - **Segfault.net** support removed in 0.4.1
 - **Sensitive keys** (identityfile, proxycommand, etc.) filtered from config viewport
+- **SFTP** — uses `github.com/pkg/sftp` via `ssh -s sftp` subsystem pipe, `BatchMode=yes` prevents interactive hangs
 - **`--` delimiter** before hostname in all SSH/mosh/syscall invocations (anti-injection)
 - **Bubbletea v2 API**: `tea.KeyPressMsg` replaces `tea.KeyMsg`, `list.SetFilterText()` not `SetFilterValue`, `viewport.GetContent()` not `Content`, `tea.View` cannot be compared to `nil`
 
@@ -101,4 +103,6 @@ make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
 - SSH stderr sanitized (truncated to 500 chars)
 - ANSI escape sequences stripped from remote command output
 - Debug logs only collected when debug mode is active
+- SFTP connections use `BatchMode=yes` + `RequestTTY=no` to prevent interactive prompts
+- In-flight SSH process tracked with `sync.Mutex` for safe cancellation on exit
 - Changelog formatted per keepachangelog.com, 1.0.0 semver for hardened v1
