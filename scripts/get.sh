@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copyright (c) 2025 Leonardo Faoro & authors
-# SPDX-License-Identifier: BSD-3-Clause
+# SPDX-License-Identifier: MIT
 set -euo pipefail
 
 APP_NAME=ssm
@@ -47,11 +47,10 @@ while [[ $# -gt 0 ]]; do
 		--dir)
 			[[ -z "${2:-}" ]] && error "--dir requires a path"
 			CUSTOM_DIR="$2"
-			shift
+			shift 2
 			;;
 		*) error "unknown option: $1 (try --help)" ;;
 	esac
-	shift
 done
 
 # ---- pipe-to-bash warning ----
@@ -133,8 +132,42 @@ fi
 
 TEMP_DIR="$(mktemp -d)" || error "failed to create temp directory"
 
-echo "Downloading..."
+echo "Downloading archive..."
 curl -fsSL "$ARCHIVE_URL" -o "${TEMP_DIR}/${ARCHIVE_NAME}" || error "download failed"
+
+# ---- verify checksum ----
+
+CHECKSUM_FILE="ssm_${VERSION}_checksums.txt"
+CHECKSUM_URL="${DOWNLOAD_URL}/${VERSION}/${CHECKSUM_FILE}"
+echo "Downloading checksums..."
+curl -fsSL "$CHECKSUM_URL" -o "${TEMP_DIR}/${CHECKSUM_FILE}" || {
+	echo "warning: checksum file not available, skipping verification"
+}
+
+if [[ -f "${TEMP_DIR}/${CHECKSUM_FILE}" ]]; then
+	echo "Verifying checksum..."
+	cd "$TEMP_DIR"
+	if command -v sha256sum &>/dev/null; then
+		expected=$(grep "$ARCHIVE_NAME" "${CHECKSUM_FILE}" | awk '{print $1}')
+		actual=$(sha256sum "${ARCHIVE_NAME}" | awk '{print $1}')
+	elif command -v shasum &>/dev/null; then
+		expected=$(grep "$ARCHIVE_NAME" "${CHECKSUM_FILE}" | awk '{print $1}')
+		actual=$(shasum -a 256 "${ARCHIVE_NAME}" | awk '{print $1}')
+	else
+		echo "warning: no SHA256 tool found, skipping verification"
+		expected=""
+		actual=""
+	fi
+
+	if [[ -n "$expected" && -n "$actual" ]]; then
+		if [[ "$expected" == "$actual" ]]; then
+			echo "Checksum verified ✓"
+		else
+			error "checksum mismatch! expected $expected, got $actual"
+		fi
+	fi
+	cd - >/dev/null
+fi
 
 echo "Extracting..."
 tar -xzf "${TEMP_DIR}/${ARCHIVE_NAME}" -C "$TEMP_DIR" || error "failed to extract archive"
