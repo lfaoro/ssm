@@ -2,19 +2,15 @@
 
 **Your SSH config on TUI-roids**
 
-Pain-Point: tired of digging through `~/.ssh/config` and typing hostnames & acronyms every time.
-
-`ssm` is a tiny terminal UI that sits on top of your existing SSH config. No changes needed on your servers. Just better everything.
+`ssm` is a tiny terminal UI that sits on top of your existing SSH config. No changes needed on your servers.
 
 [Install](#install-30-seconds)
-
-Built in Go + Bubble Tea.
 
 [![version][version-badge]](CHANGELOG.md)
 [![license][license-badge]](LICENSE)
 [![go report card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
 
-[version-badge]: https://img.shields.io/badge/version-1.0.2-blue.svg
+[version-badge]: https://img.shields.io/badge/version-1.0.1-blue.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-lue
 
 ## Demo

@@ -106,7 +106,7 @@ func main() {
 				Aliases:     []string{"t"},
 				Usage:       "define a color theme",
 				DefaultText: "sky|matrix",
-				Value:       "matrix",
+				Value:       "sky",
 				Sources:     cli.EnvVars("SSM_THEME"),
 			},
 			&cli.BoolFlag{
