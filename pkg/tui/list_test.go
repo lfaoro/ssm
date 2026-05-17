@@ -498,6 +498,22 @@ func TestRefreshList_NoPingResults(t *testing.T) {
 	}
 }
 
+func TestRefreshList_PreservesFilter(t *testing.T) {
+	m := newTestModel(t, false)
+
+	m.li.SetFilterText("test-server")
+	m.pingResults["test-server"] = "42ms"
+	refreshList(m)
+
+	if !m.li.IsFiltered() {
+		t.Error("expected filter to still be active after refreshList")
+	}
+	items := m.li.Items()
+	if len(items) == 0 {
+		t.Error("expected filtered items after refreshList")
+	}
+}
+
 type fakeTimeoutErr struct{}
 
 func (f fakeTimeoutErr) Error() string   { return "i/o timeout" }

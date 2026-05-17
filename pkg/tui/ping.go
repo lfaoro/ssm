@@ -108,4 +108,8 @@ func refreshList(m *Model) {
 		items = append(items, formatHost(host, m.pingResults[host.Name]))
 	}
 	m.li.SetItems(items)
+
+	if m.li.IsFiltered() {
+		m.li.SetFilterText(m.li.FilterValue())
+	}
 }
