@@ -218,7 +218,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 'r':
 				return RunCmdModel(m), nil
 			case 's':
-				return m, AddError(fmt.Errorf("sftp: not yet implemented"))
+				return SftpModel(m), nil
 		case 'v':
 			m.showConfig = !m.showConfig
 			default:

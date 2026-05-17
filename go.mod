@@ -4,6 +4,7 @@ go 1.26.2
 
 require (
 	github.com/google/go-github/v69 v69.2.0
+	github.com/pkg/sftp v1.13.9
 	github.com/thalesfsp/go-common-types v0.2.6
 	github.com/urfave/cli/v3 v3.8.0
 	golang.org/x/term v0.43.0
@@ -15,6 +16,8 @@ require (
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
+	github.com/kr/fs v0.1.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 )
 
 require (
