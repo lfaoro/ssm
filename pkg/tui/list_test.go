@@ -500,6 +500,6 @@ func TestRefreshList_NoPingResults(t *testing.T) {
 
 type fakeTimeoutErr struct{}
 
-func (f fakeTimeoutErr) Error() string { return "i/o timeout" }
-func (f fakeTimeoutErr) Timeout() bool { return true }
+func (f fakeTimeoutErr) Error() string   { return "i/o timeout" }
+func (f fakeTimeoutErr) Timeout() bool   { return true }
 func (f fakeTimeoutErr) Temporary() bool { return true }

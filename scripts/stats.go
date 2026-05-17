@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	repo    = "lfaoro/ssm"
-	apiURL  = "https://api.github.com/repos/" + repo + "/releases?per_page=100"
+	repo   = "lfaoro/ssm"
+	apiURL = "https://api.github.com/repos/" + repo + "/releases?per_page=100"
 )
 
 func main() {
@@ -46,8 +46,8 @@ func main() {
 
 	var releases []struct {
 		Assets []struct {
-			Name         string `json:"name"`
-			DownloadCount int   `json:"download_count"`
+			Name          string `json:"name"`
+			DownloadCount int    `json:"download_count"`
 		} `json:"assets"`
 	}
 	if err := json.Unmarshal(body, &releases); err != nil {
