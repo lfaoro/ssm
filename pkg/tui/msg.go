@@ -25,4 +25,9 @@ type (
 	FilterTagMsg struct {
 		Arg string
 	}
+	// PingResultMsg carries the result of a ping to a single host.
+	PingResultMsg struct {
+		Host    string
+		Latency string
+	}
 )

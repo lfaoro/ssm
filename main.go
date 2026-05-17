@@ -110,7 +110,6 @@ func main() {
 				Sources:     cli.EnvVars("SSM_THEME"),
 			},
 			&cli.BoolFlag{
-				// TODO: not implemented
 				Name:    "ping",
 				Aliases: []string{"p"},
 				Usage:   "ping all hosts and show liveness",

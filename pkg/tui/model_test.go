@@ -672,3 +672,112 @@ func TestModel_Update_ClearError(t *testing.T) {
 
 	_ = m2
 }
+
+func TestModel_Update_PingResultMsg(t *testing.T) {
+	m := newTestModel(t, false)
+
+	m2 := updateModel(m, PingResultMsg{Host: "test-server", Latency: "42ms"})
+
+	if m2.pingResults["test-server"] != "42ms" {
+		t.Errorf("pingResults[test-server] = %q, want %q",
+			m2.pingResults["test-server"], "42ms")
+	}
+
+	items := m2.li.Items()
+	found := false
+	for _, it := range items {
+		if it.(item).title == "test-server" &&
+			contains(it.(item).desc, "(42ms)") {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected (42ms) to appear in list item description")
+	}
+}
+
+func TestModel_Update_PKey_PingsSelected(t *testing.T) {
+	m := newTestModel(t, false)
+
+	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 'p', Mod: 0})
+
+	_ = m2
+	if cmd == nil {
+		t.Error("expected command for 'p' key (ping selected)")
+	}
+}
+
+func TestModel_Update_ShiftP_PingsAll(t *testing.T) {
+	m := newTestModel(t, false)
+
+	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 'P', Mod: tea.ModShift})
+
+	_ = m2
+	if cmd == nil {
+		t.Error("expected command for 'P' key (ping all)")
+	}
+}
+
+func TestModel_Update_PKey_ShiftPingsAll_Kitty(t *testing.T) {
+	m := newTestModel(t, false)
+
+	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 'p', Mod: tea.ModShift})
+
+	_ = m2
+	if cmd == nil {
+		t.Error("expected command for Shift+p (kitty protocol shift+P)")
+	}
+}
+
+func TestModel_Update_ShiftP_ANSI_PingsAll(t *testing.T) {
+	m := newTestModel(t, false)
+
+	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 'P', Mod: 0})
+
+	_ = m2
+	if cmd == nil {
+		t.Error("expected command for 'P' unmodified (ANSI shift+P)")
+	}
+}
+
+func TestModel_Update_CtrlP_StillWorks(t *testing.T) {
+	m := newTestModel(t, false)
+
+	m2 := updateModel(m, tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})
+
+	if m2.li.Index() != 0 {
+		t.Log("cursor up from top should stay at 0")
+	}
+	if len(m2.pingResults) > 0 {
+		t.Error("ctrl+p should not trigger ping")
+	}
+}
+
+func TestModel_Update_LivenessCheck_TriggersPingAll(t *testing.T) {
+	m := newTestModel(t, false)
+	m2, cmd := updateModelWithCmd(m, LivenessCheckMsg{})
+
+	if cmd == nil {
+		t.Error("expected command for liveness check (ping all)")
+	}
+
+	_ = m2
+}
+
+func TestPingSelectedCmd_ReturnsCmd(t *testing.T) {
+	m := newTestModel(t, false)
+
+	cmd := pingSelectedCmd(m)
+	if cmd == nil {
+		t.Error("expected non-nil command")
+	}
+}
+
+func TestPingAllCmd_ReturnsCmd(t *testing.T) {
+	m := newTestModel(t, false)
+
+	cmd := pingAllCmd(m)
+	if cmd == nil {
+		t.Error("expected non-nil command")
+	}
+}

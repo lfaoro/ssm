@@ -66,7 +66,7 @@ func listFrom(config *sshconf.Config, theme theme) list.Model {
 	return li
 }
 
-func formatHost(host sshconf.Host) item {
+func formatHost(host sshconf.Host, pingResult ...string) item {
 	fmtDescription := func() string {
 		port := func() string {
 			_port, _ := host.Options.Get("port")
@@ -98,6 +98,9 @@ func formatHost(host sshconf.Host) item {
 			return ""
 		}
 		out := fmt.Sprintf("%s%s%s %s", user(), hostname(), port(), tags())
+		if len(pingResult) > 0 && pingResult[0] != "" {
+			out += " (" + pingResult[0] + ")"
+		}
 		return out
 	}()
 	newitem := item{
@@ -132,6 +135,10 @@ func initKeys() []key.Binding {
 		key.WithKeys("ctrl+r"),
 		key.WithHelp("ctrl+r", "run command"),
 	)
+	pingKey := key.NewBinding(
+		key.WithKeys("p", "P"),
+		key.WithHelp("p/P", "ping host/all"),
+	)
 	return []key.Binding{
 		connectKey,
 		switchKey,
@@ -139,5 +146,6 @@ func initKeys() []key.Binding {
 		runCmdKey,
 		editKey,
 		showKey,
+		pingKey,
 	}
 }
