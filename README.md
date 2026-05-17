@@ -72,6 +72,25 @@ Host myserver
 
 The more tags you use, the better it gets.
 
+## Architecture
+
+```
+ssm
+├── main.go              # CLI entry (urfave/cli v3), version check, syscall.Exec
+└── pkg/
+    ├── sshconf/         # SSH config parser
+    │   ├── parser.go    # Thread-safe parsing, Include recursion, #tag: comments
+    │   └── util.go      # Helpers, sensitive key filtering, symlink resolution
+    └── tui/             # Bubbletea v2 TUI
+        ├── model.go     # Root model, state management, sub-model coordination
+        ├── list.go      # Host list, fuzzy search, tag filtering
+        ├── runcmd.go    # Remote command execution sub-model
+        ├── sftp.go      # SFTP file browser sub-model
+        ├── syscmd.go    # SSH/mosh process management, signal handling
+        ├── log.go       # Debug logging (debug-mode only)
+        └── themes.go    # Color themes (sky, matrix)
+```
+
 ## Build / Contribute
 
 Requires [Go](https://go.dev/doc/install).
