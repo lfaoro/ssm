@@ -10,7 +10,7 @@
 [![license][license-badge]](LICENSE)
 [![go report card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
 
-[version-badge]: https://img.shields.io/badge/version-1.0.1-blue.svg
+[version-badge]: https://img.shields.io/badge/version-2.0.0-blue.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-lue
 
 ## Demo

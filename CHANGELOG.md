@@ -1,4 +1,4 @@
-# [Unreleased]
+# [2.0.0] May 17, 2026
 
 ## Security
 - Add `--` delimiter before hostname in SSH command to prevent flag injection
@@ -193,4 +193,5 @@
 [1.0.0]: https://github.com/lfaoro/ssm/compare/0.4.2...1.0.0
 [1.0.1]: https://github.com/lfaoro/ssm/compare/1.0.0...1.0.1
 [1.0.2]: https://github.com/lfaoro/ssm/compare/1.0.1...1.0.2
-[Unreleased]: https://github.com/lfaoro/ssm/compare/1.0.2...HEAD
+[2.0.0]: https://github.com/lfaoro/ssm/compare/1.0.2...2.0.0
+[Unreleased]: https://github.com/lfaoro/ssm/compare/2.0.0...HEAD
