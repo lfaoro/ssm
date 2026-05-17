@@ -219,8 +219,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return RunCmdModel(m), nil
 			case 's':
 				return SftpModel(m), nil
-		case 'v':
-			m.showConfig = !m.showConfig
+			case 'v':
+				m.showConfig = !m.showConfig
 			default:
 				return m, AddError(fmt.Errorf("that's an interesting key combo! %s", msg))
 			}
