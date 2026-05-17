@@ -114,7 +114,6 @@ func main() {
 				Aliases: []string{"p"},
 				Usage:   "ping all hosts and show liveness",
 				Value:   false,
-				Hidden:  true,
 			},
 			&cli.BoolFlag{
 				Name:    "debug",
