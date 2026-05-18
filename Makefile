@@ -21,7 +21,7 @@ distclean: clean
 	go clean -testcache
 	go clean -fuzzcache
 
-release: pre release-prod help
+release: pre nix-lock release-prod help
 release-check:
 	goreleaser check
 	goreleaser healthcheck
@@ -31,6 +31,11 @@ release-dev:
 	goreleaser release --verbose --snapshot --clean
 aur-push:
 	@scripts/aur-push.sh
+
+nix-lock:
+	@rm -f flake.lock
+	@nix flake update
+	@echo "flake.lock regenerated and staged — commit it"
 
 pre: 
 	@go mod tidy
@@ -89,7 +94,7 @@ stop:
 	@pkill -9 inotify ||:
 	@pkill -9 ssm ||:
 
-.PHONY: help test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked go-mod-tidy-check gofmt check update stop clean distclean release release-check release-prod release-dev aur-push pre stats backup
+.PHONY: help test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked go-mod-tidy-check gofmt check update stop clean distclean release release-check release-prod release-dev nix-lock aur-push pre stats backup
 help:
 	go run . --help >data/help
 

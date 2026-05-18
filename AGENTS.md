@@ -53,6 +53,7 @@ direnv allow              # auto-activate on cd (via .envrc)
 make tag TYPE=major          # bump version, push tag
 make release-dev             # goreleaser snapshot (dry run)
 make aur-push               # push AUR package (requires goreleaser build/ already present)
+make release                 # pre + nix-lock + release-prod + help (full release)
 make tag TYPE=major release-prod # release immediately
 
 make stats                   # refresh download counts in data/stats.json
