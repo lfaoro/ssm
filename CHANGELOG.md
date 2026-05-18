@@ -19,6 +19,11 @@
 - Elm architecture: `vp.Style` moved from `View()` to `syncViewportStyle()` in `Update()`
 - Zero-value theme on initial render — `skyTheme()` applied before `listFrom()`
 - Version check goroutine guarded with `atomic.Bool` shutdown flag
+- SFTP: `handleEnter` remote directory nil `sftpClient` crash guard
+- SFTP: `batchTransfer` nil `sftpClient` crash guard
+- SFTP: per-pane selection maps prevent cross-pane clearing
+- SFTP: `close()` no longer calls `Process.Wait()` under `connectMutex`
+- SFTP: `sftpConnectMsg` error path clears stale `s.connecting` reference
 
 ## Refactor
 - `sync.Mutex` → `sync.RWMutex` in SSH config parser (concurrent reads no longer block)
@@ -31,6 +36,7 @@
 - `exec.Command` → `exec.CommandContext(context.Background())` — all packages
 - `fmt.Errorf` → `errors.New` for constant-string calls (perfsprint)
 - `fmt.Sprintf` single placeholder → string concatenation (perfsprint)
+- SFTP: removed unimplemented `handleMkdir` handler, `modeMkdir` constant, `m` keybinding
 
 ## Test
 - Parser: include depth limit exceeded and within limit

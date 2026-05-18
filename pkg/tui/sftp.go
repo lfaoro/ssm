@@ -35,7 +35,6 @@ const (
 	modeBrowse sftpMode = iota
 	modeConfirmOverwrite
 	modeConfirmDelete
-	modeMkdir
 	modeRename
 )
 
@@ -126,8 +125,10 @@ type sftpModel struct {
 	confirm      *confirmAction
 	connecting   *exec.Cmd
 	connectMutex sync.Mutex
-	selected     map[string]bool
-	showHidden   bool
+	selected      map[string]bool
+	localSelected map[string]bool
+	remoteSelected map[string]bool
+	showHidden    bool
 }
 
 // SftpModel wraps the base model in an SFTP browser sub-model.
@@ -155,8 +156,10 @@ func SftpModel(base tea.Model) tea.Model {
 		activePane: localPane,
 		local:      newFilePane("Local", startDir, previous.theme),
 		remote:     newFilePane(host.Name, "/tmp", previous.theme),
-		status:     "Connecting...",
-		selected:   map[string]bool{},
+		status:       "Connecting...",
+		selected:      map[string]bool{},
+		localSelected: map[string]bool{},
+		remoteSelected: map[string]bool{},
 	}
 	if items, err := loadLocalDir(startDir, false); err == nil {
 		m.local.list.SetItems(items)
@@ -290,13 +293,11 @@ func (s *sftpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if cmd != nil {
 				cmds = append(cmds, cmd)
 			}
-		case 'm':
-			cmd = s.handleMkdir()
-			if cmd != nil {
-				cmds = append(cmds, cmd)
-			}
 		}
 	case sftpConnectMsg:
+		s.connectMutex.Lock()
+		s.connecting = nil
+		s.connectMutex.Unlock()
 		if msg.err != nil {
 			s.status = msg.err.Error()
 			return s, tea.Batch(cmds...)
@@ -311,19 +312,19 @@ func (s *sftpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		s.status = "Connected to " + s.host.Name
 		cmds = append(cmds, loadRemoteDirCmd(s.sftpClient, s.remote.cwd, false))
 	case sftpDirMsg:
-		if msg.err != nil {
+		switch {
+		case msg.err != nil:
 			if msg.side == localPane {
 				s.local.list.SetItems([]list.Item{})
 			}
 			s.status = msg.err.Error()
-			break
-		}
-		clear(s.selected)
-		if msg.side == localPane {
+		case msg.side == localPane:
+			s.clearSelections(localPane)
 			s.local.cwd = msg.path
 			s.local.list.SetItems(msg.items)
 			s.local.list.SetItems(s.markSelections(s.local.list.Items()))
-		} else {
+		default:
+			s.clearSelections(remotePane)
 			s.remote.cwd = msg.path
 			s.remote.list.SetItems(msg.items)
 			s.remote.list.SetItems(s.markSelections(s.remote.list.Items()))
@@ -351,7 +352,10 @@ func (s *sftpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (s *sftpModel) handleEnter() tea.Cmd {
-	if len(s.selected) > 0 {
+	if s.activePane == localPane && len(s.localSelected) > 0 {
+		return s.batchTransfer()
+	}
+	if s.activePane == remotePane && len(s.remoteSelected) > 0 {
 		return s.batchTransfer()
 	}
 	switch s.activePane {
@@ -383,6 +387,9 @@ func (s *sftpModel) handleEnter() tea.Cmd {
 			return nil
 		}
 		if item.isDir {
+			if s.sftpClient == nil {
+				return nil
+			}
 			return loadRemoteDirCmd(s.sftpClient, item.path, s.showHidden)
 		}
 		localPath := filepath.Join(s.local.cwd, pathpkg.Base(item.path))
@@ -402,6 +409,10 @@ func (s *sftpModel) handleEnter() tea.Cmd {
 
 func (s *sftpModel) batchTransfer() tea.Cmd {
 	return func() tea.Msg {
+		if s.sftpClient == nil {
+			return sftpTransferMsg{err: errors.New("not connected to remote host"), refreshLocal: false, refreshRemote: false}
+		}
+
 		var paths []string
 		var pane *filePane
 		var dstPath func(string) string
@@ -471,17 +482,6 @@ func (s *sftpModel) handleDelete() tea.Cmd {
 	return nil
 }
 
-func (s *sftpModel) handleMkdir() tea.Cmd {
-	if s.activePane != remotePane || s.sftpClient == nil {
-		return transferMsgCmd("", errors.New("mkdir only available on remote pane"), false, false)
-	}
-	s.confirm = &confirmAction{
-		mode:    modeMkdir,
-		message: "mkdir: enter directory name (not yet implemented)",
-	}
-	return nil
-}
-
 func (s *sftpModel) executeConfirm() tea.Cmd {
 	if s.confirm == nil {
 		return nil
@@ -523,10 +523,13 @@ func (s *sftpModel) fileExistsRemote(path string) bool {
 
 func (s *sftpModel) toggleSelection() {
 	var pane *filePane
+	var paneMap map[string]bool
 	if s.activePane == localPane {
 		pane = &s.local
+		paneMap = s.localSelected
 	} else {
 		pane = &s.remote
+		paneMap = s.remoteSelected
 	}
 	item, ok := pane.list.SelectedItem().(fileItem)
 	if !ok || item.name == ".." {
@@ -538,10 +541,20 @@ func (s *sftpModel) toggleSelection() {
 	}
 	if s.selected[item.path] {
 		delete(s.selected, item.path)
+		delete(paneMap, item.path)
 	} else {
 		s.selected[item.path] = true
+		paneMap[item.path] = true
 	}
 	pane.list.SetItems(s.markSelections(pane.list.Items()))
+}
+
+func (s *sftpModel) clearSelections(side paneSide) {
+	if side == localPane {
+		clear(s.localSelected)
+	} else {
+		clear(s.remoteSelected)
+	}
 }
 
 func (s *sftpModel) markSelections(items []list.Item) []list.Item {
@@ -556,6 +569,13 @@ func (s *sftpModel) markSelections(items []list.Item) []list.Item {
 		result[i] = fi
 	}
 	return result
+}
+
+func (s *sftpModel) activePaneSelected() map[string]bool {
+	if s.activePane == localPane {
+		return s.localSelected
+	}
+	return s.remoteSelected
 }
 
 func (s *sftpModel) reloadActiveDir() tea.Cmd {
@@ -578,12 +598,14 @@ func (s *sftpModel) toggleFocus() {
 
 func (s *sftpModel) close() {
 	s.connectMutex.Lock()
-	if s.connecting != nil && s.connecting.Process != nil {
-		_ = s.connecting.Process.Kill()
-		_, _ = s.connecting.Process.Wait()
-		s.connecting = nil
-	}
+	connecting := s.connecting
+	s.connecting = nil
 	s.connectMutex.Unlock()
+
+	if connecting != nil && connecting.Process != nil {
+		_ = connecting.Process.Kill()
+		_, _ = connecting.Process.Wait()
+	}
 
 	if s.sftpClient != nil {
 		_ = s.sftpClient.Close()
@@ -659,7 +681,7 @@ func (s *sftpModel) renderHelp() string {
 	descStyle := lg.NewStyle().Foreground(lightDark(lg.Color("#A49FA5"), lg.Color(th.selectedDescriptionColor)))
 
 	selInfo := ""
-	if n := len(s.selected); n > 0 {
+	if n := len(s.activePaneSelected()); n > 0 {
 		selInfo = descStyle.Render(fmt.Sprintf("  [%d selected]", n)) + "  •  "
 	}
 	return selInfo + keyStyle.Render("enter") + " " + descStyle.Render("transfer") +

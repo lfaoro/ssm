@@ -12,6 +12,7 @@ import (
 
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
+	sftppkg "github.com/pkg/sftp"
 )
 
 func TestNewFilePane(t *testing.T) {
@@ -429,6 +430,7 @@ func TestSftpModel_handleEnter_RemoteDirectory(t *testing.T) {
 	sftp := result.(*sftpModel)
 
 	sftp.activePane = remotePane
+	sftp.sftpClient = &sftppkg.Client{}
 	sftp.remote.list.SetItems([]list.Item{
 		fileItem{name: "remoteDir", path: "/home/user/docs", isDir: true, kind: "dir"},
 	})
@@ -644,45 +646,6 @@ func TestSftpModel_handleDelete_ParentEntry(t *testing.T) {
 
 	if sftp.confirm != nil {
 		t.Error("expected no confirm dialog for .. entry")
-	}
-}
-
-func TestSftpModel_handleMkdir_RemotePane(t *testing.T) {
-	m := newTestModel(t, false)
-	m.li.CursorDown()
-
-	result, _ := m.Update(tea.KeyPressMsg{Code: 's', Mod: tea.ModCtrl})
-	sftp := result.(*sftpModel)
-
-	sftp.activePane = remotePane
-	sftp.sftpClient = nil
-
-	cmd := sftp.handleMkdir()
-	if cmd == nil {
-		t.Error("expected command for mkdir on remote without client")
-	}
-}
-
-func TestSftpModel_handleMkdir_LocalPane(t *testing.T) {
-	m := newTestModel(t, false)
-	m.li.CursorDown()
-
-	result, _ := m.Update(tea.KeyPressMsg{Code: 's', Mod: tea.ModCtrl})
-	sftp := result.(*sftpModel)
-
-	sftp.activePane = localPane
-	cmd := sftp.handleMkdir()
-	if cmd == nil {
-		t.Fatal("expected command for mkdir on local pane")
-	}
-
-	msg := cmd()
-	transferMsg, ok := msg.(sftpTransferMsg)
-	if !ok {
-		t.Fatalf("expected sftpTransferMsg, got %T", msg)
-	}
-	if transferMsg.err == nil {
-		t.Error("expected error for mkdir on local pane")
 	}
 }
 
