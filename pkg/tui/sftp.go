@@ -270,7 +270,14 @@ func (s *sftpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return s, tea.Batch(cmds...)
 		}
 		switch msg.Code {
-		case tea.KeyEsc, 'q':
+		case tea.KeyEsc:
+			if s.clearActiveSelectionsWithRefresh() {
+				cmds = append(cmds, s.reloadActiveDir())
+				break
+			}
+			s.close()
+			return s.previous, nil
+		case 'q':
 			s.close()
 			return s.previous, nil
 		case tea.KeyTab:
@@ -446,6 +453,14 @@ func (s *sftpModel) batchTransfer() tea.Cmd {
 		}
 
 		text := fmt.Sprintf("transferred %d/%d files", len(paths)-len(errs), len(paths))
+		for _, p := range paths {
+			delete(s.selected, p)
+		}
+		if s.activePane == localPane {
+			clear(s.localSelected)
+		} else {
+			clear(s.remoteSelected)
+		}
 		if len(errs) > 0 {
 			return sftpTransferMsg{
 				text: text, err: fmt.Errorf("%s", strings.Join(errs, "; ")),
@@ -576,6 +591,24 @@ func (s *sftpModel) activePaneSelected() map[string]bool {
 		return s.localSelected
 	}
 	return s.remoteSelected
+}
+
+func (s *sftpModel) clearActiveSelectionsWithRefresh() bool {
+	if s.activePane == localPane && len(s.localSelected) > 0 {
+		for k := range s.localSelected {
+			delete(s.selected, k)
+		}
+		clear(s.localSelected)
+		return true
+	}
+	if s.activePane == remotePane && len(s.remoteSelected) > 0 {
+		for k := range s.remoteSelected {
+			delete(s.selected, k)
+		}
+		clear(s.remoteSelected)
+		return true
+	}
+	return false
 }
 
 func (s *sftpModel) reloadActiveDir() tea.Cmd {
