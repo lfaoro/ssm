@@ -26,7 +26,7 @@ govulncheck ./...       # vulnerability scan
 
 | Package | Purpose |
 |---|---|
-| `main.go` | CLI entry, urfave/cli v3 flags, version check goroutine (WaitGroup-tracked, 5s timeout) |
+| `main.go` | CLI entry, urfave/cli v3 flags, version check goroutine (WaitGroup-tracked, 5s timeout, `atomic.Bool` shutdown guard) |
 | `pkg/sshconf/` | Config parsing, thread-safe, `Parse()`/`ParsePath()`, symlink resolution, permission check |
 | `pkg/tui/` | Bubbletea model, host list, run-command sub-model, SFTP file browser sub-model, ping, logging, themes |
 
