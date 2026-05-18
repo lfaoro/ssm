@@ -27,10 +27,6 @@ Secure Shell Manager -- **Your SSH config on TUI-roids.**
 | Parser | `Include` recursion (depth 10, cycle detection), `#tagorder` sorting |
 | Security | `BatchMode=yes`, `--` anti-injection |
 
-## Demo
-
-![demo](data/demo.png)
-
 ## Quick Start
 
 ```bash
