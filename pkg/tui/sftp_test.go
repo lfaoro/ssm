@@ -154,7 +154,7 @@ func TestLoadLocalDir(t *testing.T) {
 		_ = os.WriteFile(filepath.Join(tmp, "file.txt"), []byte("test"), 0644) //nolint:gosec
 		_ = os.Mkdir(filepath.Join(tmp, "subdir"), 0755)                       //nolint:gosec
 
-		items, err := loadLocalDir(tmp)
+		items, err := loadLocalDir(tmp, false)
 		if err != nil {
 			t.Fatalf("loadLocalDir() error = %v", err)
 		}
@@ -194,7 +194,7 @@ func TestLoadLocalDir(t *testing.T) {
 
 	t.Run("parent directory entry", func(t *testing.T) {
 		tmp := t.TempDir()
-		items, err := loadLocalDir(tmp)
+		items, err := loadLocalDir(tmp, false)
 		if err != nil {
 			t.Fatalf("loadLocalDir() error = %v", err)
 		}
@@ -218,7 +218,7 @@ func TestLoadLocalDir(t *testing.T) {
 	})
 
 	t.Run("nonexistent directory", func(t *testing.T) {
-		_, err := loadLocalDir("/nonexistent/path/that/does/not/exist")
+		_, err := loadLocalDir("/nonexistent/path/that/does/not/exist", false)
 		if err == nil {
 			t.Error("expected error for nonexistent directory")
 		}
@@ -395,6 +395,7 @@ func TestSftpModel_handleEnter_NoSelection(t *testing.T) {
 	result, _ := m.Update(tea.KeyPressMsg{Code: 's', Mod: tea.ModCtrl})
 	sftp := result.(*sftpModel)
 
+	sftp.local.list.SetItems([]list.Item{})
 	cmd := sftp.handleEnter()
 	if cmd != nil {
 		t.Error("expected nil command when no item selected")
