@@ -25,7 +25,7 @@ Secure Shell Manager -- **Your SSH config on TUI-roids.**
 | Ping | Single host (`p`), all hosts (`P`, capped at 50 concurrent) |
 | Themes | `sky` (default), `matrix` (green terminal vibes) |
 | Parser | `Include` recursion (depth 10, cycle detection), `#tagorder` sorting |
-| Security | Perms check (warn if not 0600), `BatchMode=yes`, `--` anti-injection |
+| Security | `BatchMode=yes`, `--` anti-injection |
 
 ## Demo
 
@@ -178,7 +178,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for dev environment setup and guidelines.
 
 ## Security
 
-- Config file permissions checked (warns if not `0600`)
 - SSH stderr sanitized (truncated to 500 chars)
 - ANSI escape sequences stripped from remote output
 - Sensitive keys (identityfile, proxycommand, etc.) filtered from config viewport
