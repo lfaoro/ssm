@@ -6,6 +6,8 @@ package tui
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -219,9 +221,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 				if editorPath == "" {
-					return m, AddError(fmt.Errorf("env EDITOR not set, nor any editor found in PATH"))
+					return m, AddError(errors.New("env EDITOR not set, nor any editor found in PATH"))
 				}
-				cmd := exec.Command(editorPath, confFile) //nolint:gosec
+				cmd := exec.CommandContext(context.Background(), editorPath, confFile) //nolint:gosec
 				cmd.Dir = filepath.Dir(confFile)
 				cmd.Stderr = &m.errbuf
 				execCmd := tea.ExecProcess(cmd, func(err error) tea.Msg {
@@ -277,7 +279,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *Model) connect() tea.Cmd {
 	host, ok := m.li.SelectedItem().(item)
 	if !ok {
-		return AddError(fmt.Errorf("unable to find selected item: open bug report"))
+		return AddError(errors.New("unable to find selected item: open bug report"))
 	}
 	if m.ExitOnCmd {
 		m.ExitHost = strings.TrimSpace(host.title)
@@ -290,9 +292,9 @@ func (m *Model) connect() tea.Cmd {
 	}
 
 	var cmd *exec.Cmd
-	cmd = exec.Command(cmdPath, "-F", m.config.GetPath(), "--", host.title) //nolint:gosec
+	cmd = exec.CommandContext(context.Background(), cmdPath, "-F", m.config.GetPath(), "--", host.title) //nolint:gosec
 	if m.Cmd == moshCmd {
-		cmd = exec.Command( //nolint:gosec
+		cmd = exec.CommandContext(context.Background(), //nolint:gosec
 			cmdPath,
 			"--",
 			host.title,

@@ -5,6 +5,8 @@ package tui
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"fmt"
 	"os/exec"
 	"regexp"
@@ -281,12 +283,12 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 	return func() tea.Msg {
 		prev, ok := m.previousModel.(*Model)
 		if !ok {
-			return cmdResultMsg{output: "", err: fmt.Errorf("invalid previous model")}
+			return cmdResultMsg{output: "", err: errors.New("invalid previous model")}
 		}
 
 		selected, ok := prev.li.SelectedItem().(item)
 		if !ok {
-			return cmdResultMsg{output: "", err: fmt.Errorf("no selected host")}
+			return cmdResultMsg{output: "", err: errors.New("no selected host")}
 		}
 
 		// ssh command args to force use of keys
@@ -298,7 +300,7 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 			command,
 		}
 
-		cmd := exec.Command(prev.Cmd.String(), args...) //nolint:gosec
+		cmd := exec.CommandContext(context.Background(), prev.Cmd.String(), args...) //nolint:gosec
 
 		m.currentCmdMu.Lock()
 		m.currentCmd = cmd

@@ -5,6 +5,11 @@
 - Shell-escape mosh `--ssh` config path (prevents metacharacter injection)
 - `filepath.Clean` on Include paths to prevent directory traversal
 
+## Add
+- 9 new linters: `misspell`, `unconvert`, `bodyclose`, `noctx`, `nilnil`, `prealloc`, `dupword`, `intrange`, `perfsprint`
+- `make check` target: lint + go-mod-tidy-check + test + build (pre-commit)
+- `go-mod-tidy-check` target: verify go.mod/go.sum consistency via `go mod tidy -diff`
+
 ## Fix
 - SftpModel: return base on bad cast instead of crashing with panic
 - SftpModel: bounds-check `GlobalIndex()` before indexing hosts, use `GetHosts()` API
@@ -22,6 +27,9 @@
 - `resolvePingTarget` explicit return (no naked return)
 - Shadowed `err` → `statErr` in parser permission check
 - `pingAllCmd` capped at 50 concurrent TCP dials via semaphore
+- `exec.Command` → `exec.CommandContext(context.Background())` — all packages
+- `fmt.Errorf` → `errors.New` for constant-string calls (perfsprint)
+- `fmt.Sprintf` single placeholder → string concatenation (perfsprint)
 
 ## Test
 - Parser: include depth limit exceeded and within limit

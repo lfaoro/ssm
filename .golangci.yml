@@ -13,6 +13,15 @@ linters:
     - gosec
     - modernize
     - gocyclo
+    - misspell
+    - unconvert
+    - bodyclose
+    - noctx
+    - nilnil
+    - prealloc
+    - dupword
+    - intrange
+    - perfsprint
   settings:
     gocyclo:
       min-complexity: 55

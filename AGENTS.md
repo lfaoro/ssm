@@ -9,8 +9,9 @@ go build ./...          # check compilation
 go vet ./...            # static analysis
 make vet                # go vet ./...
 make lint               # golangci-lint (if present) or go fmt + go vet
-make build              # go build ./...
+make build              # go build -o ./bin/ssm .
 make test               # go test -race ./... with count=1
+make check              # pre-commit: vet + lint + test + build
 make build-static       # production static binary (CGO_ENABLED=0)
 govulncheck ./...       # vulnerability scan
 ```
@@ -79,7 +80,7 @@ make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
 
 ## Linting
 
-- `.golangci.yml` enables 9 linters: `govet`, `errcheck`, `staticcheck`, `revive`, `ineffassign`, `unused`, `gosec`, `modernize`, `gocyclo`
+- `.golangci.yml` enables 18 linters: `govet`, `errcheck`, `staticcheck`, `revive`, `ineffassign`, `unused`, `gosec`, `modernize`, `gocyclo`, `misspell`, `unconvert`, `bodyclose`, `noctx`, `nilnil`, `prealloc`, `dupword`, `intrange`, `perfsprint`
 - `//nolint:gosec` used for `exec.Command` calls (expected for SSH TUI)
 - `//nolint:nilerr` at `pkg/sshconf/util.go:15` — intentional fallback to system SSH config when `$HOME` unavailable
 - Suppressed categories (acceptable): `errorlint`, `forcetypeassert`, `goconst`, `gocritic`, `godot`
