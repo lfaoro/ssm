@@ -39,6 +39,7 @@ ssm production         # filter by tag
 ssm -se vpn            # show config + exit after connect
 ssm --theme matrix     # green hacker vibes
 ssm --theme sky        # soft blue vibes
+nix run github:lfaoro/ssm -- ssm  # run without installing
 ```
 
 ## Install

@@ -10,6 +10,7 @@
 - `make check` target: lint + go-mod-tidy-check + test + build (pre-commit)
 - `go-mod-tidy-check` target: verify go.mod/go.sum consistency via `go mod tidy -diff`
 - Mise and Nix dev environments: `.mise.toml` (Go + toolchain), `flake.nix`, `.envrc` (direnv)
+- Nix: package via flake.nix (`nix run github:lfaoro/ssm`, `nix profile install github:lfaoro/ssm`)
 - SFTP: Esc clears active pane selections, second Esc/q exits to main
 - SFTP: auto-deselect after batch transfer
 - Per-theme terminal background: solid dark via `tea.View.BackgroundColor`
