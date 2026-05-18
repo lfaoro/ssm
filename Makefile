@@ -35,7 +35,7 @@ aur-push:
 nix-lock:
 	@rm -f flake.lock
 	@nix flake update
-	@echo "flake.lock regenerated and staged — commit it"
+	@git add flake.lock
 
 pre: 
 	@go mod tidy
