@@ -1,3 +1,36 @@
+# [2.1.2] May 18, 2026
+
+## Security
+- Add `--` delimiter before hostname in SFTP connection (anti-injection, matches SSH/mosh)
+- Shell-escape mosh `--ssh` config path (prevents metacharacter injection)
+- `filepath.Clean` on Include paths to prevent directory traversal
+
+## Fix
+- SftpModel: return base on bad cast instead of crashing with panic
+- SftpModel: bounds-check `GlobalIndex()` before indexing hosts, use `GetHosts()` API
+- SFTP: use remote `Getwd()` root directory instead of hardcoded `/tmp`
+- `cmdModel.currentCmd` data race fixed with `sync.Mutex`
+- Elm architecture: `vp.Style` moved from `View()` to `syncViewportStyle()` in `Update()`
+- Zero-value theme on initial render — `skyTheme()` applied before `listFrom()`
+- Version check goroutine guarded with `atomic.Bool` shutdown flag
+
+## Refactor
+- `sync.Mutex` → `sync.RWMutex` in SSH config parser (concurrent reads no longer block)
+- Loop-invariant `c.order == TagOrder` check hoisted out of scanner loop
+- `fileExists()` simplified — removed dead nested return
+- `%v` → `%w` in `latestTag` and `connect` error wrapping
+- `resolvePingTarget` explicit return (no naked return)
+- Shadowed `err` → `statErr` in parser permission check
+- `pingAllCmd` capped at 50 concurrent TCP dials via semaphore
+
+## Test
+- Parser: include depth limit exceeded and within limit
+- Parser: cyclic include detection (A→B→A)
+- Parser: include glob pattern expansion
+- Parser: include relative path resolution
+- Parser: path traversal with `filepath.Clean` (`sub/../sub/safe`)
+- Parser: `Parse()` default config path via `$HOME/.ssh/config`
+
 # [2.1.1] May 18, 2026
 
 ## Fix

@@ -20,13 +20,13 @@ govulncheck ./...       # vulnerability scan
 - **Bubbletea v2 (Elm TEA)** — Model-Update-View pattern, message-driven
 - **SSH config parser** — reads `~/.ssh/config`, `Include` recursion (depth limit 10, cycle detection), `#tag:` comments as host metadata, `#tagorder` directive
 - **`syscall.Exec`** used for `--exit` flag (replaces process, no fork+wait)
-- **Thread safety** — `Parse()` writes, `GetHost()`/`GetParamFor()`/`GetHosts()` hold mutex
+- **Thread safety** — `Parse()` writes via `Lock()`, `GetHost()`/`GetParamFor()`/`GetHosts()`/`GetPath()` read via `RLock()` (`sync.RWMutex`)
 
 ### Key Packages
 
 | Package | Purpose |
 |---|---|
-| `main.go` | CLI entry, urfave/cli v3 flags, version check goroutine (WaitGroup-tracked, 5s timeout) |
+| `main.go` | CLI entry, urfave/cli v3 flags, version check goroutine (WaitGroup-tracked, 5s timeout, `atomic.Bool` shutdown guard) |
 | `pkg/sshconf/` | Config parsing, thread-safe, `Parse()`/`ParsePath()`, symlink resolution, permission check |
 | `pkg/tui/` | Bubbletea model, host list, run-command sub-model, SFTP file browser sub-model, ping, logging, themes |
 
@@ -40,6 +40,10 @@ make tag TYPE=major release-prod # release immediately
 make stats                   # refresh download counts in data/stats.json
 make help                    # regenerate data/help
 ```
+
+Any commit that changes code, fixes bugs, adds features, or adjusts tests MUST also update `CHANGELOG.md` with a concise entry under the appropriate section (Security, Fix, Add, Refactor, Test).
+
+NEVER commit changes unless explicitly instructed — prepare the staging area and show the plan, then wait for the user to say "commit" or "go ahead".
 
 Goreleaser config: `.config/goreleaser.yaml` (v2, 4 OS × 2 arches, deb/rpm/homebrew/nix/snap/aur). Requires `GITHUB_TOKEN`.
 - **AUR push** requires SSH key registered in AUR account loaded in ssh-agent (`ssh-add ~/.ssh/aur_key`)
@@ -58,6 +62,7 @@ Goreleaser config: `.config/goreleaser.yaml` (v2, 4 OS × 2 arches, deb/rpm/home
 - `pkg/tui/test_helpers.go` — shared test helpers (matrixTheme, newTestConfig, etc.)
 - Target 80%+ coverage; skip tests if external commands missing
 - Current: 150+ tests across 8 files (85%+ coverage)
+- `pkg/sshconf/parser_test.go` — Include recursion (depth limit, cycles), glob expansion, `Parse()` default path, path traversal
 
 ## Benchmarking
 
@@ -74,7 +79,7 @@ make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
 
 ## Linting
 
-- `.golangci.yml` enables 7 linters: `govet`, `errcheck`, `staticcheck`, `revive`, `ineffassign`, `unused`, `gosec`
+- `.golangci.yml` enables 9 linters: `govet`, `errcheck`, `staticcheck`, `revive`, `ineffassign`, `unused`, `gosec`, `modernize`, `gocyclo`
 - `//nolint:gosec` used for `exec.Command` calls (expected for SSH TUI)
 - `//nolint:nilerr` at `pkg/sshconf/util.go:15` — intentional fallback to system SSH config when `$HOME` unavailable
 - Suppressed categories (acceptable): `errorlint`, `forcetypeassert`, `goconst`, `gocritic`, `godot`
@@ -93,7 +98,7 @@ make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
 - **`x/ansi@v0.9.2`, `colorprofile@v0.3.1`** pinned — newer versions break lipgloss compatibility
 - **Segfault.net** support removed in 0.4.1
 - **Sensitive keys** (identityfile, proxycommand, etc.) filtered from config viewport
-- **SFTP** — uses `github.com/pkg/sftp` via `ssh -s sftp` subsystem pipe, `BatchMode=yes` prevents interactive hangs
+- **SFTP** — uses `github.com/pkg/sftp` via `ssh -s` subsystem pipe, `BatchMode=yes` prevents interactive hangs, `StrictHostKeyChecking=no` intentional (users connect to own servers)
 - **`--` delimiter** before hostname in all SSH/mosh/syscall invocations (anti-injection)
 - **Bubbletea v2 API**: `tea.KeyPressMsg` replaces `tea.KeyMsg`, `list.SetFilterText()` not `SetFilterValue`, `viewport.GetContent()` not `Content`, `tea.View` cannot be compared to `nil`
 
@@ -105,5 +110,7 @@ make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
 - Debug logs only collected when debug mode is active
 - SFTP connections use `BatchMode=yes` + `RequestTTY=no` to prevent interactive prompts
 - In-flight SSH process tracked with `sync.Mutex` for safe cancellation on exit
+- In-flight remote command tracked with `sync.Mutex` (`currentCmdMu`) to prevent data race
+- Ping capped at 50 concurrent TCP dials (semaphore) to prevent unbounded goroutine spawning
 - Changelog formatted per keepachangelog.com, 1.0.0 semver for hardened v1
 - Ping uses TCP dial to SSH port — no raw sockets, no privileges required, works cross-platform without configuration

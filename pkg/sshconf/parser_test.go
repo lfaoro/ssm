@@ -4,6 +4,8 @@
 package sshconf_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/lfaoro/ssm/pkg/sshconf"
@@ -251,5 +253,167 @@ func TestGetPath(t *testing.T) {
 	path := cfg.GetPath()
 	if path == "" {
 		t.Error("expected non-empty path after ParsePath")
+	}
+}
+
+func TestIncludeDepthLimit(t *testing.T) {
+	t.Run("exceeds max depth", func(t *testing.T) {
+		dir := t.TempDir()
+		numFiles := 12 // maxIncludeDepth is 10
+
+		files := make([]string, numFiles)
+		for i := range numFiles {
+			files[i] = filepath.Join(dir, "depth_"+string(rune('0'+i)))
+		}
+
+		for i := numFiles - 1; i >= 0; i-- {
+			var content string
+			if i < numFiles-1 {
+				content = "Include " + files[i+1] + "\n"
+			}
+			content += "Host test" + string(rune('0'+i)) + "\n  HostName localhost\n"
+			if err := os.WriteFile(files[i], []byte(content), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		cfg := sshconf.New()
+		err := cfg.ParsePath(files[0])
+		if err == nil {
+			t.Fatal("expected error for exceeded include depth")
+		}
+	})
+
+	t.Run("within limit", func(t *testing.T) {
+		dir := t.TempDir()
+		numFiles := 3
+
+		files := make([]string, numFiles)
+		for i := range numFiles {
+			files[i] = filepath.Join(dir, "depth_"+string(rune('0'+i)))
+		}
+
+		for i := numFiles - 1; i >= 0; i-- {
+			var content string
+			if i < numFiles-1 {
+				content = "Include " + files[i+1] + "\n"
+			}
+			content += "Host test" + string(rune('0'+i)) + "\n  HostName localhost\n"
+			if err := os.WriteFile(files[i], []byte(content), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		cfg := sshconf.New()
+		err := cfg.ParsePath(files[0])
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(cfg.Hosts) < numFiles {
+			t.Errorf("expected at least %d hosts, got %d", numFiles, len(cfg.Hosts))
+		}
+	})
+}
+
+func TestIncludeCycleDetection(t *testing.T) {
+	dir := t.TempDir()
+
+	a := filepath.Join(dir, "a")
+	b := filepath.Join(dir, "b")
+
+	mustWrite(t, a, "Include "+b+"\nHost a\n  HostName a.local\n")
+	mustWrite(t, b, "Include "+a+"\nHost b\n  HostName b.local\n")
+
+	cfg := sshconf.New()
+	err := cfg.ParsePath(a)
+	if err == nil {
+		t.Fatal("expected error for cyclic include")
+	}
+}
+
+func TestIncludeGlob(t *testing.T) {
+	dir := t.TempDir()
+
+	mustWrite(t, filepath.Join(dir, "inc_a"), "Host a\n  HostName a.local\n")
+	mustWrite(t, filepath.Join(dir, "inc_b"), "Host b\n  HostName b.local\n")
+
+	main := filepath.Join(dir, "main")
+	mustWrite(t, main, "Include "+filepath.Join(dir, "inc_*")+"\nHost main\n  HostName main.local\n")
+
+	cfg := sshconf.New()
+	err := cfg.ParsePath(main)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(cfg.Hosts) != 3 {
+		t.Errorf("expected 3 hosts, got %d", len(cfg.Hosts))
+	}
+}
+
+func TestIncludeRelativePath(t *testing.T) {
+	dir := t.TempDir()
+
+	mustWrite(t, filepath.Join(dir, "included"), "Host sub\n  HostName sub.local\n")
+	mustWrite(t, filepath.Join(dir, "main"), "Include included\nHost main\n  HostName main.local\n")
+
+	cfg := sshconf.New()
+	err := cfg.ParsePath(filepath.Join(dir, "main"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(cfg.Hosts) != 2 {
+		t.Errorf("expected 2 hosts, got %d", len(cfg.Hosts))
+	}
+}
+
+func TestIncludePathTraversal(t *testing.T) {
+	dir := t.TempDir()
+	sub := filepath.Join(dir, "sub")
+	if err := os.Mkdir(sub, 0700); err != nil {
+		t.Fatal(err)
+	}
+
+	mustWrite(t, filepath.Join(sub, "safe"), "Host safe\n  HostName safe.local\n")
+	main := filepath.Join(dir, "main")
+	mustWrite(t, main, "Include sub/../sub/safe\nHost main\n  HostName main.local\n")
+
+	cfg := sshconf.New()
+	err := cfg.ParsePath(main)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(cfg.Hosts) != 2 {
+		t.Errorf("expected 2 hosts, got %d", len(cfg.Hosts))
+	}
+}
+
+func TestParseDefaultPath(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("HOME", dir)
+
+	sshDir := filepath.Join(dir, ".ssh")
+	if err := os.Mkdir(sshDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	mustWrite(t, filepath.Join(sshDir, "config"), "Host home\n  HostName home.local\n")
+
+	cfg := sshconf.New()
+	err := cfg.Parse()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(cfg.Hosts) != 1 {
+		t.Errorf("expected 1 host, got %d", len(cfg.Hosts))
+	}
+	host := cfg.GetHost("home")
+	if host.Name != "home" {
+		t.Errorf("host name = %q, want %q", host.Name, "home")
+	}
+}
+
+func mustWrite(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(content), 0600); err != nil {
+		t.Fatal(err)
 	}
 }

@@ -129,11 +129,15 @@ type sftpModel struct {
 func SftpModel(base tea.Model) tea.Model {
 	previous, ok := base.(*Model)
 	if !ok {
-		panic("failed to cast tea.Model to Model")
+		return base
 	}
 
 	i := previous.li.GlobalIndex()
-	host := previous.config.Hosts[i]
+	hosts := previous.config.GetHosts()
+	if i < 0 || i >= len(hosts) {
+		return base
+	}
+	host := hosts[i]
 	startDir, err := os.Getwd()
 	if err != nil {
 		startDir, _ = os.UserHomeDir()
@@ -261,7 +265,10 @@ func (s *sftpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		s.sshCmd = msg.cmd
 		s.sshErr = msg.stderr
 		s.sftpClient = msg.client
-		s.remote.cwd = "/tmp"
+		s.remote.cwd = msg.root
+		if s.remote.cwd == "" {
+			s.remote.cwd = "/"
+		}
 		s.status = fmt.Sprintf("Connected to %s", s.host.Name)
 		cmds = append(cmds, loadRemoteDirCmd(s.sftpClient, s.remote.cwd))
 	case sftpDirMsg:
@@ -786,13 +793,15 @@ func connectSFTP(host sshconf.Host, configPath string, onStarted func(*exec.Cmd)
 	}
 
 	//nolint:gosec
+	// StrictHostKeyChecking=no is intentional — users connect to their own
+	// servers by name. Do not change this without explicit project approval.
 	cmd := exec.Command(sshPath,
 		"-o", "StrictHostKeyChecking=no",
 		"-o", "BatchMode=yes",
 		"-o", "RequestTTY=no",
+		"-s",
 		"-F", configPath,
-		host.Name,
-		"-s", "sftp",
+		"--", host.Name, "sftp",
 	)
 	stderr := &bytes.Buffer{}
 	cmd.Stderr = stderr

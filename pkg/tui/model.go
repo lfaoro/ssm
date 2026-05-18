@@ -47,6 +47,7 @@ func NewModel(config *sshconf.Config, debug bool) *Model {
 	m := &Model{}
 	m.debug = debug
 	m.config = config
+	m.theme = skyTheme()
 	m.li = listFrom(m.config, m.theme)
 	m.log = NewLog(WithDebug(debug))
 	m.Cmd = sshCmd // defaults to ssh
@@ -59,6 +60,7 @@ func NewModel(config *sshconf.Config, debug bool) *Model {
 
 // Init initialises the model and returns the initial commands.
 func (m *Model) Init() tea.Cmd {
+	m.syncViewportStyle()
 	cmds := []tea.Cmd{
 		tea.RequestCapability("keyboard_enhancements"),
 	}
@@ -92,6 +94,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.vp.SetHeight(m.li.Height())
 		m.vp.SetWidth(msg.Width / 2)
+		m.syncViewportStyle()
 
 		if m.log.err != nil {
 			cmds = append(cmds, tea.RequestWindowSize)
@@ -241,6 +244,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return SftpModel(m), nil
 			case 'v':
 				m.showConfig = !m.showConfig
+				m.syncViewportStyle()
 			default:
 				return m, AddError(fmt.Errorf("that's an interesting key combo! %s", msg))
 			}
@@ -282,7 +286,7 @@ func (m *Model) connect() tea.Cmd {
 
 	cmdPath, err := exec.LookPath(m.Cmd.String())
 	if err != nil {
-		return AddError(fmt.Errorf("can't find `%s` cmd in your path: %v", m.Cmd, err))
+		return AddError(fmt.Errorf("can't find `%s` cmd in your path: %w", m.Cmd, err))
 	}
 
 	var cmd *exec.Cmd
@@ -292,7 +296,7 @@ func (m *Model) connect() tea.Cmd {
 			cmdPath,
 			"--",
 			host.title,
-			"--ssh=ssh -F "+m.config.GetPath(),
+			"--ssh=ssh -F '" + strings.ReplaceAll(m.config.GetPath(), "'", "'\\''") + "'",
 		)
 	}
 
@@ -332,6 +336,16 @@ func (m *Model) setConfig() {
 	m.vp.SetContent(out.String())
 }
 
+func (m *Model) syncViewportStyle() {
+	if m.debug {
+		m.vp.Style = lg.NewStyle().Border(lg.RoundedBorder(), true)
+	} else {
+		m.vp.Style = lg.NewStyle().
+			Padding(2).
+			Border(lg.HiddenBorder(), true)
+	}
+}
+
 func sanitizeStderr(s string) string {
 	const maxStderrLen = 500
 	if len(s) > maxStderrLen {
@@ -344,15 +358,6 @@ func sanitizeStderr(s string) string {
 func (m *Model) View() tea.View {
 	var out string
 	vertView := lg.JoinVertical(0, m.li.View(), m.log.View())
-	if m.debug {
-		border := lg.NewStyle().Border(lg.RoundedBorder(), true)
-		m.vp.Style = border
-	} else {
-		border := lg.NewStyle().
-			Padding(2).
-			Border(lg.HiddenBorder(), true)
-		m.vp.Style = border
-	}
 	if m.showConfig {
 		out += lg.JoinHorizontal(0.2, vertView, m.vp.View())
 	} else {
