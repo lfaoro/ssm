@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -172,8 +173,10 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 		m,
 		tea.WithOutput(os.Stderr))
 	wg := sync.WaitGroup{}
+	var shutdown atomic.Bool
 	wg.Go(func() {
 		final, err := p.Run()
+		shutdown.Store(true)
 		if err != nil {
 			e := fmt.Errorf("failed to run %v: %w", cmd.Name, err)
 			fmt.Println(e)
@@ -224,13 +227,17 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 		tag, err := latestTag()
 		if err != nil {
 			if cmd.Bool("debug") {
-				p.Send(tui.AppMsg{Text: fmt.Sprintf("%s", err)})
+				if !shutdown.Load() {
+					p.Send(tui.AppMsg{Text: fmt.Sprintf("%s", err)})
+				}
 			}
 			return
 		}
 		if tag != cmd.Version && cmd.Version != "0.0.0-dev" {
-			msg := fmt.Sprintf("%s: new version %s is available", cmd.Version, tag)
-			p.Send(tui.AppMsg{Text: msg})
+			if !shutdown.Load() {
+				msg := fmt.Sprintf("%s: new version %s is available", cmd.Version, tag)
+				p.Send(tui.AppMsg{Text: msg})
+			}
 		}
 	})
 

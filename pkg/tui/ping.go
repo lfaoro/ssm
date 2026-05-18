@@ -14,16 +14,16 @@ import (
 	"github.com/lfaoro/ssm/pkg/sshconf"
 )
 
-func resolvePingTarget(host sshconf.Host) (hostname, port string) {
-	hostname, _ = host.Options.Get("hostname")
+func resolvePingTarget(host sshconf.Host) (string, string) {
+	hostname, _ := host.Options.Get("hostname")
 	if hostname == "" {
 		hostname = host.Name
 	}
-	port, _ = host.Options.Get("port")
+	port, _ := host.Options.Get("port")
 	if port == "" {
 		port = "22"
 	}
-	return
+	return hostname, port
 }
 
 func pingHost(hostname, port string) (time.Duration, error) {
@@ -87,10 +87,14 @@ func pingSelectedCmd(m *Model) tea.Cmd {
 func pingAllCmd(m *Model) tea.Cmd {
 	hosts := m.config.GetHosts()
 	cmds := make([]tea.Cmd, 0, len(hosts))
+	const maxConcurrent = 50
+	sem := make(chan struct{}, maxConcurrent)
 	for _, host := range hosts {
 		hostname, port := resolvePingTarget(host)
 		hostName := host.Name
 		cmds = append(cmds, func() tea.Msg {
+			sem <- struct{}{}
+			defer func() { <-sem }()
 			latency, err := pingHost(hostname, port)
 			if err != nil {
 				return PingResultMsg{Host: hostName, Latency: pingErrorLabel(err)}
