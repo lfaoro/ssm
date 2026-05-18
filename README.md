@@ -57,7 +57,7 @@ xattr -d com.apple.quarantine /path/to/ssm
 |---|---|
 | macOS / Linux | `brew install lfaoro/tap/ssm` |
 | Arch Linux | `yay -S ssm-bin` (AUR) |
-| Nix | `nix profile install github:lfaoro/tap#ssm` |
+| Nix | `nix profile install github:lfaoro/ssm` |
 | Go | `go install github.com/lfaoro/ssm@latest` |
 | deb / rpm | Download from [Releases](https://github.com/lfaoro/ssm/releases) |
 

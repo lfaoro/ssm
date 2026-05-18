@@ -43,5 +43,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: cachix/install-nix-action@v30
-    - run: nix profile install github:lfaoro/tap#ssm
+    - run: nix profile install github:lfaoro/ssm
     - run: ssm --version

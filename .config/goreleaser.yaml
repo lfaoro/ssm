@@ -91,20 +91,6 @@ brews:
       email: bot@leonardofaoro.com
     skip_upload: false
 
-nix:
-  - name: ssm
-    homepage: "https://github.com/lfaoro/ssm"
-    description: "SSM | Secure Shell Manager"
-    repository:
-      owner: lfaoro
-      name: tap
-    commit_author:
-      name: bot
-      email: bot@leonardofaoro.com
-    dependencies:
-      - ssh
-    skip_upload: false
-
 # GPG signing requires GPG_PRIVATE_KEY secret configured in the repo.
 aurs:
   - name: ssm-bin
