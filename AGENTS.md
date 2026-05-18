@@ -31,8 +31,6 @@ direnv allow              # auto-activate on cd (via .envrc)
 | Go | 1.26.2 | `.mise.toml`, `go.mod` |
 | golangci-lint | 2.12.2 | `.mise.toml` |
 | goreleaser | latest | `.mise.toml` |
-| govulncheck | latest | `.mise.toml` |
-| benchstat | latest | `.mise.toml` |
 
 ## Architecture
 

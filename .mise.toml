@@ -2,5 +2,3 @@
 go = "1.26.2"
 golangci-lint = "2.12.2"
 goreleaser = "latest"
-govulncheck = "latest"
-benchstat = "latest"
