@@ -29,15 +29,7 @@ func defaultConfigPath() (string, error) {
 }
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-		// any other error we still return false
-		return false
-	}
-	// file exists
-	return true
+	return err == nil
 }
 
 // RemoveComments strips inline comments from SSH config directives.

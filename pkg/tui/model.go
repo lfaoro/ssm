@@ -292,7 +292,7 @@ func (m *Model) connect() tea.Cmd {
 			cmdPath,
 			"--",
 			host.title,
-			"--ssh=ssh -F "+m.config.GetPath(),
+			"--ssh=ssh -F '" + strings.ReplaceAll(m.config.GetPath(), "'", "'\\''") + "'",
 		)
 	}
 

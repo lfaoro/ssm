@@ -267,7 +267,7 @@ func latestTag() (string, error) {
 
 	tags, _, err := client.Repositories.ListTags(ctx, owner, repo, &github.ListOptions{PerPage: 1})
 	if err != nil {
-		return "", fmt.Errorf("failed to list tags: %v", err)
+		return "", fmt.Errorf("failed to list tags: %w", err)
 	}
 
 	if len(tags) == 0 {

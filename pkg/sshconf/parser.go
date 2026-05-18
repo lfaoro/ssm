@@ -19,7 +19,7 @@ import (
 
 // Config holds parsed SSH config data and provides thread-safe access.
 type Config struct {
-	mu             sync.Mutex
+	mu             sync.RWMutex
 	Hosts          []Host
 	secondaryHosts []Host
 
@@ -79,8 +79,8 @@ func (c *Config) ParsePath(s string) error {
 
 // GetHost returns the host entry matching the given name.
 func (c *Config) GetHost(name string) Host {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	for _, h := range c.Hosts {
 		if h.Name == name {
 			return h
@@ -91,8 +91,8 @@ func (c *Config) GetHost(name string) Host {
 
 // GetParamFor returns the value of a config key for the given host.
 func (c *Config) GetParamFor(host Host, key string) string {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	for _, h := range c.Hosts {
 		if h.Name == host.Name {
 			val, ok := h.Options.Get(key)
@@ -107,8 +107,8 @@ func (c *Config) GetParamFor(host Host, key string) string {
 
 // GetHosts returns a copy of all parsed hosts.
 func (c *Config) GetHosts() []Host {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	out := make([]Host, len(c.Hosts))
 	copy(out, c.Hosts)
 	return out
@@ -116,8 +116,8 @@ func (c *Config) GetHosts() []Host {
 
 // GetPath returns the path of the parsed SSH config file.
 func (c *Config) GetPath() string {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.path
 }
 
@@ -158,8 +158,8 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 		_ = f.Close()
 	}()
 
-	info, err := f.Stat()
-	if err == nil {
+	info, statErr := f.Stat()
+	if statErr == nil {
 		if perm := info.Mode().Perm(); perm&0077 != 0 {
 			fmt.Fprintf(os.Stderr, "ssm: warning: %s has insecure permissions %04o (should be 0600)\n", path, perm)
 		}
@@ -167,14 +167,14 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 	c.path = path
 	scanner := bufio.NewScanner(f)
 	var tagOrder bool
+	if c.order == TagOrder {
+		tagOrder = true
+	}
 	var currentHost *Host
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 
 		if line == tagOrderPrefix {
-			tagOrder = true
-		}
-		if c.order == TagOrder {
 			tagOrder = true
 		}
 
@@ -195,7 +195,7 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 		if k == "include" {
 			if !strings.HasPrefix(v, "/") {
 				dir := filepath.Dir(path)
-				v = filepath.Join(dir, v)
+				v = filepath.Clean(filepath.Join(dir, v))
 			}
 			paths, err := filepath.Glob(v)
 			if err != nil {
