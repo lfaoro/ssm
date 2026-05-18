@@ -4,3 +4,5 @@ tmp/
 _*
 TODO
 .agents/
+flake.lock
+flake.lock
