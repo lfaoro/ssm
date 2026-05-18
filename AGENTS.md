@@ -43,6 +43,8 @@ make help                    # regenerate data/help
 
 Any commit that changes code, fixes bugs, adds features, or adjusts tests MUST also update `CHANGELOG.md` with a concise entry under the appropriate section (Security, Fix, Add, Refactor, Test).
 
+NEVER commit changes unless explicitly instructed — prepare the staging area and show the plan, then wait for the user to say "commit" or "go ahead".
+
 Goreleaser config: `.config/goreleaser.yaml` (v2, 4 OS × 2 arches, deb/rpm/homebrew/nix/snap/aur). Requires `GITHUB_TOKEN`.
 - **AUR push** requires SSH key registered in AUR account loaded in ssh-agent (`ssh-add ~/.ssh/aur_key`)
 - **Platforms**: linux, darwin, freebsd, openbsd × amd64, arm64 (static builds, CGO_ENABLED=0)
