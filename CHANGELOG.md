@@ -9,6 +9,7 @@
 - 9 new linters: `misspell`, `unconvert`, `bodyclose`, `noctx`, `nilnil`, `prealloc`, `dupword`, `intrange`, `perfsprint`
 - `make check` target: lint + go-mod-tidy-check + test + build (pre-commit)
 - `go-mod-tidy-check` target: verify go.mod/go.sum consistency via `go mod tidy -diff`
+- Mise and Nix dev environments: `.mise.toml` (Go + toolchain), `flake.nix`, `.envrc` (direnv)
 
 ## Fix
 - SftpModel: return base on bad cast instead of crashing with panic

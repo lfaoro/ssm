@@ -16,6 +16,22 @@ make build-static       # production static binary (CGO_ENABLED=0)
 govulncheck ./...       # vulnerability scan
 ```
 
+## Dev Environment
+
+```bash
+mise install              # install Go + toolchain (via .mise.toml)
+nix develop               # enter Nix shell (via flake.nix)
+direnv allow              # auto-activate on cd (via .envrc)
+```
+
+### Tool Versions
+
+| Tool | Version | Source |
+|------|---------|--------|
+| Go | 1.26.2 | `.mise.toml`, `go.mod` |
+| golangci-lint | 2.12.2 | `.mise.toml` |
+| goreleaser | latest | `.mise.toml` |
+
 ## Architecture
 
 - **Bubbletea v2 (Elm TEA)** — Model-Update-View pattern, message-driven
