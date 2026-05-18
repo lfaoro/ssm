@@ -29,6 +29,8 @@ release-prod: release-check
 	goreleaser release --verbose --clean --skip=validate
 release-dev:
 	goreleaser release --verbose --snapshot --clean
+aur-push:
+	@scripts/aur-push.sh
 
 pre: 
 	@go mod tidy
@@ -84,7 +86,7 @@ stop:
 	@pkill -9 inotify ||:
 	@pkill -9 ssm ||:
 
-.PHONY: help test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked go-mod-tidy-check check update stop clean distclean release release-check release-prod release-dev pre stats backup
+.PHONY: help test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked go-mod-tidy-check check update stop clean distclean release release-check release-prod release-dev aur-push pre stats backup
 help:
 	go run . --help >data/help
 
