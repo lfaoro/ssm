@@ -2,6 +2,8 @@ package tui
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -306,7 +308,7 @@ func (s *sftpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if s.remote.cwd == "" {
 			s.remote.cwd = "/"
 		}
-		s.status = fmt.Sprintf("Connected to %s", s.host.Name)
+		s.status = "Connected to " + s.host.Name
 		cmds = append(cmds, loadRemoteDirCmd(s.sftpClient, s.remote.cwd, false))
 	case sftpDirMsg:
 		if msg.err != nil {
@@ -329,7 +331,7 @@ func (s *sftpModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case sftpTransferMsg:
 		if msg.err != nil {
 			s.status = msg.err.Error()
-			s.history = append(s.history, fmt.Sprintf("ERR: %s", msg.err.Error()))
+			s.history = append(s.history, "ERR: "+msg.err.Error())
 		} else {
 			s.status = msg.text
 			s.history = append(s.history, msg.text)
@@ -362,7 +364,7 @@ func (s *sftpModel) handleEnter() tea.Cmd {
 			return loadLocalDirCmd(item.path, s.showHidden)
 		}
 		if s.sftpClient == nil {
-			return transferMsgCmd("", fmt.Errorf("not connected to remote host"), false, false)
+			return transferMsgCmd("", errors.New("not connected to remote host"), false, false)
 		}
 		remotePath := pathpkg.Join(s.remote.cwd, filepath.Base(item.path))
 		if s.fileExistsRemote(remotePath) {
@@ -471,7 +473,7 @@ func (s *sftpModel) handleDelete() tea.Cmd {
 
 func (s *sftpModel) handleMkdir() tea.Cmd {
 	if s.activePane != remotePane || s.sftpClient == nil {
-		return transferMsgCmd("", fmt.Errorf("mkdir only available on remote pane"), false, false)
+		return transferMsgCmd("", errors.New("mkdir only available on remote pane"), false, false)
 	}
 	s.confirm = &confirmAction{
 		mode:    modeMkdir,
@@ -497,7 +499,7 @@ func (s *sftpModel) executeConfirm() tea.Cmd {
 			if err := os.RemoveAll(s.confirm.localPath); err != nil {
 				return transferMsgCmd("", err, true, false)
 			}
-			return transferMsgCmd(fmt.Sprintf("deleted %s", filepath.Base(s.confirm.localPath)), nil, true, false)
+			return transferMsgCmd("deleted "+filepath.Base(s.confirm.localPath), nil, true, false)
 		}
 		if s.confirm.remotePath != "" && s.sftpClient != nil {
 			return deleteRemoteFileCmd(s.sftpClient, s.confirm.remotePath)
@@ -853,7 +855,7 @@ func deleteRemoteFileCmd(client *sftp.Client, path string) tea.Cmd {
 			return sftpTransferMsg{err: err, refreshRemote: true}
 		}
 		return sftpTransferMsg{
-			text:          fmt.Sprintf("deleted %s", pathpkg.Base(path)),
+			text:          "deleted " + pathpkg.Base(path),
 			refreshRemote: true,
 		}
 	}
@@ -942,7 +944,7 @@ func connectSFTP(host sshconf.Host, configPath string, onStarted func(*exec.Cmd)
 	//nolint:gosec
 	// StrictHostKeyChecking=no is intentional — users connect to their own
 	// servers by name. Do not change this without explicit project approval.
-	cmd := exec.Command(sshPath,
+	cmd := exec.CommandContext(context.Background(), sshPath,
 		"-o", "StrictHostKeyChecking=no",
 		"-o", "BatchMode=yes",
 		"-o", "RequestTTY=no",

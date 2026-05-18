@@ -71,7 +71,7 @@ func formatHost(host sshconf.Host, pingResult ...string) item {
 		port := func() string {
 			_port, _ := host.Options.Get("port")
 			if _port != "" && _port != "22" {
-				return fmt.Sprintf(":%s", _port)
+				return ":" + _port
 			}
 			return ""
 		}

@@ -8,7 +8,7 @@ build-static:
 	CGO_ENABLED=0 go build ${FLAGS} ${LDFLAGS} -o ./bin/ .
 build-linked:
 	@go mod tidy
-	rm bin/ssm
+	rm -f bin/ssm
 	go build -ldflags='-buildid= -w -s' -trimpath -buildvcs=false -o ./bin .
 
 clean:
@@ -32,7 +32,6 @@ release-dev:
 
 pre: 
 	@go mod tidy
-	# @go fmt ./... && go vet ./...
 
 stats:
 	@go run scripts/stats.go
@@ -67,7 +66,15 @@ lint:
 	fi
 
 build:
-	go build ./...
+	go build -o ./bin/ssm .
+
+go-mod-tidy-check:
+	@cp go.mod go.mod.bak && cp go.sum go.sum.bak
+	@go mod tidy -diff
+	@mv go.mod.bak go.mod && mv go.sum.bak go.sum
+	@rm -f go.mod.bak go.sum.bak
+
+check: lint go-mod-tidy-check test build
 
 update:
 	go get -u .
@@ -77,9 +84,9 @@ stop:
 	@pkill -9 inotify ||:
 	@pkill -9 ssm ||:
 
-.PHONY: help test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked update stop clean distclean release release-check release-prod release-dev pre stats backup
+.PHONY: help test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked go-mod-tidy-check check update stop clean distclean release release-check release-prod release-dev pre stats backup
 help:
-	build/ssm_linux_amd64_v1/ssm --help >data/help
+	go run . --help >data/help
 
 
 backup: 

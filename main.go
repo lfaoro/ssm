@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/mail"
 	"os"
@@ -147,7 +148,7 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 	}
 
 	if !term.IsTerminal(int(os.Stdin.Fd())) {
-		return fmt.Errorf("not an interactive terminal :(")
+		return errors.New("not an interactive terminal :(")
 	}
 
 	var err error
@@ -203,7 +204,7 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 
 	if filterTag != "" {
 		p.Send(tui.FilterTagMsg{
-			Arg: fmt.Sprintf("#%s", filterTag),
+			Arg: "#" + filterTag,
 		})
 	}
 	if cmd.Bool("exit") {
@@ -278,7 +279,7 @@ func latestTag() (string, error) {
 	}
 
 	if len(tags) == 0 {
-		return "", fmt.Errorf("no tags found in the repository")
+		return "", errors.New("no tags found in the repository")
 	}
 
 	return *tags[0].Name, nil
