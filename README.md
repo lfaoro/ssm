@@ -11,6 +11,22 @@ Secure Shell Manager -- **Your SSH config on TUI-roids.**
 
 `ssm` is a tiny terminal UI that sits on top of your existing SSH config. No changes needed on your servers.
 
+## Features
+
+|  | |
+|----------|-----------|
+| Tags | `#tag:` comments in SSH config, filter hosts by tag (`ssm production`) |
+| Search | Fuzzy host search (`/`) |
+| Connect | SSH or MOSH (`tab` to toggle) |
+| Exit mode | `--exit` replaces process with `syscall.Exec` (no leftover shell) |
+| Config | Live editor (`ctrl+e`), sanitized inspector (`ctrl+v`) |
+| SFTP | Two-pane local/remote file browser with batch transfer (`ctrl+s`) |
+| Remote exec | Run commands on selected host (`ctrl+r`) |
+| Ping | Single host (`p`), all hosts (`P`, capped at 50 concurrent) |
+| Themes | `sky` (default), `matrix` (green terminal vibes) |
+| Parser | `Include` recursion (depth 10, cycle detection), `#tagorder` sorting |
+| Security | Perms check (warn if not 0600), `BatchMode=yes`, `--` anti-injection |
+
 ## Demo
 
 ![demo](data/demo.png)
