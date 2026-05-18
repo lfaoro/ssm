@@ -369,6 +369,7 @@ func (m *Model) View() tea.View {
 	v.AltScreen = true
 	v.WindowTitle = "SSM | Secure Shell Manager"
 	v.ReportFocus = true
+	v.BackgroundColor = parseHexColor(m.theme.backgroundColor)
 	return v
 }
 

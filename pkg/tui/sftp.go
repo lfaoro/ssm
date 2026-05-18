@@ -704,6 +704,7 @@ func (s *sftpModel) View() tea.View {
 
 	view := tea.NewView(content)
 	view.AltScreen = true
+	view.BackgroundColor = parseHexColor(s.previous.theme.backgroundColor)
 	return view
 }
 

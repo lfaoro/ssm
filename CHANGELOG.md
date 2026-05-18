@@ -12,6 +12,7 @@
 - Mise and Nix dev environments: `.mise.toml` (Go + toolchain), `flake.nix`, `.envrc` (direnv)
 - SFTP: Esc clears active pane selections, second Esc/q exits to main
 - SFTP: auto-deselect after batch transfer
+- Per-theme terminal background: solid dark via `tea.View.BackgroundColor`
 - README: feature list section
 
 ## Fix

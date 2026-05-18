@@ -239,6 +239,9 @@ func (m *cmdModel) View() tea.View {
 	builder.WriteString(m.viewport.View())
 	v := tea.NewView(builder.String())
 	v.AltScreen = true
+	if pm, ok := m.previousModel.(*Model); ok {
+		v.BackgroundColor = parseHexColor(pm.theme.backgroundColor)
+	}
 	return v
 }
 
