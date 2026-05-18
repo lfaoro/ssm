@@ -11,7 +11,7 @@ make vet                # go vet ./...
 make lint               # golangci-lint (if present) or go fmt + go vet
 make build              # go build -o ./bin/ssm .
 make test               # go test -race ./... with count=1
-make check              # pre-commit: vet + lint + test + build
+make check              # pre-commit: go fmt + lint + go-mod-tidy-check + test + build
 make build-static       # production static binary (CGO_ENABLED=0)
 govulncheck ./...       # vulnerability scan
 ```

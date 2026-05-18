@@ -109,26 +109,26 @@ type filePane struct {
 }
 
 type sftpModel struct {
-	previous     *Model
-	host         sshconf.Host
-	firstBoot    bool
-	width        int
-	height       int
-	activePane   paneSide
-	local        filePane
-	remote       filePane
-	sshCmd       *exec.Cmd
-	sshErr       *bytes.Buffer
-	sftpClient   *sftp.Client
-	status       string
-	history      []string
-	confirm      *confirmAction
-	connecting   *exec.Cmd
-	connectMutex sync.Mutex
-	selected      map[string]bool
-	localSelected map[string]bool
+	previous       *Model
+	host           sshconf.Host
+	firstBoot      bool
+	width          int
+	height         int
+	activePane     paneSide
+	local          filePane
+	remote         filePane
+	sshCmd         *exec.Cmd
+	sshErr         *bytes.Buffer
+	sftpClient     *sftp.Client
+	status         string
+	history        []string
+	confirm        *confirmAction
+	connecting     *exec.Cmd
+	connectMutex   sync.Mutex
+	selected       map[string]bool
+	localSelected  map[string]bool
 	remoteSelected map[string]bool
-	showHidden    bool
+	showHidden     bool
 }
 
 // SftpModel wraps the base model in an SFTP browser sub-model.
@@ -150,15 +150,15 @@ func SftpModel(base tea.Model) tea.Model {
 	}
 
 	m := &sftpModel{
-		previous:   previous,
-		host:       host,
-		firstBoot:  true,
-		activePane: localPane,
-		local:      newFilePane("Local", startDir, previous.theme),
-		remote:     newFilePane(host.Name, "/tmp", previous.theme),
-		status:       "Connecting...",
-		selected:      map[string]bool{},
-		localSelected: map[string]bool{},
+		previous:       previous,
+		host:           host,
+		firstBoot:      true,
+		activePane:     localPane,
+		local:          newFilePane("Local", startDir, previous.theme),
+		remote:         newFilePane(host.Name, "/tmp", previous.theme),
+		status:         "Connecting...",
+		selected:       map[string]bool{},
+		localSelected:  map[string]bool{},
 		remoteSelected: map[string]bool{},
 	}
 	if items, err := loadLocalDir(startDir, false); err == nil {

@@ -76,7 +76,10 @@ go-mod-tidy-check:
 	@mv go.mod.bak go.mod && mv go.sum.bak go.sum
 	@rm -f go.mod.bak go.sum.bak
 
-check: lint go-mod-tidy-check test build
+check: gofmt lint go-mod-tidy-check test build
+
+gofmt:
+	@go fmt ./...
 
 update:
 	go get -u .
@@ -86,7 +89,7 @@ stop:
 	@pkill -9 inotify ||:
 	@pkill -9 ssm ||:
 
-.PHONY: help test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked go-mod-tidy-check check update stop clean distclean release release-check release-prod release-dev aur-push pre stats backup
+.PHONY: help test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked go-mod-tidy-check gofmt check update stop clean distclean release release-check release-prod release-dev aur-push pre stats backup
 help:
 	go run . --help >data/help
 

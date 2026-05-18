@@ -11,10 +11,10 @@ import (
 // theme provides the colors for the properties.
 // you can use ANSI, ANSI256 or Hex colors.
 type theme struct {
-	backgroundColor         string
-	mainTitleColor          string
-	selectedBorderColor     string
-	selectedTitleColor      string
+	backgroundColor          string
+	mainTitleColor           string
+	selectedBorderColor      string
+	selectedTitleColor       string
 	selectedDescriptionColor string
 }
 
@@ -25,20 +25,20 @@ var themes = map[string]theme{
 
 func matrixTheme() theme {
 	return theme{
-		backgroundColor:         "#000000",
-		mainTitleColor:          "#648c11",
-		selectedTitleColor:      "#9efd38",
-		selectedBorderColor:     "#9efd38",
+		backgroundColor:          "#000000",
+		mainTitleColor:           "#648c11",
+		selectedTitleColor:       "#9efd38",
+		selectedBorderColor:      "#9efd38",
 		selectedDescriptionColor: "#648c11",
 	}
 }
 
 func skyTheme() theme {
 	return theme{
-		backgroundColor:         "#0d1117",
-		mainTitleColor:          "#4682b4",
-		selectedTitleColor:      "#00bfff",
-		selectedBorderColor:     "#00bfff",
+		backgroundColor:          "#0d1117",
+		mainTitleColor:           "#4682b4",
+		selectedTitleColor:       "#00bfff",
+		selectedBorderColor:      "#00bfff",
 		selectedDescriptionColor: "#4682b4",
 	}
 }
