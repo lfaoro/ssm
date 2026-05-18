@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"sync"
 
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
@@ -104,6 +105,7 @@ type cmdModel struct {
 	running       bool
 	spinner       spinner.Model
 	currentCmd    *exec.Cmd
+	currentCmdMu  sync.Mutex
 }
 
 func (m *cmdModel) Init() tea.Cmd {
@@ -173,14 +175,25 @@ func (m *cmdModel) handleKeyMsg(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.commands = nil
 				m.viewport.SetContent("")
 			case 'c':
-				if m.running && m.currentCmd != nil && m.currentCmd.Process != nil {
-					_ = m.currentCmd.Process.Kill()
-					m.commands = append(m.commands, "[command cancelled]")
-					m.viewport.SetContent(strings.Join(m.commands, "\n"))
-					m.viewport.GotoBottom()
-					m.running = false
-					m.input.Focus()
-					m.currentCmd = nil
+				if m.running {
+					m.currentCmdMu.Lock()
+					proc := m.currentCmd
+					m.currentCmdMu.Unlock()
+					if proc != nil && proc.Process != nil {
+						_ = proc.Process.Kill()
+						m.commands = append(m.commands, "[command cancelled]")
+						m.viewport.SetContent(strings.Join(m.commands, "\n"))
+						m.viewport.GotoBottom()
+						m.running = false
+						m.input.Focus()
+						m.currentCmdMu.Lock()
+						m.currentCmd = nil
+						m.currentCmdMu.Unlock()
+					} else {
+						m.commands = append(m.commands, "[no running command to cancel]")
+						m.viewport.SetContent(strings.Join(m.commands, "\n"))
+						m.viewport.GotoBottom()
+					}
 				} else {
 					m.commands = append(m.commands, "[no running command to cancel]")
 					m.viewport.SetContent(strings.Join(m.commands, "\n"))
@@ -287,12 +300,16 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 
 		cmd := exec.Command(prev.Cmd.String(), args...) //nolint:gosec
 
+		m.currentCmdMu.Lock()
 		m.currentCmd = cmd
+		m.currentCmdMu.Unlock()
 		var out bytes.Buffer
 		cmd.Stdout = &out
 		cmd.Stderr = &out
 		err := cmd.Run()
+		m.currentCmdMu.Lock()
 		m.currentCmd = nil
+		m.currentCmdMu.Unlock()
 
 		return cmdResultMsg{output: sanitizeOutput(out.String()), err: err}
 	}
