@@ -9,7 +9,7 @@
 
 Secure Shell Manager -- **Your SSH config on TUI-roids.**
 
-`ssm` is a tiny terminal UI that sits on top of your existing SSH config. No changes needed on your servers.
+SSM is an open-source terminal UI that sits on top of your existing SSH config to simplify and automate connectivity, data transfer, organization and host discovery.
 
 ## Features
 
