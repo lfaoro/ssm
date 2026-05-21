@@ -31,10 +31,11 @@ SSM is an open-source terminal UI that sits on top of your existing SSH config t
 
 ```bash
 ssm                    # launch TUI
-ssm production         # filter by tag
-ssm -se vpn            # show config + exit after connect
+ssm production         # launch TUI showing only production tagged hosts
+ssm --show --exit vpn  # show config + exit ssm on connect + filter vpn tagged hosts
 ssm --theme matrix     # green hacker vibes
 ssm --theme sky        # soft blue vibes
+
 nix run github:lfaoro/ssm -- ssm  # run without installing
 ```
 
