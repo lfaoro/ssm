@@ -1,7 +1,8 @@
-# [Unreleased]
+# [2.3.0] May 22, 2026
 
 ## Fix
 - Filtering bug after ping cleared host list
+- Fix changelog versions (2.1.2 renamed to 2.2.0, add missing 2.2.1 section)
 
 ## Add
 - `aur-push` target and script for AUR package publishing
@@ -20,6 +21,7 @@
 - Bump `golangci/golangci-lint-action` from 8 to 9
 - Bump `dependabot/fetch-metadata` from 2 to 3
 - Bump `github/codeql-action` from 4.35.4 to 4.35.5
+- Disable AUR upload in goreleaser (`skip_upload: true`), defer to `aur-push.sh`
 
 # [2.2.1] May 19, 2026
 
