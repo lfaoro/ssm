@@ -109,7 +109,7 @@ aurs:
       name: bot
       email: bot@leonardofaoro.com
     git_ssh_command: 'ssh -o StrictHostKeyChecking=accept-new'
-    skip_upload: false
+    skip_upload: true
 
 signs:
   - cmd: gpg
