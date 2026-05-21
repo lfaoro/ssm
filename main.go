@@ -49,7 +49,7 @@ func main() {
 		Usage:                  "Secure Shell Manager",
 		UsageText:              "ssm [--options] [tag]\nexample: ssm --show --exit vpn\nexample: ssm -se vpn",
 		ArgsUsage:              "[tag]",
-		Description:            "ssm is a connection manager designed to help organize servers, connect, filter, tag, and much more from a simple terminal interface. It works on top of installed command-line programs and does not require any setup on remote systems.",
+		Description:            "SSM is an open-source terminal UI that sits on top of your existing SSH config to simplify and automate connectivity, data transfer, organization and host discovery.",
 
 		Version: BuildVersion,
 		ExtraInfo: func() map[string]string {
@@ -95,6 +95,13 @@ func main() {
 				Value:   false,
 				Sources: cli.EnvVars("SSM_ORDER"),
 			},
+			&cli.BoolFlag{
+				Name:    "ping",
+				Aliases: []string{"p"},
+				Usage:   "connect to all hosts and show response time",
+				Value:   false,
+				Sources: cli.EnvVars("SSM_PING"),
+			},
 			&cli.StringFlag{
 				Name:      "config",
 				TakesFile: true,
@@ -110,12 +117,6 @@ func main() {
 				DefaultText: "sky|matrix",
 				Value:       "sky",
 				Sources:     cli.EnvVars("SSM_THEME"),
-			},
-			&cli.BoolFlag{
-				Name:    "ping",
-				Aliases: []string{"p"},
-				Usage:   "ping all hosts and show liveness",
-				Value:   false,
 			},
 			&cli.BoolFlag{
 				Name:    "debug",
@@ -202,11 +203,6 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 		}
 	})
 
-	if filterTag != "" {
-		p.Send(tui.FilterTagMsg{
-			Arg: "#" + filterTag,
-		})
-	}
 	if cmd.Bool("exit") {
 		p.Send(tui.ExitOnConnMsg{})
 	}
@@ -221,6 +217,11 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 	}
 	if cmd.Bool("ping") {
 		p.Send(tui.LivenessCheckMsg{})
+	}
+	if filterTag != "" {
+		p.Send(tui.FilterTagMsg{
+			Arg: "#" + filterTag,
+		})
 	}
 
 	// inform user when new version is available
