@@ -1,4 +1,32 @@
-# [2.1.2] May 18, 2026
+# [Unreleased]
+
+## Fix
+- Filtering bug after ping cleared host list
+
+## Add
+- `aur-push` target and script for AUR package publishing
+- Nix package output via flake.nix (`nix run`, `nix profile install`)
+- `nix-lock` target: regenerate flake.lock, auto-staged for release
+- `gofmt` in `make check` target for formatting consistency
+
+## Docs
+- Nix run and profile install in quick-start section
+- Fix Nix table entries in readme
+- Add Ailton Baúque to AUTHORS
+
+## Build
+- Bump `actions/checkout` from 4 to 6
+- Bump `actions/setup-go` from 5 to 6
+- Bump `golangci/golangci-lint-action` from 8 to 9
+- Bump `dependabot/fetch-metadata` from 2 to 3
+- Bump `github/codeql-action` from 4.35.4 to 4.35.5
+
+# [2.2.1] May 19, 2026
+
+## Add
+- Per-theme terminal background: solid dark via `tea.View.BackgroundColor`
+
+# [2.2.0] May 18, 2026
 
 ## Security
 - Add `--` delimiter before hostname in SFTP connection (anti-injection, matches SSH/mosh)
@@ -13,7 +41,6 @@
 - Nix: package via flake.nix (`nix run github:lfaoro/ssm`, `nix profile install github:lfaoro/ssm`)
 - SFTP: Esc clears active pane selections, second Esc/q exits to main
 - SFTP: auto-deselect after batch transfer
-- Per-theme terminal background: solid dark via `tea.View.BackgroundColor`
 - README: feature list section
 
 ## Fix
