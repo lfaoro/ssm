@@ -55,3 +55,47 @@ jobs:
           exit 1
         fi
       shell: bash
+
+  install_script_path_modification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Test --no-modify-path does not touch rc files
+        run: |
+          export HOME=$(mktemp -d)
+          export SHELL=/bin/bash
+          ./scripts/get.sh --no-modify-path --dir /tmp/ssm-nomod
+          if [ -f "$HOME/.bashrc" ] && grep -q "ssm-nomod" "$HOME/.bashrc"; then
+            echo "ERROR: --no-modify-path should not have modified .bashrc"
+            exit 1
+          fi
+          /tmp/ssm-nomod/ssm --version
+
+      - name: Test --modify-path appends to bashrc with comment
+        run: |
+          export HOME=$(mktemp -d)
+          export SHELL=/bin/bash
+          ./scripts/get.sh --modify-path --dir /tmp/ssm-mod
+          if ! grep -q "Added by ssm install script" "$HOME/.bashrc"; then
+            echo "ERROR: Expected comment not found in .bashrc"
+            cat "$HOME/.bashrc"
+            exit 1
+          fi
+          if ! grep -q "/tmp/ssm-mod" "$HOME/.bashrc"; then
+            echo "ERROR: PATH line not found"
+            exit 1
+          fi
+          /tmp/ssm-mod/ssm --version
+
+      - name: Test unsupported shell shows generic message
+        shell: bash
+        run: |
+          export HOME=$(mktemp -d)
+          export SHELL=/bin/dash
+          output=$(./scripts/get.sh --dir /tmp/ssm-dash 2>&1 || true)
+          if ! echo "$output" | grep -q "Add /tmp/ssm-dash to your PATH"; then
+            echo "ERROR: Did not get expected message for unsupported shell"
+            echo "$output"
+            exit 1
+          fi
