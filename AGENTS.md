@@ -57,11 +57,10 @@ direnv allow              # auto-activate on cd (via .envrc)
 make tag TYPE=major          # bump version, push tag
 make release-dev             # goreleaser snapshot (dry run)
 make aur-push               # push AUR package (requires goreleaser build/ already present)
-make release                 # pre + nix-lock + release-prod + help (full release)
+make release                 # pre + nix-lock + release-prod (full release)
 make tag TYPE=major release-prod # release immediately
 
 make stats                   # refresh download counts in data/stats.json
-make help                    # regenerate data/help
 ```
 
 Any commit that changes code, fixes bugs, adds features, or adjusts tests MUST also update `CHANGELOG.md` with a concise entry under the appropriate section (Security, Fix, Add, Refactor, Test).
@@ -109,7 +108,6 @@ make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
 
 - `data/config_example` — SSH config fixture with 8 tagged hosts used by integration tests
 - `data/stats.json` — Download counts for README badge (updated via `make stats`)
-- `data/help` — Auto-generated CLI help text (updated via `make help`)
 
 ## Constraints
 
