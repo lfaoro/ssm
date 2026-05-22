@@ -25,21 +25,122 @@ Usage: $0 [OPTIONS]
 Install ${APP_NAME} from GitHub releases.
 
 Options:
-  -h, --help       Show this help and exit
-  --debug          Enable verbose debug output (set -x)
-  --dir <path>     Install to <path> instead of auto-detecting
+  -h, --help            Show this help and exit
+  --debug               Enable verbose debug output (set -x)
+  --dir <path>          Install to <path> instead of auto-detecting
+  --no-modify-path      Do not modify shell rc files (print instructions only)
+  --modify-path         Modify shell rc files without prompting (for supported shells)
 
 The script auto-detects:
   /usr/local/bin  (preferred, requires write permission)
   ~/.local/bin    (fallback, created if needed)
 
+For bash, zsh, and fish, the script will automatically add the install directory
+to your PATH (in the appropriate rc file) when possible. Use --no-modify-path
+to disable this behavior.
+
 EOF
 	exit 0
+}
+
+# ---- shell rc path helpers ----
+
+detect_shell() {
+	local shell
+	shell="${SHELL:-}"
+	if [[ -z "$shell" ]]; then
+		shell="$(ps -p $$ -o comm= 2>/dev/null || true)"
+	fi
+	if [[ -z "$shell" ]]; then
+		shell="${0##*/}"
+	fi
+	basename "$shell" 2>/dev/null || echo "unknown"
+}
+
+is_ci_environment() {
+	[[ -n "${CI:-}" ]] ||
+	[[ -n "${GITHUB_ACTIONS:-}" ]] ||
+	[[ -n "${GITLAB_CI:-}" ]] ||
+	[[ -n "${JENKINS_URL:-}" ]] ||
+	[[ -n "${BUILD_NUMBER:-}" ]] ||
+	[[ -n "${TF_BUILD:-}" ]] ||
+	[[ -n "${TRAVIS:-}" ]]
+}
+
+get_target_rc_file() {
+	local shell="$1"
+	case "$shell" in
+		bash) echo "$HOME/.bashrc" ;;
+		zsh)  echo "$HOME/.zshrc" ;;
+		fish) echo "$HOME/.config/fish/config.fish" ;;
+		*)    echo "" ;;
+	esac
+}
+
+get_path_line() {
+	local shell="$1"
+	local dir="$2"
+	case "$shell" in
+		bash|zsh)
+			echo "export PATH=\"\$PATH:${dir}\""
+			;;
+		fish)
+			echo "fish_add_path ${dir}"
+			;;
+		*)
+			echo ""
+			;;
+	esac
+}
+
+path_already_configured() {
+	local file="$1"
+	local line="$2"
+	[[ -f "$file" ]] && grep -Fq "$line" "$file"
+}
+
+append_to_rc_file() {
+	local file="$1"
+	local line="$2"
+	local comment="$3"
+
+	mkdir -p "$(dirname "$file")" 2>/dev/null || true
+
+	if [[ ! -f "$file" ]]; then
+		touch "$file" || return 1
+	fi
+
+	{
+		echo ""
+		echo "$comment"
+		echo "$line"
+	} >> "$file"
+}
+
+should_modify_path() {
+	# Explicit flags take precedence
+	if [[ "$MODIFY_PATH" == "no" ]]; then
+		return 1
+	fi
+	if [[ "$MODIFY_PATH" == "yes" ]]; then
+		return 0
+	fi
+
+	# Default safety rules
+	if ! [[ -t 0 && -t 1 ]]; then
+		return 1
+	fi
+	if is_ci_environment; then
+		return 1
+	fi
+
+	return 0
 }
 
 # ---- parse flags ----
 
 CUSTOM_DIR=""
+MODIFY_PATH=""          # "", "yes", or "no"
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		-h|--help) usage ;;
@@ -48,6 +149,14 @@ while [[ $# -gt 0 ]]; do
 			[[ -z "${2:-}" ]] && error "--dir requires a path"
 			CUSTOM_DIR="$2"
 			shift 2
+			;;
+		--no-modify-path)
+			MODIFY_PATH="no"
+			shift
+			;;
+		--modify-path)
+			MODIFY_PATH="yes"
+			shift
 			;;
 		*) error "unknown option: $1 (try --help)" ;;
 	esac
@@ -184,10 +293,32 @@ echo "Installed ${APP_NAME} to: ${BINARY_PATH}"
 
 if [[ ":$PATH:" != *":${CUSTOM_DIR}:"* ]]; then
 	echo "Note: ${CUSTOM_DIR} is not in your PATH"
-	case "${SHELL##*/}" in
-		bash) echo "  Add: echo 'export PATH=\$PATH:${CUSTOM_DIR}' >> ~/.bashrc" ;;
-		zsh)  echo "  Add: echo 'export PATH=\$PATH:${CUSTOM_DIR}' >> ~/.zshrc" ;;
-		*)    echo "  Add ${CUSTOM_DIR} to your PATH" ;;
+
+	shell=$(detect_shell)
+	rc_file=$(get_target_rc_file "$shell")
+	line=$(get_path_line "$shell" "$CUSTOM_DIR")
+	comment="# Added by ssm install script on $(date +%Y-%m-%d)"
+
+	case "$shell" in
+		bash|zsh|fish)
+			if should_modify_path && [[ -n "$rc_file" ]] && [[ -n "$line" ]]; then
+				if path_already_configured "$rc_file" "$line"; then
+					echo "  (already present in $rc_file)"
+				elif append_to_rc_file "$rc_file" "$line" "$comment"; then
+					echo "  Added to $rc_file"
+				else
+					echo "  Could not write to $rc_file"
+					echo "  Please add this line manually:"
+					echo "    $line"
+				fi
+			else
+				echo "  Add this line to your $shell config:"
+				echo "    $line"
+			fi
+			;;
+		*)
+			echo "  Add ${CUSTOM_DIR} to your PATH"
+			;;
 	esac
 fi
 
