@@ -1,4 +1,7 @@
-# SSM 🐚
+# SSM 🐚 – Secure Shell Manager
+Your SSH config on TUI-roids.
+
+> SSM is a lightweight, open-source terminal UI (TUI) that sits seamlessly on top of your existing ~/.ssh/config (and installed ssh/mosh binaries) to eliminate SSH friction. It delivers fast, interactive host discovery, one-keystroke connections, integrated SFTP file transfers, remote command execution, tag-based filtering, live config editing, and more — with zero setup or changes required on any remote server.
 
 [![Go](https://img.shields.io/github/go-mod/go-version/lfaoro/ssm?logo=go)](https://github.com/lfaoro/ssm)
 [![Release](https://img.shields.io/github/v/release/lfaoro/ssm?logo=github)](https://github.com/lfaoro/ssm/releases)
@@ -7,36 +10,65 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
 [![License](https://img.shields.io/github/license/lfaoro/ssm)](LICENSE)
 
-Secure Shell Manager -- **Your SSH config on TUI-roids.**
 
-SSM is an open-source terminal UI that sits on top of your existing SSH config to simplify and automate connectivity, data transfer, organization and host discovery.
+## ✨ Features
 
-## Features
+SSM turns your plain SSH config into a delightful, keyboard-driven experience. Here’s what you get out of the box:
 
-|  | |
-|----------|-----------|
-| Tags | `#tag:` comments in SSH config, filter hosts by tag (`ssm production`) |
-| Search | Fuzzy host search (`/`) |
-| Connect | SSH or MOSH (`tab` to toggle) |
-| Exit mode | `--exit` replaces process with `syscall.Exec` (no leftover shell) |
-| Config | Live editor (`ctrl+e`), sanitized inspector (`ctrl+v`) |
-| SFTP | Two-pane local/remote file browser with batch transfer (`ctrl+s`) |
-| Remote exec | Run commands on selected host (`ctrl+r`) |
-| Ping | Single host (`p`), all hosts (`P`, capped at 50 concurrent) |
-| Themes | `sky` (default), `matrix` (green terminal vibes) |
-| Parser | `Include` recursion (depth 10, cycle detection), `#tagorder` sorting |
-| Security | `BatchMode=yes`, `--` anti-injection |
+### 🔍 Discovery & Navigation
+| Feature       | Description                                                                 | Shortcut      |
+|---------------|-----------------------------------------------------------------------------|---------------|
+| **Tags**      | Add `#tag: production` (or any label) in your SSH config and instantly filter hosts | `ssm production` |
+| **Fuzzy Search** | Lightning-fast fuzzy search across all hosts                                 | `/`           |
+| **Ping**      | Check reachability of one host or all hosts at once (capped at 50 concurrent for safety) | `p` / `P`     |
 
-## Quick Start
+### 🚀 Connection & Interaction
+| Feature          | Description                                                                 | Shortcut      |
+|------------------|-----------------------------------------------------------------------------|---------------|
+| **Connect**      | Connect via SSH or Mosh with a single keystroke                             | `tab` to toggle |
+| **Remote Exec**  | Run any command on the selected host without leaving the TUI                | `ctrl+r`      |
+| **Exit Mode**    | Clean exit that replaces the process entirely (`syscall.Exec`) — no leftover shell | `--exit` flag |
+
+### 📁 File Management
+| Feature     | Description                                                                 | Shortcut      |
+|-------------|-----------------------------------------------------------------------------|---------------|
+| **SFTP**    | Beautiful two-pane local ↔ remote file browser with batch transfer support   | `ctrl+s`      |
+
+### ⚙️ Configuration & Power Tools
+| Feature            | Description                                                                 | Shortcut      |
+|--------------------|-----------------------------------------------------------------------------|---------------|
+| **Live Editor**    | Edit your SSH config directly inside SSM                                     | `ctrl+e`      |
+| **Config Inspector**| View sanitized, readable version of the parsed config                        | `ctrl+v`      |
+| **Advanced Parser**| Full `Include` recursion (depth 10 + cycle detection) + `#tagorder` sorting | —             |
+
+### 🎨 Theming & Security
+| Feature     | Description                                                                 | Details                  |
+|-------------|-----------------------------------------------------------------------------|--------------------------|
+| **Themes**  | Beautiful built-in themes for different vibes                               | `sky` (default) • `matrix` |
+| **Security**| Hardened defaults including `BatchMode=yes` and injection protection        | `--` anti-injection delimiter |
+
+> **Pro tip:** Run `ssm --theme matrix` for that classic green-terminal hacker aesthetic.
+
+## 🚀 Quick Start
+
+SSM is designed to feel instant. Here are the most common ways to launch it:
 
 ```bash
-ssm                    # launch TUI
-ssm production         # launch TUI showing only production tagged hosts
-ssm --show --exit vpn  # show config + exit ssm on connect + filter vpn tagged hosts
-ssm --theme matrix     # green hacker vibes
-ssm --theme sky        # soft blue vibes
+# Launch the full TUI (recommended first command)
+ssm
 
-nix run github:lfaoro/ssm -- ssm  # run without installing
+# Filter to only hosts tagged with "production"
+ssm production
+
+# Advanced one-liner: show config + auto-exit on connect + filter "vpn" hosts
+ssm --show --exit vpn
+
+# Choose your aesthetic
+ssm --theme matrix    # classic green terminal vibes
+ssm --theme sky       # soft modern blue (default)
+
+# Run instantly without installing (Nix flake)
+nix run github:lfaoro/ssm -- ssm
 ```
 
 ## Install
@@ -45,19 +77,22 @@ nix run github:lfaoro/ssm -- ssm  # run without installing
 
 ```bash
 curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
-# macOS quarantine workaround
-xattr -d com.apple.quarantine /path/to/ssm
+```
+
+### macOS users - remove quarantine flag
+```
+xattr -d com.apple.quarantine $(which ssm)
 ```
 
 ### Package Managers
 
 | Platform | Command |
 |---|---|
-| macOS / Linux | `brew install lfaoro/tap/ssm` |
+| Go | `go install github.com/lfaoro/ssm@latest` |
+| macOS | `brew install lfaoro/tap/ssm` |
 | Arch Linux | `yay -S ssm-bin` (AUR) |
 | Nix install | `nix profile install github:lfaoro/ssm` |
 | Nix run | `nix run github:lfaoro/ssm -- ssm` |
-| Go | `go install github.com/lfaoro/ssm@latest` |
 | deb / rpm | Download from [Releases](https://github.com/lfaoro/ssm/releases) |
 
 ### Pre-built Binaries
@@ -68,60 +103,6 @@ Download the latest archive for your platform from the [releases page](https://g
 tar xzf ssm_*.tar.gz
 sudo mv ssm /usr/local/bin/
 ```
-
-## Keys You'll Actually Use
-
-| Key | What it does |
-|---|---|
-| `enter` | Connect |
-| `ctrl+e` | Edit config live |
-| `ctrl+r` | Run command on host |
-| `ctrl+s` | SFTP file browser |
-| `ctrl+v` | Toggle config inspector |
-| `tab` | Switch SSH ↔ MOSH |
-| `/` | Fuzzy search |
-| `q` | Quit |
-| `p` | Ping selected host |
-| `P` | Ping all hosts |
-
-Full list in the app with `?`
-
-## Usage
-
-```
-ssm [command] [flags]
-
-Commands:
-  (none — ssm launches directly into the TUI)
-
-Flags:
-  -s, --show          Show config viewport on launch
-  -e, --exit          Exit after connecting (uses syscall.Exec)
-  --theme <name>      Color theme: sky (default), matrix
-  --config <path>     Custom SSH config path
-  --debug             Enable debug logging
-  -p, --ping          Ping all hosts on startup
-  -v, --version       Show version
-  -h, --help          Show help
-```
-
-### Tag Filtering
-
-Pass a positional argument to filter hosts by tag on launch:
-
-```bash
-ssm production    # show only hosts tagged "production"
-ssm web           # show only hosts tagged "web"
-```
-
-### Themes
-
-```bash
-ssm --theme matrix    # green on black
-ssm --theme sky       # soft blue
-```
-
-Want more themes? PRs welcome.
 
 ## SSH Config Tips
 
@@ -134,10 +115,6 @@ Host myserver
     HostName 10.0.0.5
     ...
 ```
-
-The more tags you use, the better it gets.
-
-`ssm` also respects `Include` directives (recurses up to depth 10 with cycle detection) and `#tagorder` for custom host sorting.
 
 ## Architecture
 
@@ -181,19 +158,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for dev environment setup and guidelines.
 - SFTP uses `BatchMode=yes` + `RequestTTY=no` to prevent interactive prompts
 - `--` delimiter before hostname in all SSH/mosh/syscall invocations (anti-injection)
 
-**That's it.**
-
-If you live in the terminal and manage more than a couple servers, this thing just makes life a little nicer.
 
 Star it if it helps → https://github.com/lfaoro/ssm
 
 Made with ❤️ and too much SSH pain.
 
-## Shoutout
+## Shoutouts
 
 **[@hackerschoice](https://x.com/hackerschoice/status/1920899798837711279)** on X
+**[@golangch](https://x.com/golangch/status/1920138613473649150)** on X
 
-If `ssm` actually made your life better:
+If you live in the terminal and manage more than a couple servers, this thing just makes life a little nicer.
 
 - [GitHub Sponsors](https://github.com/sponsors/lfaoro)
 - BTC: `bc1qzaqeqwklaq86uz8h2lww87qwfpnyh9fveyh3hs`
