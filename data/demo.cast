@@ -1,0 +1,14 @@
+# Placeholder for asciinema recording
+
+# This file is a stub.
+# Replace it with the real .cast file once the 30-second asciinema demo is recorded.
+#
+# Recommended content for the recording (calm, power-user style):
+# - Start with `ssm`
+# - Show tag filtering (e.g. "production", "db")
+# - Show P to ping all hosts
+# - Show Ctrl+r to run a command on a selected host
+# - Show Ctrl+s for SFTP
+# - Keep it around 25-30 seconds, calm and professional
+#
+# When ready, replace this file and update the embed in README.md

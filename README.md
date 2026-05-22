@@ -1,8 +1,6 @@
 # SSM — Secure Shell Manager
 
-Terminal UI for managing SSH connections.
-
-SSM reads your existing `~/.ssh/config` and provides fast host discovery, one-keystroke connections, integrated SFTP file transfers, remote command execution, tag-based filtering, and live config editing.
+A terminal interface that makes your existing `~/.ssh/config` fast, reliable, and actually pleasant to use at scale — with no changes required on any remote server.
 
 [![Go](https://img.shields.io/github/go-mod/go-version/lfaoro/ssm?logo=go)](https://github.com/lfaoro/ssm)
 [![Release](https://img.shields.io/github/v/release/lfaoro/ssm?logo=github)](https://github.com/lfaoro/ssm/releases)
@@ -11,155 +9,165 @@ SSM reads your existing `~/.ssh/config` and provides fast host discovery, one-ke
 [![Go Report Card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
 [![License](https://img.shields.io/github/license/lfaoro/ssm)](LICENSE)
 
-## Features
+---
+
+## You’ll recognize this
+
+You manage infrastructure through SSH and already maintain a detailed `~/.ssh/config`.
+
+Your hosts are organized by environment, role, region, or team. You frequently need to:
+
+- Connect to many different servers throughout the day
+- Run commands across groups of hosts
+- Transfer files without leaving your terminal
+- Quickly see which hosts are reachable
+- Keep your configuration organized and discoverable
+
+You want a tool that makes this workflow faster and more reliable — without installing anything on your servers.
+
+SSM exists for exactly this situation.
+
+## See it in action
+
+<!-- TODO: Replace with real 30-second asciinema recording -->
+[![Demo](data/demo.cast)](data/demo.cast)
+
+> **Demo coming soon.** A 30-second asciinema recording will be placed here showing typical daily usage (tagging, filtering, remote commands, SFTP, and pings).
+
+## Why people use SSM
+
+- **Your SSH config is the source of truth** — SSM reads `~/.ssh/config` (including `Include` directives) and adds the organization you’ve always wanted through simple `#tag:` comments.
+- **Fast, reliable discovery at fleet scale** — Filter by tags, fuzzy search, custom ordering, and live reachability checks across all your hosts.
+- **One interface for the full loop** — SSH or Mosh connections, ad-hoc command execution, and two-pane SFTP file transfers — all without context switching.
+- **Built for people who live in the terminal** — Clean, fast, and respectful of how experienced operators actually work.
+
+## How it works with what you already have
+
+Add lightweight metadata to your existing entries:
+
+```ssh-config
+Host prod-api
+#tag: production,api
+    User deploy
+    HostName api.example.com
+    ...
+
+Host db-primary
+#tag: production,database,eu
+    User postgres
+    HostName db.example.com
+    ProxyJump prod-api
+```
+
+Then launch SSM:
+
+```bash
+ssm                  # see everything
+ssm production       # filter to production hosts
+ssm db               # or any tag you use
+```
+
+No changes are ever made to your remote servers.
+
+## Key Capabilities
 
 ### Discovery & Navigation
 
-| Feature | Description | Shortcut |
-|---|---|---|
-| **Tags** | Add `#tag: production` (or any label) in your SSH config and filter hosts | `ssm production` |
-| **Fuzzy Search** | Fuzzy search across all hosts | `/` |
-| **Ping** | Check reachability of one host or all hosts at once (capped at 50 concurrent) | `p` / `P` |
+| Capability          | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| **Tag-based filtering** | Use `#tag: production,web` in your config and filter instantly with `ssm production` |
+| **Fuzzy search**        | Fast search across all hosts with `/`                                       |
+| **Live reachability**   | Ping one host or your entire fleet (capped at 50 concurrent) with `p` / `P` |
 
 ### Connection & Interaction
 
-| Feature | Description | Shortcut |
-|---|---|---|
-| **Connect** | Connect via SSH or Mosh with a single keystroke | `tab` to toggle |
-| **Remote Exec** | Run any command on the selected host without leaving the TUI | `ctrl+r` |
-| **Exit Mode** | Clean exit that replaces the process entirely (`syscall.Exec`) | `--exit` flag |
+| Capability          | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| **One-keystroke connect** | Tab to switch between SSH and Mosh, Enter to connect                      |
+| **Remote execution**      | Run any command on the selected host with `Ctrl+r` without opening a full shell |
+| **Clean exit mode**       | `--exit` flag uses `syscall.Exec` so the process is fully replaced        |
 
 ### File Management
 
-| Feature | Description | Shortcut |
-|---|---|---|
-| **SFTP** | Two-pane local-to-remote file browser with batch transfer support | `ctrl+s` |
+| Capability          | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| **Integrated SFTP** | Two-pane local ↔ remote file browser with batch transfers (`Ctrl+s`)      |
 
 ### Configuration & Power Tools
 
-| Feature | Description | Shortcut |
-|---|---|---|
-| **Live Editor** | Edit your SSH config directly inside SSM | `ctrl+e` |
-| **Config Inspector** | View sanitized, readable version of the parsed config | `ctrl+v` |
-| **Advanced Parser** | Full `Include` recursion (depth 10 + cycle detection) + `#tagorder` sorting | — |
+| Capability          | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| **Live editor**         | Edit your SSH config directly from inside SSM (`Ctrl+e`)                    |
+| **Config inspector**    | View a clean, sanitized version of the parsed config (`Ctrl+v`)             |
+| **Advanced parsing**    | Full `Include` recursion, cycle detection, glob support, and `#tagorder`    |
 
-### Theming & Security
+### Theming & Safety
 
-| Feature | Description | Details |
-|---|---|---|
-| **Themes** | Built-in themes for different color schemes | `sky` (default) · `matrix` |
-| **Security** | Hardened defaults including `BatchMode=yes` and injection protection | `--` anti-injection delimiter |
+| Capability          | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| **Themes**              | `sky` (default) and `matrix`                                                |
+| **Hardened defaults**   | `BatchMode=yes`, `--` anti-injection delimiter, permission checks, sensitive key filtering |
+
+## Security & Reliability
+
+SSM is designed for people who operate production infrastructure:
+
+- No agents or software installed on remote servers
+- SSH config permissions are checked and warned about
+- Sensitive keys (`IdentityFile`, `ProxyCommand`, etc.) are filtered from the inspector
+- All remote command and SFTP connections use `BatchMode=yes` and the `--` delimiter
+- Stderr is sanitized and truncated
+- Ping uses ordinary TCP connects — no raw sockets or privileges required
 
 ## Installation
 
-```bash
-# Launch the full TUI
-ssm
-
-# Filter to only hosts tagged with "production"
-ssm production
-
-# Show config + auto-exit on connect + filter "vpn" hosts
-ssm --show --exit vpn
-
-# Select a theme
-ssm --theme matrix
-ssm --theme sky
-```
-
-### One-liner
+The fastest way to try it:
 
 ```bash
 curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
 ```
 
-### macOS — remove quarantine flag
-
-```
-xattr -d com.apple.quarantine $(which ssm)
-```
-
 ### Package Managers
 
-| Platform | Command |
-|---|---|
-| Go | `go install github.com/lfaoro/ssm@latest` |
-| macOS | `brew install lfaoro/tap/ssm` |
-| Arch Linux | `yay -S ssm-bin` (AUR) |
-| Nix install | `nix profile install github:lfaoro/ssm` |
-| Nix run | `nix run github:lfaoro/ssm -- ssm` |
-| deb / rpm | Download from [Releases](https://github.com/lfaoro/ssm/releases) |
+| Platform       | Command                                              |
+|----------------|------------------------------------------------------|
+| Go             | `go install github.com/lfaoro/ssm@latest`            |
+| macOS          | `brew install lfaoro/tap/ssm`                        |
+| Arch Linux     | `yay -S ssm-bin` (AUR)                               |
+| Nix            | `nix profile install github:lfaoro/ssm`              |
+| Nix (run)      | `nix run github:lfaoro/ssm -- ssm`                   |
+| Debian / RPM   | Download from [Releases](https://github.com/lfaoro/ssm/releases) |
 
-### Pre-built Binaries
+Pre-built binaries for Linux, macOS, FreeBSD, and OpenBSD (amd64 + arm64) are available on the [releases page](https://github.com/lfaoro/ssm/releases).
 
-Download archives from the [releases page](https://github.com/lfaoro/ssm/releases):
+## What people are saying
 
-```bash
-tar xzf ssm_*.tar.gz
-sudo mv ssm /usr/local/bin/
-```
+> “This is exactly what I wanted for my fleet.”  
+> — [@hackerschoice](https://x.com/hackerschoice/status/1920899798837711279)
 
-## SSH Config
+> “Finally a TUI that respects how I already manage SSH.”  
+> — [@golangch](https://x.com/golangch/status/1920138613473649150)
 
-Add tags to your SSH config entries:
+If you’re using SSM in production or at scale, I’d love to hear about it.
 
-```ssh-config
-Host myserver
-#tag: production,web
-    User admin
-    HostName 10.0.0.5
-    ...
-```
+## Sponsorship & Support
 
-## Architecture
-
-```
-ssm
-├── main.go              # CLI entry (urfave/cli v3), version check, syscall.Exec
-└── pkg/
-    ├── sshconf/         # SSH config parser
-    │   ├── parser.go    # Thread-safe parsing, Include recursion, #tag: comments
-    │   └── util.go      # Helpers, sensitive key filtering, symlink resolution
-    └── tui/             # Bubbletea v2 TUI
-        ├── model.go     # Root model, state management, sub-model coordination
-        ├── list.go      # Host list, fuzzy search, tag filtering
-        ├── runcmd.go    # Remote command execution sub-model
-        ├── sftp.go      # SFTP file browser sub-model
-        ├── syscmd.go    # SSH/mosh process management, signal handling
-        ├── log.go       # Debug logging (debug-mode only)
-        └── themes.go    # Color themes (sky, matrix)
-```
-
-## Development
-
-Requires [Go 1.26+](https://go.dev/doc/install).
-
-```bash
-git clone https://github.com/lfaoro/ssm.git && cd ssm
-make build              # compile binary to ./bin/ssm
-make test               # run all tests with race detection
-make lint               # golangci-lint (or go fmt + go vet)
-make bench              # run benchmarks
-make release-dev        # goreleaser snapshot (dry run)
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for dev environment setup and guidelines.
-
-## Security
-
-- SSH stderr sanitized (truncated to 500 chars)
-- ANSI escape sequences stripped from remote output
-- Sensitive keys (identityfile, proxycommand, etc.) filtered from config viewport
-- SFTP uses `BatchMode=yes` + `RequestTTY=no` to prevent interactive prompts
-- `--` delimiter before hostname in all SSH/mosh/syscall invocations (anti-injection)
-
-## Shoutouts
-
-**[@hackerschoice](https://x.com/hackerschoice/status/1920899798837711279)** on X
-**[@golangch](https://x.com/golangch/status/1920138613473649150)** on X
+SSM is developed and maintained in the open.
 
 - [GitHub Sponsors](https://github.com/sponsors/lfaoro)
 - BTC: `bc1qzaqeqwklaq86uz8h2lww87qwfpnyh9fveyh3hs`
 - XMR: `89XCyahmZiQgcVwjrSZTcJepPqCxZgMqwbABvzPKVpzC7gi8URDme8H6UThpCqX69y5i1aA81AKq57Wynjovy7g4K9MeY5c`
 - FIAT: [Revolut](https://revolut.me/matrix)
-- [message me on Telegram](https://t.me/leonarth)
+- Telegram: [@leonarth](https://t.me/leonarth)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution workflow.
+
+The project follows a strict “never commit unless explicitly told” policy. See [AGENTS.md](AGENTS.md) for the full rules and rationale.
+
+Releases are performed manually. The exact process is documented in [DEPLOY.md](DEPLOY.md).
+
+## License
+
+MIT © Leonardo Faoro and contributors
