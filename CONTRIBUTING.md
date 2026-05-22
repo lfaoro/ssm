@@ -23,14 +23,6 @@ mise trust            # trust the project config
 nix develop            # enter shell with Go + tools from flake.nix
 ```
 
-### direnv (auto-activate)
-
-With either method above, direnv activates the environment automatically when you `cd` into the project:
-
-```bash
-direnv allow           # one-time trust of .envrc
-```
-
 ## Workflow
 
 1. Fork the repo
