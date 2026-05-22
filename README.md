@@ -2,7 +2,7 @@
 
 Terminal UI for managing SSH connections.
 
-SSM reads your existing `~/.ssh/config` and provides fast host discovery, one-keystroke connections, integrated SFTP file transfers, remote command execution, tag-based filtering, and live config editing — with no changes required on any remote server.
+SSM reads your existing `~/.ssh/config` and provides fast host discovery, one-keystroke connections, integrated SFTP file transfers, remote command execution, tag-based filtering, and live config editing.
 
 [![Go](https://img.shields.io/github/go-mod/go-version/lfaoro/ssm?logo=go)](https://github.com/lfaoro/ssm)
 [![Release](https://img.shields.io/github/v/release/lfaoro/ssm?logo=github)](https://github.com/lfaoro/ssm/releases)
