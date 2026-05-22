@@ -212,7 +212,11 @@ resolve_install_dir
 # ---- fetch latest version ----
 
 echo "Fetching latest version..."
-API_RESPONSE="$(curl -sSL "$API_URL")" || error "failed to fetch from GitHub API"
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+	API_RESPONSE="$(curl -sSL -H "Authorization: Bearer ${GITHUB_TOKEN}" "$API_URL")" || error "failed to fetch from GitHub API"
+else
+	API_RESPONSE="$(curl -sSL "$API_URL")" || error "failed to fetch from GitHub API"
+fi
 VERSION="$(grep -o '"tag_name": "[^"]*"' <<<"$API_RESPONSE" | sed 's/"tag_name": "//;s/"//')"
 [[ -n "$VERSION" ]] || {
 	echo "debug: raw API response:" >&2
