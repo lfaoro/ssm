@@ -1,7 +1,8 @@
-# SSM 🐚 – Secure Shell Manager
-Your SSH config on TUI-roids.
+# SSM — Secure Shell Manager
 
-> SSM is a lightweight, open-source terminal UI (TUI) that sits seamlessly on top of your existing ~/.ssh/config (and installed ssh/mosh binaries) to eliminate SSH friction. It delivers fast, interactive host discovery, one-keystroke connections, integrated SFTP file transfers, remote command execution, tag-based filtering, live config editing, and more — with zero setup or changes required on any remote server.
+Terminal UI for managing SSH connections.
+
+SSM reads your existing `~/.ssh/config` and provides fast host discovery, one-keystroke connections, integrated SFTP file transfers, remote command execution, tag-based filtering, and live config editing — with no changes required on any remote server.
 
 [![Go](https://img.shields.io/github/go-mod/go-version/lfaoro/ssm?logo=go)](https://github.com/lfaoro/ssm)
 [![Release](https://img.shields.io/github/v/release/lfaoro/ssm?logo=github)](https://github.com/lfaoro/ssm/releases)
@@ -10,68 +11,61 @@ Your SSH config on TUI-roids.
 [![Go Report Card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
 [![License](https://img.shields.io/github/license/lfaoro/ssm)](LICENSE)
 
+## Features
 
-## ✨ Features
+### Discovery & Navigation
 
-SSM turns your plain SSH config into a delightful, keyboard-driven experience. Here’s what you get out of the box:
+| Feature | Description | Shortcut |
+|---|---|---|
+| **Tags** | Add `#tag: production` (or any label) in your SSH config and filter hosts | `ssm production` |
+| **Fuzzy Search** | Fuzzy search across all hosts | `/` |
+| **Ping** | Check reachability of one host or all hosts at once (capped at 50 concurrent) | `p` / `P` |
 
-### 🔍 Discovery & Navigation
-| Feature       | Description                                                                 | Shortcut      |
-|---------------|-----------------------------------------------------------------------------|---------------|
-| **Tags**      | Add `#tag: production` (or any label) in your SSH config and instantly filter hosts | `ssm production` |
-| **Fuzzy Search** | Lightning-fast fuzzy search across all hosts                                 | `/`           |
-| **Ping**      | Check reachability of one host or all hosts at once (capped at 50 concurrent for safety) | `p` / `P`     |
+### Connection & Interaction
 
-### 🚀 Connection & Interaction
-| Feature          | Description                                                                 | Shortcut      |
-|------------------|-----------------------------------------------------------------------------|---------------|
-| **Connect**      | Connect via SSH or Mosh with a single keystroke                             | `tab` to toggle |
-| **Remote Exec**  | Run any command on the selected host without leaving the TUI                | `ctrl+r`      |
-| **Exit Mode**    | Clean exit that replaces the process entirely (`syscall.Exec`) — no leftover shell | `--exit` flag |
+| Feature | Description | Shortcut |
+|---|---|---|
+| **Connect** | Connect via SSH or Mosh with a single keystroke | `tab` to toggle |
+| **Remote Exec** | Run any command on the selected host without leaving the TUI | `ctrl+r` |
+| **Exit Mode** | Clean exit that replaces the process entirely (`syscall.Exec`) | `--exit` flag |
 
-### 📁 File Management
-| Feature     | Description                                                                 | Shortcut      |
-|-------------|-----------------------------------------------------------------------------|---------------|
-| **SFTP**    | Beautiful two-pane local ↔ remote file browser with batch transfer support   | `ctrl+s`      |
+### File Management
 
-### ⚙️ Configuration & Power Tools
-| Feature            | Description                                                                 | Shortcut      |
-|--------------------|-----------------------------------------------------------------------------|---------------|
-| **Live Editor**    | Edit your SSH config directly inside SSM                                     | `ctrl+e`      |
-| **Config Inspector**| View sanitized, readable version of the parsed config                        | `ctrl+v`      |
-| **Advanced Parser**| Full `Include` recursion (depth 10 + cycle detection) + `#tagorder` sorting | —             |
+| Feature | Description | Shortcut |
+|---|---|---|
+| **SFTP** | Two-pane local-to-remote file browser with batch transfer support | `ctrl+s` |
 
-### 🎨 Theming & Security
-| Feature     | Description                                                                 | Details                  |
-|-------------|-----------------------------------------------------------------------------|--------------------------|
-| **Themes**  | Beautiful built-in themes for different vibes                               | `sky` (default) • `matrix` |
-| **Security**| Hardened defaults including `BatchMode=yes` and injection protection        | `--` anti-injection delimiter |
+### Configuration & Power Tools
 
-> **Pro tip:** Run `ssm --theme matrix` for that classic green-terminal hacker aesthetic.
+| Feature | Description | Shortcut |
+|---|---|---|
+| **Live Editor** | Edit your SSH config directly inside SSM | `ctrl+e` |
+| **Config Inspector** | View sanitized, readable version of the parsed config | `ctrl+v` |
+| **Advanced Parser** | Full `Include` recursion (depth 10 + cycle detection) + `#tagorder` sorting | — |
 
-## 🚀 Quick Start
+### Theming & Security
 
-SSM is designed to feel instant. Here are the most common ways to launch it:
+| Feature | Description | Details |
+|---|---|---|
+| **Themes** | Built-in themes for different color schemes | `sky` (default) · `matrix` |
+| **Security** | Hardened defaults including `BatchMode=yes` and injection protection | `--` anti-injection delimiter |
+
+## Installation
 
 ```bash
-# Launch the full TUI (recommended first command)
+# Launch the full TUI
 ssm
 
 # Filter to only hosts tagged with "production"
 ssm production
 
-# Advanced one-liner: show config + auto-exit on connect + filter "vpn" hosts
+# Show config + auto-exit on connect + filter "vpn" hosts
 ssm --show --exit vpn
 
-# Choose your aesthetic
-ssm --theme matrix    # classic green terminal vibes
-ssm --theme sky       # soft modern blue (default)
-
-# Run instantly without installing (Nix flake)
-nix run github:lfaoro/ssm -- ssm
+# Select a theme
+ssm --theme matrix
+ssm --theme sky
 ```
-
-## Install
 
 ### One-liner
 
@@ -79,7 +73,8 @@ nix run github:lfaoro/ssm -- ssm
 curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
 ```
 
-### macOS users - remove quarantine flag
+### macOS — remove quarantine flag
+
 ```
 xattr -d com.apple.quarantine $(which ssm)
 ```
@@ -97,16 +92,16 @@ xattr -d com.apple.quarantine $(which ssm)
 
 ### Pre-built Binaries
 
-Download the latest archive for your platform from the [releases page](https://github.com/lfaoro/ssm/releases), then:
+Download archives from the [releases page](https://github.com/lfaoro/ssm/releases):
 
 ```bash
 tar xzf ssm_*.tar.gz
 sudo mv ssm /usr/local/bin/
 ```
 
-## SSH Config Tips
+## SSH Config
 
-Add tags like this:
+Add tags to your SSH config entries:
 
 ```ssh-config
 Host myserver
@@ -158,22 +153,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for dev environment setup and guidelines.
 - SFTP uses `BatchMode=yes` + `RequestTTY=no` to prevent interactive prompts
 - `--` delimiter before hostname in all SSH/mosh/syscall invocations (anti-injection)
 
-
-Star it if it helps → https://github.com/lfaoro/ssm
-
-Made with ❤️ and too much SSH pain.
-
 ## Shoutouts
 
 **[@hackerschoice](https://x.com/hackerschoice/status/1920899798837711279)** on X
 **[@golangch](https://x.com/golangch/status/1920138613473649150)** on X
-
-If you live in the terminal and manage more than a couple servers, this thing just makes life a little nicer.
 
 - [GitHub Sponsors](https://github.com/sponsors/lfaoro)
 - BTC: `bc1qzaqeqwklaq86uz8h2lww87qwfpnyh9fveyh3hs`
 - XMR: `89XCyahmZiQgcVwjrSZTcJepPqCxZgMqwbABvzPKVpzC7gi8URDme8H6UThpCqX69y5i1aA81AKq57Wynjovy7g4K9MeY5c`
 - FIAT: [Revolut](https://revolut.me/matrix)
 - [message me on Telegram](https://t.me/leonarth)
-
-or just ⭐ the repo. Appreciate it either way.
