@@ -22,10 +22,19 @@ govulncheck ./...       # vulnerability scan
 
 ## Dev Environment
 
+Pick one:
+
+### mise (recommended)
+
 ```bash
 mise install              # install Go + toolchain (via .mise.toml)
+mise trust                # trust the project config
+```
+
+### Nix
+
+```bash
 nix develop               # enter Nix shell (via flake.nix)
-direnv allow              # auto-activate on cd (via .envrc)
 ```
 
 ### Tool Versions
