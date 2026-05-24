@@ -298,8 +298,8 @@ func (m *Model) connect() tea.Cmd {
 			cmdPath,
 			"--",
 			host.title,
-			"--ssh=ssh -F '"+strings.ReplaceAll(m.config.GetPath(), "'", "'\\''")+"'",
 		)
+		cmd.Env = append(os.Environ(), "SSH_CONFIG="+m.config.GetPath())
 	}
 
 	cmd.Stderr = &m.errbuf

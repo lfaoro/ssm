@@ -1,3 +1,8 @@
+# [2.3.1] May 25, 2026
+
+## Fix
+- Mosh connection failure on macOS: replace fragile `--ssh=` quoting with `SSH_CONFIG` env var (closes #45)
+
 # [2.3.0] May 22, 2026
 
 ## Fix
