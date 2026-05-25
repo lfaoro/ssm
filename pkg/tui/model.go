@@ -247,6 +247,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 'v':
 				m.showConfig = !m.showConfig
 				m.syncViewportStyle()
+			case 'y':
+				return SyncModel(m), nil
 			default:
 				return m, AddError(fmt.Errorf("that's an interesting key combo! %s", msg))
 			}

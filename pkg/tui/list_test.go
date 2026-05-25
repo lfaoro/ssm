@@ -223,18 +223,19 @@ func TestListFrom_HelpKeys(t *testing.T) {
 func TestInitKeys(t *testing.T) {
 	keys := initKeys()
 
-	if len(keys) != 7 {
-		t.Errorf("expected 7 key bindings, got %d", len(keys))
+	if len(keys) != 8 {
+		t.Errorf("expected 8 key bindings, got %d", len(keys))
 	}
 
 	expectedKeys := map[string]bool{
 		"enter":  false,
 		"tab":    false,
-		"ctrl+s": false,
-		"ctrl+r": false,
+		"p":      false,
 		"ctrl+e": false,
 		"ctrl+v": false,
-		"p":      false,
+		"ctrl+s": false,
+		"ctrl+r": false,
+		"ctrl+y": false,
 	}
 
 	for _, k := range keys {

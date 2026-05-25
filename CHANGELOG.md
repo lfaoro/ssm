@@ -1,8 +1,16 @@
 # [Unreleased]
 
-## Fix
-- `--ping` with tag filter: only ping visible/filtered hosts instead of all hosts
-- `--ping` applied before tag filter: send `FilterTagMsg` before `LivenessCheckMsg` in startup sequence
+## Add
+- Cloud provider sync: `ssm sync [hetzner aws gcp azure]` CLI subcommand and `Ctrl+y` TUI
+  panel to discover running servers and write them to `~/.ssh/config.d/50-ssm-cloud`
+  - Hetzner: uses `HCLOUD_TOKEN` env var
+  - AWS: uses standard SDK credential chain (all regions)
+  - GCP: uses `GCP_PROJECT` env var
+  - Azure: uses `AZURE_SUBSCRIPTION_ID` env var + Azure SDK chain
+  - `--user` and `--key` flags for default SSH user and IdentityFile
+  - `--dry-run` / `-n` to preview generated config
+  - Generated hosts are automatically tagged with `#tag: <provider>` for filtering
+  - Auto-injects `Include ~/.ssh/config.d/*` into `~/.ssh/config` if missing
 
 # [2.3.1] May 25, 2026
 

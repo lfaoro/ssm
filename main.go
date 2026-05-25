@@ -19,6 +19,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/google/go-github/v69/github"
 	"github.com/lfaoro/ssm/pkg/sshconf"
+	"github.com/lfaoro/ssm/pkg/syncer"
 	"github.com/lfaoro/ssm/pkg/tui"
 	"github.com/urfave/cli/v3"
 	"golang.org/x/term"
@@ -130,6 +131,7 @@ func main() {
 		Commands: []*cli.Command{
 			generateCmd,
 			testCmd,
+			syncCmd,
 		},
 	}
 
@@ -263,6 +265,66 @@ var generateCmd = &cli.Command{
 	Hidden:  true,
 }
 var generateAction = func(_ context.Context, _ *cli.Command) error {
+	return nil
+}
+
+var syncCmd = &cli.Command{
+	Name:      "sync",
+	Usage:     "Sync servers from cloud providers into SSH config",
+	ArgsUsage: "[hetzner aws gcp azure]",
+	Flags: []cli.Flag{
+		&cli.BoolFlag{
+			Name:    "dry-run",
+			Aliases: []string{"n"},
+			Usage:   "preview generated config without writing",
+			Sources: cli.EnvVars("SSM_SYNC_DRY_RUN"),
+		},
+		&cli.StringFlag{
+			Name:  "user",
+			Usage: "default SSH user for all synced hosts",
+		},
+		&cli.StringFlag{
+			Name:  "key",
+			Usage: "default IdentityFile path for all synced hosts",
+		},
+	},
+	Action: syncAction,
+}
+
+var syncAction = func(_ context.Context, cmd *cli.Command) error {
+	s := syncer.New()
+	providers := cmd.Args().Slice()
+
+	if cmd.Bool("dry-run") {
+		content, err := s.DryRun(context.Background(), cmd.String("user"), cmd.String("key"), providers)
+		if err != nil {
+			return err
+		}
+		fmt.Println(content)
+		return nil
+	}
+
+	servers, err := s.Sync(context.Background(), cmd.String("user"), cmd.String("key"), providers)
+	if err != nil {
+		return err
+	}
+
+	if len(servers) == 0 {
+		fmt.Println("ssm: no servers synced (check credentials and provider names)")
+		return nil
+	}
+
+	byProvider := make(map[string]int)
+	for _, s := range servers {
+		byProvider[s.Provider]++
+	}
+	fmt.Printf("ssm: synced %d servers:", len(servers))
+	for _, p := range []string{"hetzner", "aws", "gcp", "azure"} {
+		if n := byProvider[p]; n > 0 {
+			fmt.Printf(" %s=%d", p, n)
+		}
+	}
+	fmt.Println()
 	return nil
 }
 
