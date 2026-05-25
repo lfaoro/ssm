@@ -272,6 +272,16 @@ var syncCmd = &cli.Command{
 	Name:      "sync",
 	Usage:     "Sync servers from cloud providers into SSH config",
 	ArgsUsage: "[hetzner aws gcp azure]",
+	Description: `Discover running servers from cloud providers and write them to ~/.ssh/config.d/50-ssm-{provider}.
+
+Credentials are read from environment variables:
+  Hetzner  HCLOUD_TOKEN
+  AWS      Standard SDK chain (AWS_PROFILE, AWS_ACCESS_KEY_ID, IAM role)
+  GCP      GCP_PROJECT + Application Default Credentials
+  Azure    AZURE_SUBSCRIPTION_ID + Azure SDK auth (env, CLI, managed identity)
+
+Each provider gets its own file under ~/.ssh/config.d/. The Include config.d/*
+directive is automatically added to ~/.ssh/config if missing.`,
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:    "dry-run",
