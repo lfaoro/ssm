@@ -87,7 +87,7 @@ func pingSelectedCmd(m *Model) tea.Cmd {
 func pingAllCmd(m *Model) tea.Cmd {
 	hosts := m.config.GetHosts()
 	cmds := make([]tea.Cmd, 0, len(hosts))
-	const maxConcurrent = 50
+	const maxConcurrent = 20
 	sem := make(chan struct{}, maxConcurrent)
 	for _, host := range hosts {
 		hostname, port := resolvePingTarget(host)
