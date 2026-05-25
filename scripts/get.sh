@@ -212,7 +212,11 @@ resolve_install_dir
 # ---- fetch latest version ----
 
 echo "Fetching latest version..."
-API_RESPONSE="$(curl -sSL "$API_URL")" || error "failed to fetch from GitHub API"
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+	API_RESPONSE="$(curl -sSL -H "Authorization: Bearer ${GITHUB_TOKEN}" "$API_URL")" || error "failed to fetch from GitHub API"
+else
+	API_RESPONSE="$(curl -sSL "$API_URL")" || error "failed to fetch from GitHub API"
+fi
 VERSION="$(grep -o '"tag_name": "[^"]*"' <<<"$API_RESPONSE" | sed 's/"tag_name": "//;s/"//')"
 [[ -n "$VERSION" ]] || {
 	echo "debug: raw API response:" >&2
@@ -302,6 +306,18 @@ if [[ ":$PATH:" != *":${CUSTOM_DIR}:"* ]]; then
 	case "$shell" in
 		bash|zsh|fish)
 			if should_modify_path && [[ -n "$rc_file" ]] && [[ -n "$line" ]]; then
+				# Preferred path: interactive + not CI
+				if path_already_configured "$rc_file" "$line"; then
+					echo "  (already present in $rc_file)"
+				elif append_to_rc_file "$rc_file" "$line" "$comment"; then
+					echo "  Added to $rc_file"
+				else
+					echo "  Could not write to $rc_file"
+					echo "  Please add this line manually:"
+					echo "    $line"
+				fi
+			elif [[ "$shell" =~ ^(bash|zsh|fish)$ ]] && ! is_ci_environment && [[ "$MODIFY_PATH" != "no" ]] && [[ -n "$rc_file" ]] && [[ -n "$line" ]]; then
+				# Aggressive path for supported shells (e.g. curl | bash in interactive terminal)
 				if path_already_configured "$rc_file" "$line"; then
 					echo "  (already present in $rc_file)"
 				elif append_to_rc_file "$rc_file" "$line" "$comment"; then
@@ -312,7 +328,11 @@ if [[ ":$PATH:" != *":${CUSTOM_DIR}:"* ]]; then
 					echo "    $line"
 				fi
 			else
-				echo "  Add this line to your $shell config:"
+				if [[ -n "$rc_file" ]]; then
+					echo "  Add this line to $rc_file:"
+				else
+					echo "  Add this line to your $shell config:"
+				fi
 				echo "    $line"
 			fi
 			;;
