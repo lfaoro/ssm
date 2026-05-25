@@ -13,16 +13,18 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+// GCP fetches Compute Engine instances from the project set in GCP_PROJECT.
 type GCP struct{}
 
-func (GCP) Name() string { return "gcp" }
+func (GCP) Name() string { return "gcp" } //nolint:revive
 
+// FetchServers returns all running GCP Compute Engine instances.
 func (g GCP) FetchServers(ctx context.Context) ([]Server, error) {
 	client, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("gcp: %w", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	projects := gcpProjects()
 	if len(projects) == 0 {

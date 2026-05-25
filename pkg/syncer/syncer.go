@@ -29,11 +29,13 @@ var allProviders = []providers.Provider{
 	providers.Azure{},
 }
 
+// Syncer orchestrates cloud provider discovery and SSH config file generation.
 type Syncer struct {
 	outputDir string
 	sshConfig string
 }
 
+// New returns a Syncer that writes to ~/.ssh/config.d/ and manages ~/.ssh/config.
 func New() *Syncer {
 	return &Syncer{
 		outputDir: sshConfigDir(),
@@ -121,7 +123,7 @@ func generateSSHConfig(servers []providers.Server, user, keyPath string) string 
 	})
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("# SSM managed block - %s\n", time.Now().UTC().Format(time.RFC3339)))
+	fmt.Fprintf(&b, "# SSM managed block - %s\n", time.Now().UTC().Format(time.RFC3339))
 	b.WriteString("# Do not edit manually - changes will be overwritten by `ssm sync`\n")
 
 	for _, s := range servers {
@@ -134,15 +136,15 @@ func generateSSHConfig(servers []providers.Server, user, keyPath string) string 
 			continue
 		}
 
-		b.WriteString(fmt.Sprintf("\nHost %s\n", hostname))
-		b.WriteString(fmt.Sprintf("    HostName %s\n", ip))
+		fmt.Fprintf(&b, "\nHost %s\n", hostname)
+		fmt.Fprintf(&b, "    HostName %s\n", ip)
 		if user != "" {
-			b.WriteString(fmt.Sprintf("    User %s\n", user))
+			fmt.Fprintf(&b, "    User %s\n", user)
 		}
 		if keyPath != "" {
-			b.WriteString(fmt.Sprintf("    IdentityFile %s\n", keyPath))
+			fmt.Fprintf(&b, "    IdentityFile %s\n", keyPath)
 		}
-		b.WriteString(fmt.Sprintf("    #tag: %s\n", s.Provider))
+		fmt.Fprintf(&b, "    #tag: %s\n", s.Provider)
 	}
 	b.WriteString("\n# End SSM managed block\n")
 	return b.String()
@@ -162,32 +164,32 @@ func sanitizeHostName(name string) string {
 
 func writeManagedFile(path, content string) error {
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return err
 	}
-	return os.WriteFile(path, []byte(content), 0o600)
+	return os.WriteFile(path, []byte(content), 0o600) //nolint:gosec
 }
 
 func ensureInclude(configPath string) error {
-	data, err := os.ReadFile(configPath)
+	data, err := os.ReadFile(configPath) //nolint:gosec
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
 		dir := filepath.Dir(configPath)
-		if err := os.MkdirAll(dir, 0o755); err != nil {
+		if err := os.MkdirAll(dir, 0o750); err != nil {
 			return err
 		}
 		return os.WriteFile(configPath, []byte(includeLine+"\n"), 0o600)
 	}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		trimmed := strings.TrimSpace(line)
 		if strings.EqualFold(trimmed, includeLine) {
 			return nil
 		}
 	}
 	content := includeLine + "\n" + string(data)
-	return os.WriteFile(configPath, []byte(content), 0o600)
+	return os.WriteFile(configPath, []byte(content), 0o600) //nolint:gosec
 }
 
 func sshConfigDir() string {

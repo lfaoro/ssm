@@ -10,10 +10,12 @@ import (
 	"github.com/hetznercloud/hcloud-go/v2/hcloud"
 )
 
+// Hetzner fetches servers from Hetzner Cloud using HCLOUD_TOKEN.
 type Hetzner struct{}
 
-func (Hetzner) Name() string { return "hetzner" }
+func (Hetzner) Name() string { return "hetzner" } //nolint:revive
 
+// FetchServers returns all running Hetzner Cloud servers.
 func (h Hetzner) FetchServers(ctx context.Context) ([]Server, error) {
 	token := os.Getenv("HCLOUD_TOKEN")
 	if token == "" {
@@ -33,7 +35,7 @@ func (h Hetzner) FetchServers(ctx context.Context) ([]Server, error) {
 		if s.PublicNet.IPv4.IP != nil {
 			pubIP = s.PublicNet.IPv4.IP.String()
 		}
-		if s.PrivateNet != nil && len(s.PrivateNet) > 0 {
+		if len(s.PrivateNet) > 0 {
 			if s.PrivateNet[0].IP != nil {
 				privIP = s.PrivateNet[0].IP.String()
 			}
@@ -43,7 +45,7 @@ func (h Hetzner) FetchServers(ctx context.Context) ([]Server, error) {
 			PublicIP:  pubIP,
 			PrivateIP: privIP,
 			Provider:  "hetzner",
-			Region:    s.Datacenter.Location.Name,
+			Region:    s.Location.Name,
 			Status:    string(s.Status),
 		})
 	}

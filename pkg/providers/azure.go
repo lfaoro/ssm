@@ -13,10 +13,12 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 )
 
+// Azure fetches virtual machines from the subscription identified by AZURE_SUBSCRIPTION_ID.
 type Azure struct{}
 
-func (Azure) Name() string { return "azure" }
+func (Azure) Name() string { return "azure" } //nolint:revive
 
+// FetchServers returns all running Azure VMs in the configured subscription.
 func (a Azure) FetchServers(ctx context.Context) ([]Server, error) {
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {

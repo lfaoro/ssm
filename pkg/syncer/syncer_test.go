@@ -121,7 +121,7 @@ func TestEnsureInclude(t *testing.T) {
 		if err := ensureInclude(path); err != nil {
 			t.Fatal(err)
 		}
-		data, err := os.ReadFile(path)
+		data, err := os.ReadFile(path) //nolint:gosec
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -140,7 +140,7 @@ func TestEnsureInclude(t *testing.T) {
 		if err := ensureInclude(path); err != nil {
 			t.Fatal(err)
 		}
-		data, err := os.ReadFile(path)
+		data, err := os.ReadFile(path) //nolint:gosec
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -159,7 +159,7 @@ func TestEnsureInclude(t *testing.T) {
 		if err := ensureInclude(path); err != nil {
 			t.Fatal(err)
 		}
-		data, err := os.ReadFile(path)
+		data, err := os.ReadFile(path) //nolint:gosec
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -177,7 +177,7 @@ func TestWriteManagedFile(t *testing.T) {
 		if err := writeManagedFile(path, content); err != nil {
 			t.Fatal(err)
 		}
-		data, err := os.ReadFile(path)
+		data, err := os.ReadFile(path) //nolint:gosec
 		if err != nil {
 			t.Fatal(err)
 		}

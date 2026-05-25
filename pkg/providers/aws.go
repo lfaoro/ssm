@@ -13,10 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
+// AWS fetches EC2 instances across all regions using the standard SDK credential chain.
 type AWS struct{}
 
-func (AWS) Name() string { return "aws" }
+func (AWS) Name() string { return "aws" } //nolint:revive
 
+// FetchServers returns all running EC2 instances across all regions.
 func (a AWS) FetchServers(ctx context.Context) ([]Server, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
