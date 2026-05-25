@@ -1,6 +1,6 @@
 # SSM — Secure Shell Manager
 
-A terminal interface that makes your existing `~/.ssh/config` fast, reliable, and actually pleasant to use at scale — with no changes required on any remote server.
+> ssm is a delightful TUI SSH connection manager that makes your existing ~/.ssh/config fast, searchable, and pleasant to use at scale.
 
 [![Go](https://img.shields.io/github/go-mod/go-version/lfaoro/ssm?logo=go)](https://github.com/lfaoro/ssm)
 [![Release](https://img.shields.io/github/v/release/lfaoro/ssm?logo=github)](https://github.com/lfaoro/ssm/releases)
@@ -11,25 +11,12 @@ A terminal interface that makes your existing `~/.ssh/config` fast, reliable, an
 
 ---
 
-## You’ll recognize this
+TL;DR [Install](#Installation)
 
-You manage infrastructure through SSH and already maintain a detailed `~/.ssh/config`.
-
-Your hosts are organized by environment, role, region, or team. You frequently need to:
-
-- Connect to many different servers throughout the day
-- Run commands across groups of hosts
-- Transfer files without leaving your terminal
-- Quickly see which hosts are reachable
-- Keep your configuration organized and discoverable
-
-You want a tool that makes this workflow faster and more reliable — without installing anything on your servers.
-
-SSM exists for exactly this situation.
+Terminal interface (TUI) built on top of your existing ~/.ssh/config and native ssh/mosh binaries. No agent or setup needed on remote servers. Features include host filtering/search, editing config in-app, running commands, file transfers, tagging, themes, etc. Designed specifically for people who manage many servers (sysadmins, DevOps, SREs).
 
 ## See it in action
 
-<!-- TODO: Replace with real 30-second asciinema recording -->
 [![Demo](data/demo.cast)](data/demo.cast)
 
 > **Demo coming soon.** A 30-second asciinema recording will be placed here showing typical daily usage (tagging, filtering, remote commands, SFTP, and pings).
@@ -38,8 +25,8 @@ SSM exists for exactly this situation.
 
 - **Your SSH config is the source of truth** — SSM reads `~/.ssh/config` (including `Include` directives) and adds the organization you’ve always wanted through simple `#tag:` comments.
 - **Fast, reliable discovery at fleet scale** — Filter by tags, fuzzy search, custom ordering, and live reachability checks across all your hosts.
-- **One interface for the full loop** — SSH or Mosh connections, ad-hoc command execution, and two-pane SFTP file transfers — all without context switching.
-- **Built for people who live in the terminal** — Clean, fast, and respectful of how experienced operators actually work.
+- **One interface for the full loop** — SSH or MOSH connections, ad-hoc command execution, and two-pane SFTP file transfers — all without context switching.
+- **Built for people who work the terminal** — Clean, fast, and respectful of how experienced operators actually work.
 
 ## How it works with what you already have
 
@@ -121,7 +108,7 @@ SSM is designed for people who operate production infrastructure:
 
 ## Installation
 
-The fastest way to try it:
+The fastest way
 
 ```bash
 curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
