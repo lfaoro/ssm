@@ -1,3 +1,9 @@
+# [Unreleased]
+
+## Fix
+- `--ping` with tag filter: only ping visible/filtered hosts instead of all hosts
+- `--ping` applied before tag filter: send `FilterTagMsg` before `LivenessCheckMsg` in startup sequence
+
 # [2.3.1] May 25, 2026
 
 ## Fix
