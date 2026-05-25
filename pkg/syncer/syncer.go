@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 // Package syncer orchestrates cloud provider server discovery and writes
-// SSH config entries to a dedicated include file.
+// SSH config entries to dedicated include files (one per provider).
 package syncer
 
 import (
@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	managedFileName = "50-ssm-cloud"
-	includeLine     = "Include ~/.ssh/config.d/*"
+	managedFilePrefix = "50-ssm-"
+	includeLine       = "Include config.d/*"
 )
 
 var allProviders = []providers.Provider{
@@ -41,30 +41,44 @@ func New() *Syncer {
 	}
 }
 
-func (s *Syncer) Sync(ctx context.Context, user, keyPath string, providerNames []string) ([]providers.Server, error) {
+// Path returns the full path to the managed config file for a given provider.
+func (s *Syncer) Path(provider string) string {
+	return filepath.Join(s.outputDir, managedFilePrefix+provider)
+}
+
+// Sync fetches servers from the specified cloud providers and writes one managed
+// SSH config file per provider. Returns servers grouped by provider name.
+func (s *Syncer) Sync(ctx context.Context, user, keyPath string, providerNames []string) (map[string][]providers.Server, error) {
 	provs := s.filterProviders(providerNames)
-	var all []providers.Server
+	result := make(map[string][]providers.Server)
+
 	for _, p := range provs {
 		servers, err := p.FetchServers(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", p.Name(), err)
 		}
-		all = append(all, servers...)
-	}
-	if len(all) == 0 {
-		return nil, nil
+		if len(servers) == 0 {
+			continue
+		}
+		result[p.Name()] = servers
+		content := generateSSHConfig(servers, user, keyPath)
+		if err := writeManagedFile(s.Path(p.Name()), content); err != nil {
+			return nil, fmt.Errorf("writing %s config: %w", p.Name(), err)
+		}
 	}
 
-	content := generateSSHConfig(all, user, keyPath)
-	if err := writeManagedFile(s.outputDir, content); err != nil {
-		return nil, fmt.Errorf("writing managed config: %w", err)
+	if len(result) == 0 {
+		return result, nil
 	}
+
 	if err := ensureInclude(s.sshConfig); err != nil {
 		return nil, fmt.Errorf("ensuring include directive: %w", err)
 	}
-	return all, nil
+	return result, nil
 }
 
+// DryRun fetches servers from all specified providers and returns the combined
+// generated SSH config without writing anything.
 func (s *Syncer) DryRun(ctx context.Context, user, keyPath string, providerNames []string) (string, error) {
 	provs := s.filterProviders(providerNames)
 	var all []providers.Server
@@ -74,13 +88,13 @@ func (s *Syncer) DryRun(ctx context.Context, user, keyPath string, providerNames
 			return "", fmt.Errorf("%s: %w", p.Name(), err)
 		}
 		all = append(all, servers...)
-		sort.Slice(all, func(i, j int) bool {
-			if all[i].Provider != all[j].Provider {
-				return all[i].Provider < all[j].Provider
-			}
-			return all[i].Name < all[j].Name
-		})
 	}
+	sort.Slice(all, func(i, j int) bool {
+		if all[i].Provider != all[j].Provider {
+			return all[i].Provider < all[j].Provider
+		}
+		return all[i].Name < all[j].Name
+	})
 	return generateSSHConfig(all, user, keyPath), nil
 }
 
@@ -103,9 +117,6 @@ func (s *Syncer) filterProviders(names []string) []providers.Provider {
 
 func generateSSHConfig(servers []providers.Server, user, keyPath string) string {
 	sort.Slice(servers, func(i, j int) bool {
-		if servers[i].Provider != servers[j].Provider {
-			return servers[i].Provider < servers[j].Provider
-		}
 		return servers[i].Name < servers[j].Name
 	})
 
@@ -149,11 +160,11 @@ func sanitizeHostName(name string) string {
 	return b.String()
 }
 
-func writeManagedFile(dir, content string) error {
+func writeManagedFile(path, content string) error {
+	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	path := filepath.Join(dir, managedFileName)
 	return os.WriteFile(path, []byte(content), 0o600)
 }
 

@@ -121,18 +121,14 @@ func (m *syncModel) startSync() tea.Cmd {
 	}
 
 	return func() tea.Msg {
-		servers, err := m.syncer.Sync(context.Background(), m.user, m.keyPath, enabled)
+		byProvider, err := m.syncer.Sync(context.Background(), m.user, m.keyPath, enabled)
 		if err != nil {
 			return syncCompleteMsg{err: err}
-		}
-		byProvider := make(map[string]int)
-		for _, s := range servers {
-			byProvider[s.Provider]++
 		}
 		var lines []string
 		var total int
 		for _, p := range m.providers {
-			n := byProvider[p.name]
+			n := len(byProvider[p.name])
 			total += n
 			if n > 0 {
 				lines = append(lines, fmt.Sprintf("%s: %d servers", p.label, n))
@@ -143,7 +139,7 @@ func (m *syncModel) startSync() tea.Cmd {
 		}
 		progress := make([]syncProgressMsg, 0, len(m.providers))
 		for _, p := range m.providers {
-			n := byProvider[p.name]
+			n := len(byProvider[p.name])
 			progress = append(progress, syncProgressMsg{
 				provider: p.name,
 				count:    n,

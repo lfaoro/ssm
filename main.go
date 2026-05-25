@@ -304,27 +304,29 @@ var syncAction = func(_ context.Context, cmd *cli.Command) error {
 		return nil
 	}
 
-	servers, err := s.Sync(context.Background(), cmd.String("user"), cmd.String("key"), providers)
+	byProvider, err := s.Sync(context.Background(), cmd.String("user"), cmd.String("key"), providers)
 	if err != nil {
 		return err
 	}
 
-	if len(servers) == 0 {
+	if len(byProvider) == 0 {
 		fmt.Println("ssm: no servers synced (check credentials and provider names)")
 		return nil
 	}
 
-	byProvider := make(map[string]int)
-	for _, s := range servers {
-		byProvider[s.Provider]++
-	}
-	fmt.Printf("ssm: synced %d servers:", len(servers))
+	var total int
+	var pathList []string
 	for _, p := range []string{"hetzner", "aws", "gcp", "azure"} {
-		if n := byProvider[p]; n > 0 {
-			fmt.Printf(" %s=%d", p, n)
+		if n := len(byProvider[p]); n > 0 {
+			total += n
+			fmt.Printf("ssm: synced %d servers: %s=%d\n", total, p, n)
+			pathList = append(pathList, "  "+s.Path(p))
 		}
 	}
-	fmt.Println()
+	fmt.Println("ssm: config written:")
+	for _, p := range pathList {
+		fmt.Println(p)
+	}
 	return nil
 }
 
