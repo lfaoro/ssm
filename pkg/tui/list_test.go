@@ -514,6 +514,29 @@ func TestRefreshList_PreservesFilter(t *testing.T) {
 	}
 }
 
+func TestPingAllCmd_Filtered(t *testing.T) {
+	m := newTestModel(t, false)
+
+	totalHosts := len(m.config.GetHosts())
+	visibleBefore := len(m.li.VisibleItems())
+	if visibleBefore != totalHosts {
+		t.Fatalf("expected %d visible items before filter, got %d", totalHosts, visibleBefore)
+	}
+
+	m.li.SetFilterText("test-server")
+	m.li.SetFilteringEnabled(true)
+
+	visibleAfter := len(m.li.VisibleItems())
+	if visibleAfter >= totalHosts {
+		t.Fatalf("expected fewer visible items after filter (%d < %d)", visibleAfter, totalHosts)
+	}
+
+	cmd := pingAllCmd(m)
+	if cmd == nil {
+		t.Error("expected non-nil command from pingAllCmd")
+	}
+}
+
 type fakeTimeoutErr struct{}
 
 func (f fakeTimeoutErr) Error() string   { return "i/o timeout" }

@@ -215,13 +215,13 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 			Theme: theme,
 		})
 	}
-	if cmd.Bool("ping") {
-		p.Send(tui.LivenessCheckMsg{})
-	}
 	if filterTag != "" {
 		p.Send(tui.FilterTagMsg{
 			Arg: "#" + filterTag,
 		})
+	}
+	if cmd.Bool("ping") {
+		p.Send(tui.LivenessCheckMsg{})
 	}
 
 	// inform user when new version is available
