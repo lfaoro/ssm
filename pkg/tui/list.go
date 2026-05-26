@@ -139,6 +139,10 @@ func initKeys() []key.Binding {
 		key.WithKeys("p", "P"),
 		key.WithHelp("p/P", "ping host/all"),
 	)
+	syncKey := key.NewBinding(
+		key.WithKeys("ctrl+y"),
+		key.WithHelp("ctrl+y", "sync cloud"),
+	)
 	return []key.Binding{
 		connectKey,
 		switchKey,
@@ -147,5 +151,6 @@ func initKeys() []key.Binding {
 		editKey,
 		showKey,
 		pingKey,
+		syncKey,
 	}
 }

@@ -13,7 +13,7 @@
 
 TL;DR [Install](#Installation)
 
-Terminal interface (TUI) built on top of your existing ~/.ssh/config and native ssh/mosh binaries. No agent or setup needed on remote servers. Features include host filtering/search, editing config in-app, running commands, file transfers, tagging, themes, etc. Designed specifically for people who manage many servers (sysadmins, DevOps, SREs).
+Terminal interface (TUI) built on top of your existing ~/.ssh/config and native ssh/mosh binaries. No agent or setup needed on remote servers. Features include host filtering/search, editing config in-app, running commands, file transfers, tagging, cloud provider sync, themes, and more. Designed specifically for people who manage many servers (sysadmins, DevOps, SREs).
 
 ## See it in action
 
@@ -56,6 +56,27 @@ ssm db               # or any tag you use
 
 No changes are ever made to your remote servers.
 
+### Cloud provider sync
+
+SSM can discover running servers from your cloud providers and write them into your SSH config:
+
+```bash
+ssm sync                         # sync all configured providers
+ssm sync hetzner aws             # sync specific providers
+ssm sync --user deploy --key ~/.ssh/id_ed25519  # set default user and key
+ssm sync --dry-run               # preview what would be written
+```
+
+Synced hosts are named `{region}-{name}` (e.g. `fsn1-web-01`) and tagged with `#tag: {provider}` so you can filter them with `ssm hetzner`.
+
+Each provider gets its own file under `~/.ssh/config.d/50-ssm-{provider}`. The `Include config.d/*` line in `~/.ssh/config` is added automatically — no manual editing required.
+
+> Credentials are read from environment variables:
+> - Hetzner: `HCLOUD_TOKEN`
+> - AWS: standard SDK credential chain (env vars, `~/.aws/credentials`, IAM role)
+> - GCP: `GCP_PROJECT` + Application Default Credentials
+> - Azure: `AZURE_SUBSCRIPTION_ID` + Azure SDK auth (env vars, Azure CLI, managed identity)
+
 ## Key Capabilities
 
 ### Discovery & Navigation
@@ -87,6 +108,20 @@ No changes are ever made to your remote servers.
 | **Live editor**         | Edit your SSH config directly from inside SSM (`Ctrl+e`)                    |
 | **Config inspector**    | View a clean, sanitized version of the parsed config (`Ctrl+v`)             |
 | **Advanced parsing**    | Full `Include` recursion, cycle detection, glob support, and `#tagorder`    |
+
+### Cloud Sync
+
+| Capability          | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| **Provider discovery** | Fetch running servers from Hetzner, AWS, GCP, and Azure with `ssm sync`   |
+| **Per-provider files** | Each provider written to `~/.ssh/config.d/50-ssm-{provider}`              |
+| **Auto-include**        | `Include config.d/*` added to `~/.ssh/config` automatically               |
+| **Defaults**            | `--user` and `--key` flags applied to all synced hosts                     |
+| **Preview mode**        | `--dry-run` shows generated config without writing                         |
+| **Auth: Hetzner**       | `HCLOUD_TOKEN`                                                             |
+| **Auth: AWS**           | Standard SDK chain (`AWS_PROFILE`, env vars, IAM role)                    |
+| **Auth: GCP**           | `GCP_PROJECT` + Application Default Credentials                            |
+| **Auth: Azure**         | `AZURE_SUBSCRIPTION_ID` + Azure SDK auth (env, CLI, managed identity)      |
 
 ### Theming & Safety
 
