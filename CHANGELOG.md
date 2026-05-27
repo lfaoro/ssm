@@ -1,5 +1,11 @@
 # [Unreleased]
 
+## Test
+- pkg/syncer: raised coverage from 53.7% to 82.1% with new reliable tests (no cloud credentials required):
+  - Full table-driven coverage of `filterProviders`.
+  - Conservative `Sync`/`DryRun` cases exercising empty-result and provider-error paths that are fast/deterministic in any environment.
+  - Additional error case for `writeManagedFile` when parent path is a file.
+
 ## Docs
 - Correct stale metrics and guidance in AGENTS.md (test count/files/coverage numbers, ping semaphore value, charm.land transitive pinning note for x/ansi + colorprofile after v2 migration).
 

@@ -4,6 +4,7 @@
 package syncer
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -200,6 +201,19 @@ func TestWriteManagedFile(t *testing.T) {
 			t.Errorf("expected 0600, got %04o", perm)
 		}
 	})
+
+	t.Run("fails when parent path is a file instead of directory", func(t *testing.T) {
+		dir := t.TempDir()
+		parent := filepath.Join(dir, "not-a-dir")
+		if err := os.WriteFile(parent, []byte("this is a file"), 0600); err != nil {
+			t.Fatal(err)
+		}
+		path := filepath.Join(parent, "50-ssm-test")
+		err := writeManagedFile(path, "content")
+		if err == nil {
+			t.Error("expected error when MkdirAll fails because parent is a file")
+		}
+	})
 }
 
 func TestPath(t *testing.T) {
@@ -208,4 +222,123 @@ func TestPath(t *testing.T) {
 	if !strings.HasSuffix(got, "/config.d/50-ssm-hetzner") {
 		t.Errorf("unexpected path: %s", got)
 	}
+}
+
+func TestFilterProviders(t *testing.T) {
+	s := &Syncer{}
+
+	tests := []struct {
+		name      string
+		input     []string
+		wantNames []string
+	}{
+		{
+			name:      "empty returns all in declaration order",
+			input:     nil,
+			wantNames: []string{"hetzner", "aws", "gcp", "azure"},
+		},
+		{
+			name:      "empty slice returns all",
+			input:     []string{},
+			wantNames: []string{"hetzner", "aws", "gcp", "azure"},
+		},
+		{
+			name:      "single provider case insensitive",
+			input:     []string{"HETZNER"},
+			wantNames: []string{"hetzner"},
+		},
+		{
+			name:      "single provider lowercase",
+			input:     []string{"aws"},
+			wantNames: []string{"aws"},
+		},
+		{
+			name:      "multiple providers",
+			input:     []string{"gcp", "azure"},
+			wantNames: []string{"gcp", "azure"},
+		},
+		{
+			name:      "unknown providers are ignored",
+			input:     []string{"digitalocean", "hetzner", "vultr"},
+			wantNames: []string{"hetzner"},
+		},
+		{
+			name:      "mixed valid invalid and duplicates",
+			input:     []string{"AWS", "aws", "unknown", "Hetzner"},
+			wantNames: []string{"hetzner", "aws"}, // follows allProviders declaration order
+		},
+		{
+			name:      "all unknown",
+			input:     []string{"foo", "bar"},
+			wantNames: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := s.filterProviders(tt.input)
+			if len(got) != len(tt.wantNames) {
+				t.Fatalf("got %d providers, want %d", len(got), len(tt.wantNames))
+			}
+			for i, p := range got {
+				if p.Name() != tt.wantNames[i] {
+					t.Errorf("provider[%d] = %q, want %q", i, p.Name(), tt.wantNames[i])
+				}
+			}
+		})
+	}
+}
+
+func TestSyncer_Sync_DryRun_NoCredentials(t *testing.T) {
+	ctx := context.Background()
+	s := New()
+
+	// These tests deliberately only exercise paths that are fast and deterministic
+	// even when no cloud credentials are present. Providers that perform expensive
+	// credential chain probing (which can hang or timeout) are avoided.
+
+	t.Run("Sync unknown providers treated as none (fast empty path)", func(t *testing.T) {
+		res, err := s.Sync(ctx, "", "", []string{"digitalocean", "linode"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(res) != 0 {
+			t.Errorf("expected empty, got %d", len(res))
+		}
+	})
+
+	t.Run("Sync surfaces wrapped error from providers that fail without creds (AWS)", func(t *testing.T) {
+		_, err := s.Sync(ctx, "", "", []string{"aws"})
+		if err == nil {
+			t.Fatal("expected error when AWS has no credentials")
+		}
+		if !strings.Contains(err.Error(), "aws:") {
+			t.Errorf("expected error wrapped with provider name 'aws:', got: %v", err)
+		}
+	})
+
+	t.Run("DryRun with unknown provider is fast and returns header-only string", func(t *testing.T) {
+		out, err := s.DryRun(ctx, "", "", []string{"vultr"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !strings.Contains(out, "# Do not edit manually") {
+			t.Error("expected DryRun to still produce the standard header comments even with zero servers")
+		}
+	})
+
+	t.Run("DryRun with a provider that may probe creds still returns string without writing", func(t *testing.T) {
+		// azure may or may not probe depending on env; we only assert it doesn't panic or hang forever
+		out, err := s.DryRun(ctx, "root", "/root/.ssh/id", []string{"azure"})
+		if err != nil {
+			// Some environments will error on credential acquisition for Azure — that's acceptable
+			if !strings.Contains(err.Error(), "azure:") {
+				t.Fatalf("unexpected non-azure-wrapped error: %v", err)
+			}
+			return
+		}
+		if !strings.HasPrefix(out, "# SSM managed block") {
+			t.Error("expected DryRun output to start with managed block header")
+		}
+	})
 }
