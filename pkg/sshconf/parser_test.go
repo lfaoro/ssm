@@ -417,3 +417,24 @@ func mustWrite(t *testing.T, path, content string) {
 		t.Fatal(err)
 	}
 }
+
+func TestParseConcurrentReaders(_ *testing.T) {
+	cfg := sshconf.New()
+
+	done := make(chan struct{})
+	go func() {
+		_ = cfg.ParsePath("../../data/config_example")
+		close(done)
+	}()
+
+	// Hammer readers while a parse may be in progress.
+	// This exercises the shortened critical section.
+	for range 200 {
+		_ = cfg.GetHosts()
+		_ = cfg.GetHost("prod-api")
+		_ = cfg.GetParamFor(sshconf.Host{Name: "prod-api"}, "user")
+		_ = cfg.GetPath()
+	}
+
+	<-done
+}
