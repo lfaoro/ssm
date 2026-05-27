@@ -8,6 +8,7 @@
 
 ## Docs
 - Correct stale metrics and guidance in AGENTS.md (test count/files/coverage numbers, ping semaphore value, charm.land transitive pinning note for x/ansi + colorprofile after v2 migration).
+- Redesign AGENTS.md for LLM coding agents: new structure focused on verification commands, architecture contracts, hard rules, and historical gotchas. Removed all test counts and coverage percentages (they rot immediately and provide no lasting value).
 
 ## Add
 - Cloud provider sync: `ssm sync [hetzner aws gcp azure]` CLI subcommand and `Ctrl+y` TUI
