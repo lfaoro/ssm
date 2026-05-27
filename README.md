@@ -92,7 +92,7 @@ Each provider gets its own file under `~/.ssh/config.d/50-ssm-{provider}`. The `
 | Capability          | Description                                                                 |
 |---------------------|-----------------------------------------------------------------------------|
 | **One-keystroke connect** | Tab to switch between SSH and Mosh, Enter to connect                      |
-| **Remote execution**      | Run any command on the selected host with `Ctrl+r` without opening a full shell |
+| **Remote execution**      | `Ctrl+r` (interactive on selected host) or `ssm [tag] -r 'cmd'` (batch on filtered hosts, non-TTY safe) |
 | **Clean exit mode**       | `--exit` flag uses `syscall.Exec` so the process is fully replaced        |
 
 ### File Management

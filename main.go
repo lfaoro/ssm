@@ -48,7 +48,7 @@ func main() {
 		Suggest:                true,
 		Copyright:              "(c) Leonardo Faoro & authors",
 		Usage:                  "Secure Shell Manager",
-		UsageText:              "ssm [--options] [tag]\nexample: ssm --show --exit vpn\nexample: ssm -se vpn",
+		UsageText:              "ssm [--options] [tag]\nexample: ssm --show --exit vpn\nexample: ssm -se vpn\nexample: ssm dev -r 'whoami && pwd'",
 		ArgsUsage:              "[tag]",
 		Description:            "SSM is an open-source terminal UI that sits on top of your existing SSH config to simplify and automate connectivity, data transfer, organization and host discovery.",
 
@@ -126,6 +126,12 @@ func main() {
 				Value:   false,
 				Sources: cli.EnvVars("SSM_DEBUG"),
 			},
+			&cli.StringFlag{
+				Name:    "command",
+				Aliases: []string{"r"},
+				Usage:   "run command on all (or tag-filtered) hosts and exit (non-interactive)",
+				Sources: cli.EnvVars("SSM_COMMAND"),
+			},
 		},
 
 		Commands: []*cli.Command{
@@ -150,10 +156,7 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 		}
 	}
 
-	if !term.IsTerminal(int(os.Stdin.Fd())) {
-		return errors.New("not an interactive terminal :(")
-	}
-
+	// Load config early (needed for both TUI and --command batch paths).
 	var err error
 	var config = sshconf.New()
 	if cmd.Bool("order") {
@@ -170,6 +173,15 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	// --command (or -r) is a non-interactive batch path. Allow it without a TTY.
+	if command := cmd.String("command"); command != "" {
+		return tui.RunBatchRemoteCommands(config, filterTag, command)
+	}
+
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		return errors.New("not an interactive terminal :(")
 	}
 
 	m := tui.NewModel(config, debug)

@@ -11,6 +11,8 @@
 - Redesign AGENTS.md for LLM coding agents: new structure focused on verification commands, architecture contracts, hard rules, and historical gotchas. Removed all test counts and coverage percentages (they rot immediately and provide no lasting value).
 
 ## Add
+- `--command` / `-r` flag for non-interactive batch command execution: `ssm [tag] -r 'whoami && pwd'`.
+  Respects the existing positional tag filter, uses the same hardened SSH invocation as the TUI run-command feature (`-T`, `--` delimiter), bounded concurrency, sanitized output, and exits non-zero on any failure. Bypasses the TUI entirely (works in scripts / non-TTY).
 - Cloud provider sync: `ssm sync [hetzner aws gcp azure]` CLI subcommand and `Ctrl+y` TUI
   panel to discover running servers and write them to `~/.ssh/config.d/50-ssm-{provider}`
   - Hetzner: uses `HCLOUD_TOKEN` env var

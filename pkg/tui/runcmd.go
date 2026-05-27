@@ -19,6 +19,8 @@ import (
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+
+	"github.com/lfaoro/ssm/pkg/sshconf"
 )
 
 // RunCmdModel wraps the base model in a run-command sub-model.
@@ -324,4 +326,135 @@ var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]|\x1b\].*?\x07|\x1b[PX^
 
 func sanitizeOutput(s string) string {
 	return ansiRegex.ReplaceAllString(s, "")
+}
+
+// --- Batch remote command support (for --command / -r CLI flag) ---
+
+// execOnHost is the reusable primitive for running a single command on one host.
+// It uses the same hardened invocation style as the interactive run command
+// sub-model ( -T, -F, -- delimiter, combined output, sanitization ).
+func execOnHost(sshBinary, configPath, host, command string) (string, error) {
+	args := []string{
+		"-T",
+		"-F", configPath,
+		"--",
+		host,
+		command,
+	}
+
+	cmd := exec.CommandContext(context.Background(), sshBinary, args...) //nolint:gosec
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	err := cmd.Run()
+
+	return sanitizeOutput(out.String()), err
+}
+
+// hostsForBatch implements a lightweight tag + name matcher for the CLI
+// --command path. It deliberately approximates the behavior of the TUI's
+// bubbles list filter when the user passes the positional tag argument
+// (e.g. "ssm dev --command ...").
+func hostsForBatch(hosts []sshconf.Host, filter string) []sshconf.Host {
+	if filter == "" {
+		return hosts
+	}
+
+	parts := strings.Split(filter, ",")
+	for i := range parts {
+		parts[i] = strings.ToLower(strings.TrimSpace(parts[i]))
+	}
+
+	var out []sshconf.Host
+	for _, h := range hosts {
+		match := containsAny(strings.ToLower(h.Name), parts)
+
+		if tags, ok := h.Options.Get("#tag:"); ok && tags != "" {
+			for t := range strings.SplitSeq(tags, ",") {
+				tt := strings.ToLower(strings.TrimSpace(t))
+				if containsAny(tt, parts) {
+					match = true
+					break
+				}
+			}
+		}
+
+		if match {
+			out = append(out, h)
+		}
+	}
+	return out
+}
+
+func containsAny(s string, needles []string) bool {
+	for _, n := range needles {
+		if n != "" && strings.Contains(s, n) {
+			return true
+		}
+	}
+	return false
+}
+
+// RunBatchRemoteCommands is the entry point called from main.go when
+// --command (or -r) is supplied. It never launches the TUI.
+func RunBatchRemoteCommands(cfg *sshconf.Config, tagFilter, command string) error {
+	hosts := hostsForBatch(cfg.GetHosts(), tagFilter)
+	if len(hosts) == 0 {
+		fmt.Println("ssm: no matching hosts for command execution")
+		return nil
+	}
+
+	sshBin := "ssh" // batch mode always uses ssh (mosh does not make sense here)
+	cfgPath := cfg.GetPath()
+
+	limit := ConcurrencyLimit()
+	sem := make(chan struct{}, limit)
+
+	type hostResult struct {
+		host   string
+		output string
+		err    error
+	}
+
+	results := make([]hostResult, len(hosts))
+	var wg sync.WaitGroup
+
+	for i, h := range hosts {
+		wg.Add(1)
+		go func(idx int, hostName string) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			out, err := execOnHost(sshBin, cfgPath, hostName, command)
+			results[idx] = hostResult{host: hostName, output: out, err: err}
+		}(i, h.Name)
+	}
+
+	wg.Wait()
+
+	// Print results in the original (config) order, grouped for readability.
+	failures := 0
+	for _, r := range results {
+		fmt.Printf("[%s]\n", r.host)
+		if r.err != nil {
+			failures++
+			if r.output != "" {
+				fmt.Printf("ERROR: %v\n%s\n", r.err, r.output)
+			} else {
+				fmt.Printf("ERROR: %v\n", r.err)
+			}
+		} else {
+			if r.output != "" {
+				fmt.Println(r.output)
+			}
+		}
+		fmt.Println()
+	}
+
+	if failures > 0 {
+		return fmt.Errorf("command failed on %d/%d host(s)", failures, len(hosts))
+	}
+	return nil
 }
