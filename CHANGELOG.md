@@ -1,35 +1,23 @@
 # [Unreleased]
 
-## Test
-- pkg/syncer: raised coverage from 53.7% to 82.1% with new reliable tests (no cloud credentials required):
-  - Full table-driven coverage of `filterProviders`.
-  - Conservative `Sync`/`DryRun` cases exercising empty-result and provider-error paths that are fast/deterministic in any environment.
-  - Additional error case for `writeManagedFile` when parent path is a file.
+## Add
+
+## Fix
 
 ## Docs
-- Correct stale metrics and guidance in AGENTS.md (test count/files/coverage numbers, ping semaphore value, charm.land transitive pinning note for x/ansi + colorprofile after v2 migration).
-- Redesign AGENTS.md for LLM coding agents: new structure focused on verification commands, architecture contracts, hard rules, and historical gotchas. Removed all test counts and coverage percentages (they rot immediately and provide no lasting value).
+
+# [2.5.0] May 27, 2026
 
 ## Add
 - `--command` / `-r` flag for non-interactive batch command execution: `ssm [tag] -r 'whoami && pwd'`.
-  Respects the existing positional tag filter, uses the same hardened SSH invocation as the TUI run-command feature (`-T`, `--` delimiter), bounded concurrency, sanitized output, and exits non-zero on any failure. Bypasses the TUI entirely (works in scripts / non-TTY).
-- Cloud provider sync: `ssm sync [hetzner aws gcp azure]` CLI subcommand and `Ctrl+y` TUI
-  panel to discover running servers and write them to `~/.ssh/config.d/50-ssm-{provider}`
-  - Hetzner: uses `HCLOUD_TOKEN` env var
-  - AWS: uses standard SDK credential chain (all regions)
-  - GCP: uses `GCP_PROJECT` env var
-  - Azure: uses `AZURE_SUBSCRIPTION_ID` env var + Azure SDK chain
-  - `--user` and `--key` flags for default SSH user and IdentityFile
-  - `--dry-run` / `-n` to preview generated config
-  - Hosts named `{region}-{name}`, tagged with `#tag: {provider}` for filtering
-  - Auto-injects `Include config.d/*` into `~/.ssh/config` if missing
-  - CLI output shows per-provider file paths
-- Tests: syncer unit tests (config generation, sanitize, file writing, include injection),
-  provider interface compliance, TUI sync sub-model tests
+  Run arbitrary commands across all hosts or a filtered subset (by tag). Fully scriptable, works without a TTY, reuses the project's hardened SSH invocation style (`-T`, `--` delimiter), bounded concurrency, sanitized output, and exits non-zero if any host fails.
 
-## Fix
-- `--ping` with tag filter: only ping visible/filtered hosts instead of all hosts
-- `--ping` applied before tag filter: send `FilterTagMsg` before `LivenessCheckMsg` in startup sequence
+## Docs
+- Major redesign of AGENTS.md to be much more effective for AI coding agents and humans: prioritized actionable verification commands, architecture contracts (especially the parser lock model), non-obvious decisions & gotchas, and hard rules. Removed all stale test counts and coverage percentages.
+
+## Internal
+- Extracted reusable `execOnHost` and `hostsForBatch` helpers.
+- Exported `ConcurrencyLimit()` for consistent worker pool sizing across batch features (ping + remote commands).
 
 # [2.3.1] May 25, 2026
 
