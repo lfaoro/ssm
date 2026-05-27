@@ -1,5 +1,8 @@
 # [Unreleased]
 
+## Docs
+- Correct stale metrics and guidance in AGENTS.md (test count/files/coverage numbers, ping semaphore value, charm.land transitive pinning note for x/ansi + colorprofile after v2 migration).
+
 ## Add
 - Cloud provider sync: `ssm sync [hetzner aws gcp azure]` CLI subcommand and `Ctrl+y` TUI
   panel to discover running servers and write them to `~/.ssh/config.d/50-ssm-{provider}`

@@ -90,8 +90,8 @@ Goreleaser config: `.config/goreleaser.yaml` (v2, 4 OS × 2 arches, deb/rpm/home
 - `pkg/tui/testdata/test_config` — shared test fixture (8 tagged hosts)
 - `pkg/tui/test_helpers.go` — shared test helpers (matrixTheme, newTestConfig, etc.)
 - Target 80%+ coverage; skip tests if external commands missing
-- Current: 150+ tests across 8 files (85%+ coverage)
-- `pkg/sshconf/parser_test.go` — Include recursion (depth limit, cycles), glob expansion, `Parse()` default path, path traversal
+- Current: 187 tests across 12 files (sshconf ~89%, TUI ~63%, syncer ~54%; providers minimal because they require cloud credentials)
+- `pkg/sshconf/parser_test.go` — Include recursion (depth limit, cycles), glob expansion, `Parse()` default path, path traversal (see also `parser_bench_test.go`)
 
 ## Benchmarking
 
@@ -123,7 +123,7 @@ make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
 - **Charm.land modules** — bubbletea/bubbles/lipgloss v2 migrated from `github.com/charmbracelet` to `charm.land`
 - **View() returns `tea.View`** (struct), not `string` — Init commands replaced by View struct fields (`AltScreen`, `WindowTitle`, etc.)
 - **Pinned**: `charm.land/bubbletea/v2@v2.0.6`, `charm.land/bubbles/v2@v2.1.0`, `charm.land/lipgloss/v2@v2.0.3`
-- **`x/ansi@v0.9.2`, `colorprofile@v0.3.1`** pinned — newer versions break lipgloss compatibility
+- The charm.land/v2 packages manage their own transitive dependencies on `github.com/charmbracelet/x/ansi` and `colorprofile`. Strict pinning of the old `charmbracelet/` paths (v0.9.2 / v0.3.1) was required during the initial v2 migration; current transitive versions build and test cleanly.
 - **Segfault.net** support removed in 0.4.1
 - **Sensitive keys** (identityfile, proxycommand, etc.) filtered from config viewport
 - **SFTP** — uses `github.com/pkg/sftp` via `ssh -s` subsystem pipe, `BatchMode=yes` prevents interactive hangs, `StrictHostKeyChecking=no` intentional (users connect to own servers)
@@ -139,6 +139,6 @@ make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
 - SFTP connections use `BatchMode=yes` + `RequestTTY=no` to prevent interactive prompts
 - In-flight SSH process tracked with `sync.Mutex` for safe cancellation on exit
 - In-flight remote command tracked with `sync.Mutex` (`currentCmdMu`) to prevent data race
-- Ping capped at 50 concurrent TCP dials (semaphore) to prevent unbounded goroutine spawning
+- Ping uses a bounded semaphore (currently 20) for concurrent TCP dials to SSH ports (see `pkg/tui/ping.go`)
 - Changelog formatted per keepachangelog.com, 1.0.0 semver for hardened v1
 - Ping uses TCP dial to SSH port — no raw sockets, no privileges required, works cross-platform without configuration
