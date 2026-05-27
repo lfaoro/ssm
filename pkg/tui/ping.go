@@ -133,13 +133,10 @@ func refreshList(m *Model) {
 
 // pingWorkerCount returns a safe, bounded number of concurrent workers
 // for pingAllCmd. It is intentionally conservative.
+//
+// We use CPU count as the main signal (cheap and portable) and apply hard
+// bounds so we never launch a ridiculous number of goroutines even on
+// high-core machines or containers that report high CPU counts.
 func pingWorkerCount() int {
-	n := runtime.NumCPU() * 4
-	if n < 8 {
-		n = 8
-	}
-	if n > 64 {
-		n = 64
-	}
-	return n
+	return min(max(runtime.NumCPU()*4, 8), 64)
 }

@@ -19,9 +19,8 @@ import (
 
 // Config holds parsed SSH config data and provides thread-safe access.
 type Config struct {
-	mu             sync.RWMutex
-	Hosts          []Host
-	secondaryHosts []Host
+	mu    sync.RWMutex
+	Hosts []Host
 
 	order Order
 	path  string
@@ -151,8 +150,12 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 	order := c.order
 	c.mu.RUnlock()
 
-	// Perform all I/O and parsing without holding the lock.
-	// Only take the lock at the very end to publish results atomically.
+	// We do the expensive work (file I/O, Include recursion, globbing, host parsing)
+	// without holding the write lock. This dramatically shortens the critical section.
+	// Only at the very end (on success) do we take the lock briefly to publish results.
+	//
+	// Readers (GetHosts, GetParamFor, etc.) will see either the old consistent snapshot
+	// or the new one — never a half-parsed state.
 
 	f, err := os.Open(path) //nolint:gosec
 	if err != nil {
@@ -247,7 +250,6 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 	// Publish results under the lock (very short critical section)
 	c.mu.Lock()
 	c.Hosts = newHosts
-	c.secondaryHosts = nil // not needed after append
 	c.path = path
 	c.mu.Unlock()
 
