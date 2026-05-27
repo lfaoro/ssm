@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"runtime"
 	"time"
 
 	"charm.land/bubbles/v2/list"
@@ -86,9 +87,14 @@ func pingSelectedCmd(m *Model) tea.Cmd {
 
 func pingAllCmd(m *Model) tea.Cmd {
 	items := m.li.VisibleItems()
-	cmds := make([]tea.Cmd, 0, len(items))
-	const maxConcurrent = 20
-	sem := make(chan struct{}, maxConcurrent)
+	if len(items) == 0 {
+		return nil
+	}
+
+	workers := pingWorkerCount()
+	sem := make(chan struct{}, workers)
+
+	var cmds []tea.Cmd
 	for _, it := range items {
 		hostItem, ok := it.(item)
 		if !ok {
@@ -97,9 +103,11 @@ func pingAllCmd(m *Model) tea.Cmd {
 		hostName := hostItem.title
 		h := m.config.GetHost(hostName)
 		hostname, port := resolvePingTarget(h)
+
 		cmds = append(cmds, func() tea.Msg {
 			sem <- struct{}{}
 			defer func() { <-sem }()
+
 			latency, err := pingHost(hostname, port)
 			if err != nil {
 				return PingResultMsg{Host: hostName, Latency: pingErrorLabel(err)}
@@ -121,4 +129,17 @@ func refreshList(m *Model) {
 	if m.li.IsFiltered() {
 		m.li.SetFilterText(m.li.FilterValue())
 	}
+}
+
+// pingWorkerCount returns a safe, bounded number of concurrent workers
+// for pingAllCmd. It is intentionally conservative.
+func pingWorkerCount() int {
+	n := runtime.NumCPU() * 4
+	if n < 8 {
+		n = 8
+	}
+	if n > 64 {
+		n = 64
+	}
+	return n
 }
