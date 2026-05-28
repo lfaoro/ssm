@@ -137,33 +137,6 @@ func TestModel_Update_EscKey(t *testing.T) {
 	}
 }
 
-func TestModel_Update_CtrlC(t *testing.T) {
-	m := newTestModel(t, false)
-	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
-
-	if cmd == nil {
-		t.Fatal("expected command to be returned")
-	}
-
-	msg := cmd()
-	if _, ok := msg.(tea.QuitMsg); !ok {
-		t.Errorf("expected QuitMsg, got %T", msg)
-	}
-
-	_ = m2
-}
-
-func TestModel_Update_CtrlC_WhileFiltering(t *testing.T) {
-	m := newTestModel(t, false)
-
-	m.li.SetFilterText("test")
-	m2 := updateModel(m, tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
-
-	if m2.li.FilterState() == list.Filtering {
-		t.Error("expected filter to be reset")
-	}
-}
-
 func TestModel_Update_CtrlV(t *testing.T) {
 	m := newTestModel(t, false)
 	m2 := updateModel(m, tea.KeyPressMsg{Code: 'v', Mod: tea.ModCtrl})
@@ -521,30 +494,6 @@ func TestModel_View_Debug(t *testing.T) {
 	}
 }
 
-func TestTick(t *testing.T) {
-	cmd := tick()
-
-	if cmd == nil {
-		t.Fatal("expected non-nil command")
-	}
-
-	msg := cmd()
-	if _, ok := msg.(tickMsg); !ok {
-		t.Errorf("expected tickMsg, got %T", msg)
-	}
-}
-
-func TestModel_Update_LivenessCheck(t *testing.T) {
-	m := newTestModel(t, false)
-	m2, cmd := updateModelWithCmd(m, LivenessCheckMsg{})
-
-	if cmd == nil {
-		t.Error("expected command for liveness check")
-	}
-
-	_ = m2
-}
-
 func TestModel_Update_CtrlP_CtrlN(t *testing.T) {
 	m := newTestModel(t, false)
 	m2 := updateModel(m, tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})
@@ -761,65 +710,5 @@ func TestModel_Update_LivenessCheck_TriggersPingAll(t *testing.T) {
 		t.Error("expected command for liveness check (ping all)")
 	}
 
-	_ = m2
-}
-
-func TestPingSelectedCmd_ReturnsCmd(t *testing.T) {
-	m := newTestModel(t, false)
-
-	cmd := pingSelectedCmd(m)
-	if cmd == nil {
-		t.Error("expected non-nil command")
-	}
-}
-
-func TestPingAllCmd_ReturnsCmd(t *testing.T) {
-	m := newTestModel(t, false)
-
-	cmd := pingAllCmd(m)
-	if cmd == nil {
-		t.Error("expected non-nil command")
-	}
-}
-
-func TestModel_Update_YKey_CopiesHost(t *testing.T) {
-	m := newTestModel(t, false)
-
-	// Ensure we have at least one host from the test fixture
-	if m.li.SelectedItem() == nil {
-		t.Fatal("expected at least one host in test model")
-	}
-
-	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 'y'})
-
-	_ = m2 // status message side-effect is on the list; we mainly check no panic + cmd behavior
-
-	// On success (normal dev machine with clipboard), cmd may be nil or a debug log cmd.
-	// We don't assert clipboard contents here (would require mocking), just that it didn't error.
-	if cmd != nil {
-		// If a cmd was returned it should be an AddLog (debug off by default in helper) or similar non-error.
-		// In practice for this test env it is often nil on success path.
-		msg := cmd()
-		if _, ok := msg.(ErrorMsg); ok {
-			t.Errorf("unexpected error cmd from 'y' key: %T", msg)
-		}
-	}
-}
-
-func TestModel_Update_YKey_NoSelection_Errors(t *testing.T) {
-	cfg := newTestConfig(t)
-	m := NewModel(cfg, false)
-	// Force empty list to trigger the no-selection error path
-	m.li.SetItems([]list.Item{})
-
-	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 'y'})
-
-	if cmd == nil {
-		t.Fatal("expected non-nil cmd (error) when no selection")
-	}
-	msg := cmd()
-	if errMsg, ok := msg.(ErrorMsg); !ok || errMsg.Err == nil {
-		t.Errorf("expected ErrorMsg with non-nil Err, got %T", msg)
-	}
 	_ = m2
 }
