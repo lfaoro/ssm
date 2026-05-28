@@ -7,6 +7,9 @@
 
 ## Docs
 
+## Refactor
+- Remove unused `make stats` target, `scripts/stats.go`, and `data/stats.json`. The README uses GitHub's standard downloads badge (`img.shields.io/github/downloads/lfaoro/ssm/total`); the custom stats generator was no longer referenced by any code, CI, or active documentation. This eliminates a manual post-release step and removes documentation drift.
+
 # [2.5.0] May 27, 2026
 
 ## Add

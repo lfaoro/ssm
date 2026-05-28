@@ -40,9 +40,6 @@ nix-lock:
 pre: 
 	@go mod tidy
 
-stats:
-	@go run scripts/stats.go
-
 test:
 	go test -race -count=1 ./...
 
@@ -94,7 +91,7 @@ stop:
 	@pkill -9 inotify ||:
 	@pkill -9 ssm ||:
 
-.PHONY: test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked go-mod-tidy-check gofmt check update stop clean distclean release release-check release-prod release-dev nix-lock aur-push pre stats backup
+.PHONY: test bench bench-cpu bench-mem bench-compare vet lint build build-static build-linked go-mod-tidy-check gofmt check update stop clean distclean release release-check release-prod release-dev nix-lock aur-push pre backup
 
 backup: 
 	rm -rf build/*

@@ -103,7 +103,6 @@ When adding a new `//nolint`, add a clear comment explaining why and consider wh
 - Tagging and full releases are driven by `make release`, `make release-prod`, `make tag TYPE=...`.
 - goreleaser config lives in `.config/goreleaser.yaml` (multi-platform static binaries + many package formats).
 - AUR publishing requires a loaded ssh-agent key (`ssh-add ~/.ssh/aur_key`) and uses the dedicated `scripts/aur-push.sh`.
-- `make stats` updates the download badge data in `data/stats.json`.
 - `make nix-lock` is required as part of the release process.
 
 Any change to release-related files or scripts must be accompanied by a CHANGELOG entry.
