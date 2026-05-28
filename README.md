@@ -86,6 +86,7 @@ Each provider gets its own file under `~/.ssh/config.d/50-ssm-{provider}`. The `
 | **Tag-based filtering** | Use `#tag: production,web` in your config and filter instantly with `ssm production` |
 | **Fuzzy search**        | Fast search across all hosts with `/`                                       |
 | **Live reachability**   | Ping one host or your entire fleet (capped at 50 concurrent) with `p` / `P` |
+| **Copy host name**      | `y` / `Y` copies the selected host's SSH `Host` alias (the connect name) to clipboard |
 
 ### Connection & Interaction
 

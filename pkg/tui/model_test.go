@@ -781,3 +781,45 @@ func TestPingAllCmd_ReturnsCmd(t *testing.T) {
 		t.Error("expected non-nil command")
 	}
 }
+
+func TestModel_Update_YKey_CopiesHost(t *testing.T) {
+	m := newTestModel(t, false)
+
+	// Ensure we have at least one host from the test fixture
+	if m.li.SelectedItem() == nil {
+		t.Fatal("expected at least one host in test model")
+	}
+
+	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 'y'})
+
+	_ = m2 // status message side-effect is on the list; we mainly check no panic + cmd behavior
+
+	// On success (normal dev machine with clipboard), cmd may be nil or a debug log cmd.
+	// We don't assert clipboard contents here (would require mocking), just that it didn't error.
+	if cmd != nil {
+		// If a cmd was returned it should be an AddLog (debug off by default in helper) or similar non-error.
+		// In practice for this test env it is often nil on success path.
+		msg := cmd()
+		if _, ok := msg.(ErrorMsg); ok {
+			t.Errorf("unexpected error cmd from 'y' key: %T", msg)
+		}
+	}
+}
+
+func TestModel_Update_YKey_NoSelection_Errors(t *testing.T) {
+	cfg := newTestConfig(t)
+	m := NewModel(cfg, false)
+	// Force empty list to trigger the no-selection error path
+	m.li.SetItems([]list.Item{})
+
+	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 'y'})
+
+	if cmd == nil {
+		t.Fatal("expected non-nil cmd (error) when no selection")
+	}
+	msg := cmd()
+	if errMsg, ok := msg.(ErrorMsg); !ok || errMsg.Err == nil {
+		t.Errorf("expected ErrorMsg with non-nil Err, got %T", msg)
+	}
+	_ = m2
+}

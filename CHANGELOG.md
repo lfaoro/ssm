@@ -1,6 +1,7 @@
 # [Unreleased]
 
 ## Add
+- TUI: `y` / `Y` while scrolling the host list copies the selected host's name (the SSH config `Host` alias / connectable server name) to the system clipboard. Shows transient "Copied: ..." status. Uses `github.com/atotto/clipboard` (pure Go + exec fallbacks, compatible with CGO_ENABLED=0 static builds). Respects filter mode (does not interfere with search input).
 
 ## Fix
 

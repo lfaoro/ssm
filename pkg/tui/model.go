@@ -19,6 +19,7 @@ import (
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	lg "charm.land/lipgloss/v2"
+	"github.com/atotto/clipboard"
 	"github.com/lfaoro/ssm/pkg/sshconf"
 )
 
@@ -74,6 +75,7 @@ func (m *Model) Init() tea.Cmd {
 }
 
 // Update handles all messages and returns the updated model.
+//nolint:gocyclo // TEA message dispatchers are naturally complex (large switch); threshold is 55 and this change only added one guarded case.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	cmds := []tea.Cmd{}
@@ -178,6 +180,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case 'P':
 			if m.li.FilterState() != list.Filtering {
 				return m, pingAllCmd(m)
+			}
+		case 'y', 'Y':
+			if m.li.FilterState() != list.Filtering {
+				return m, m.copySelected()
 			}
 		}
 		switch msg.Mod {
@@ -316,6 +322,25 @@ func (m *Model) connect() tea.Cmd {
 		return ErrorMsg{Err: fmt.Errorf("%s", msg)}
 	})
 	return execmd
+}
+
+// copySelected copies the currently selected host's name (the SSH config "Host" alias)
+// to the system clipboard using atotto/clipboard. On success it shows a transient
+// status message in the list. Errors surface via the normal error log path.
+// Safe to call only when not actively filtering (caller guards).
+func (m *Model) copySelected() tea.Cmd {
+	host, ok := m.li.SelectedItem().(item)
+	if !ok {
+		return AddError(errors.New("no host selected"))
+	}
+	if err := clipboard.WriteAll(host.title); err != nil {
+		return AddError(fmt.Errorf("copy to clipboard failed: %w", err))
+	}
+	m.li.NewStatusMessage("Copied: " + host.title)
+	if m.debug {
+		return AddLog("copied host: %s", host.title)
+	}
+	return nil
 }
 
 func (m *Model) setConfig() {
