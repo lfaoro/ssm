@@ -1,6 +1,6 @@
 # SSM — Secure Shell Manager
 
-> ssm is a delightful TUI SSH connection manager that makes your existing ~/.ssh/config fast, searchable, and pleasant to use at scale.
+> A fast, keyboard-driven TUI that makes your existing `~/.ssh/config` delightful to use at fleet scale.
 
 [![Go](https://img.shields.io/github/go-mod/go-version/lfaoro/ssm?logo=go)](https://github.com/lfaoro/ssm)
 [![Release](https://img.shields.io/github/v/release/lfaoro/ssm?logo=github)](https://github.com/lfaoro/ssm/releases)
@@ -11,185 +11,177 @@
 
 ---
 
-TL;DR [Install](#Installation)
+**No agents. No changes on your servers. Just a better way to navigate the SSH config you already have.**
 
-Terminal interface (TUI) built on top of your existing ~/.ssh/config and native ssh/mosh binaries. No agent or setup needed on remote servers. Features include host filtering/search, editing config in-app, running commands, file transfers, tagging, cloud provider sync, themes, and more. Designed specifically for people who manage many servers (sysadmins, DevOps, SREs).
+![SSM TUI](data/demo.png)
 
-## See it in action
+## 30-second quick start
 
-[![Demo](data/demo.cast)](data/demo.cast)
+```bash
+# 1. Install
+curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
 
-> **Demo coming soon.** A 30-second asciinema recording will be placed here showing typical daily usage (tagging, filtering, remote commands, SFTP, and pings).
-
-## Why people use SSM
-
-- **Your SSH config is the source of truth** — SSM reads `~/.ssh/config` (including `Include` directives) and adds the organization you’ve always wanted through simple `#tag:` comments.
-- **Fast, reliable discovery at fleet scale** — Filter by tags, fuzzy search, custom ordering, and live reachability checks across all your hosts.
-- **One interface for the full loop** — SSH or MOSH connections, ad-hoc command execution, and two-pane SFTP file transfers — all without context switching.
-- **Built for people who work the terminal** — Clean, fast, and respectful of how experienced operators actually work.
-
-## How it works with what you already have
-
-Add lightweight metadata to your existing entries:
-
-```ssh-config
+# 2. Tag a few hosts in ~/.ssh/config
 Host prod-api
 #tag: production,api
+    HostName 10.0.0.42
     User deploy
-    HostName api.example.com
-    ...
+
+# 3. Launch
+ssm production          # filter to production hosts
+ssm                     # or see everything
+```
+
+That's it. SSM reads your existing config (including `Include` directives), adds powerful navigation on top, and never touches your remote machines.
+
+## What you get
+
+- **Instant filtering** by tags, names, or fuzzy search (`/`)
+- **Live reachability** — `p` pings the selected host, `P` pings everything visible (bounded concurrency based on CPU cores)
+- **One-keystroke connect** — `Enter` (toggle SSH/Mosh with `Tab`)
+- **Batch commands** — `ssm [tag] -r 'uptime && whoami'` runs across any filtered set, non-interactively
+- **Integrated SFTP** — `Ctrl+s` opens a two-pane file browser with batch transfers
+- **Remote execution** — `Ctrl+r` for interactive commands on the selected host
+- **Cloud discovery** — `ssm sync hetzner|aws|gcp|azure` pulls running instances into your config automatically
+- **Live config editing** — `Ctrl+e` opens your SSH config in `$EDITOR`, then reloads
+- **Everything else** — copy host name with `y`/`Y`, config inspector (`Ctrl+v`), themes, `--ping` at startup, `--exit` for clean handoff, and more
+
+## How tagging works
+
+Add lightweight comments to your existing entries:
+
+```ssh-config
+#tagorder                 # optional: show tagged hosts first
+
+Host web-01
+#tag: production,web,eu
+    HostName 203.0.113.10
+    User deploy
+    IdentityFile ~/.ssh/prod_ed25519
 
 Host db-primary
-#tag: production,database,eu
-    User postgres
-    HostName db.example.com
-    ProxyJump prod-api
+#tag: production,database
+    HostName 203.0.113.20
+    ProxyJump web-01
 ```
 
-Then launch SSM:
+Then use those tags as filters:
 
 ```bash
-ssm                  # see everything
-ssm production       # filter to production hosts
-ssm db               # or any tag you use
+ssm production          # all production hosts
+ssm web                 # anything tagged "web"
+ssm eu,production       # combine tags
 ```
 
-No changes are ever made to your remote servers.
+SSM supports full `Include` recursion, globs, `#tagorder`, and cycle detection.
 
-### Cloud provider sync
+## Cloud provider sync
 
-SSM can discover running servers from your cloud providers and write them into your SSH config:
+Discover running servers and write them into your SSH config with zero manual work:
 
 ```bash
-ssm sync                         # sync all configured providers
-ssm sync hetzner aws             # sync specific providers
-ssm sync --user deploy --key ~/.ssh/id_ed25519  # set default user and key
-ssm sync --dry-run               # preview what would be written
+ssm sync                    # all configured providers
+ssm sync aws hetzner        # specific providers
+ssm sync --dry-run          # preview only
+ssm sync --user deploy --key ~/.ssh/id_ed25519
 ```
 
-Synced hosts are named `{region}-{name}` (e.g. `fsn1-web-01`) and tagged with `#tag: {provider}` so you can filter them with `ssm hetzner`.
+- Each provider gets its own file under `~/.ssh/config.d/50-ssm-{provider}`
+- `Include config.d/*` is added to your main config automatically
+- Hosts are tagged with the provider name so you can filter with `ssm aws`
 
-Each provider gets its own file under `~/.ssh/config.d/50-ssm-{provider}`. The `Include config.d/*` line in `~/.ssh/config` is added automatically — no manual editing required.
+Supported providers and credentials:
+- **Hetzner**: `HCLOUD_TOKEN`
+- **AWS**: standard SDK chain (`AWS_PROFILE`, env vars, IAM role)
+- **GCP**: `GCP_PROJECT` + Application Default Credentials
+- **Azure**: `AZURE_SUBSCRIPTION_ID` + Azure auth chain
 
-> Credentials are read from environment variables:
-> - Hetzner: `HCLOUD_TOKEN`
-> - AWS: standard SDK credential chain (env vars, `~/.aws/credentials`, IAM role)
-> - GCP: `GCP_PROJECT` + Application Default Credentials
-> - Azure: `AZURE_SUBSCRIPTION_ID` + Azure SDK auth (env vars, Azure CLI, managed identity)
+## Key bindings (TUI)
 
-## Key Capabilities
+| Key          | Action                              |
+|--------------|-------------------------------------|
+| `Enter`      | Connect (SSH or Mosh)               |
+| `Tab`        | Toggle SSH ↔ Mosh                   |
+| `p`          | Ping selected host                  |
+| `P`          | Ping all visible hosts              |
+| `y` / `Y`    | Copy host name to clipboard         |
+| `/`          | Fuzzy search / filter               |
+| `q` or `Ctrl+c` | Quit                             |
+| `Ctrl+e`     | Edit `~/.ssh/config` in `$EDITOR`   |
+| `Ctrl+r`     | Run command on selected host        |
+| `Ctrl+s`     | Open SFTP file browser              |
+| `Ctrl+v`     | Toggle parsed config inspector      |
+| `Ctrl+y`     | Open cloud sync panel               |
+| `Esc`        | Clear filter / close panels         |
 
-### Discovery & Navigation
+Emacs navigation (`Ctrl+p/n/b/f`) also works.
 
-| Capability          | Description                                                                 |
-|---------------------|-----------------------------------------------------------------------------|
-| **Tag-based filtering** | Use `#tag: production,web` in your config and filter instantly with `ssm production` |
-| **Fuzzy search**        | Fast search across all hosts with `/`                                       |
-| **Live reachability**   | Ping one host or your entire fleet (capped at 50 concurrent) with `p` / `P` |
-| **Copy host name**      | `y` / `Y` copies the selected host's SSH `Host` alias (the connect name) to clipboard |
+## CLI flags & batch usage
 
-### Connection & Interaction
+```bash
+ssm [tag]                     # launch TUI, optionally filtered
+ssm [tag] -r 'uptime'         # run command on matching hosts and exit
+ssm --ping                    # launch with live pings already running
+ssm --exit prod-api           # connect and fully replace the ssm process
+ssm --order production        # show tagged hosts first
+ssm -t matrix                 # use a different theme (sky | matrix)
+ssm -c ~/.ssh/work_config     # use a custom config file
+```
 
-| Capability          | Description                                                                 |
-|---------------------|-----------------------------------------------------------------------------|
-| **One-keystroke connect** | Tab to switch between SSH and Mosh, Enter to connect                      |
-| **Remote execution**      | `Ctrl+r` (interactive on selected host) or `ssm [tag] -r 'cmd'` (batch on filtered hosts, non-TTY safe) |
-| **Clean exit mode**       | `--exit` flag uses `syscall.Exec` so the process is fully replaced        |
+The `-r` / `--command` flag is fully scriptable and exits non-zero if any host fails.
 
-### File Management
+## Security & hardening
 
-| Capability          | Description                                                                 |
-|---------------------|-----------------------------------------------------------------------------|
-| **Integrated SFTP** | Two-pane local ↔ remote file browser with batch transfers (`Ctrl+s`)      |
+SSM is built for production infrastructure teams:
 
-### Configuration & Power Tools
+- **Zero software** is ever installed on remote hosts
+- Every SSH, mosh, and SFTP invocation uses the `--` delimiter to prevent flag injection
+- `BatchMode=yes` + `RequestTTY=no` for all non-interactive operations
+- Sensitive keys (`IdentityFile`, `ProxyCommand`, etc.) are filtered from the config viewer
+- SSH config file permissions are checked (warns if not 0600)
+- All remote output is sanitized (ANSI stripped, stderr truncated)
+- Ping uses ordinary TCP connects — no raw sockets or elevated privileges
 
-| Capability          | Description                                                                 |
-|---------------------|-----------------------------------------------------------------------------|
-| **Live editor**         | Edit your SSH config directly from inside SSM (`Ctrl+e`)                    |
-| **Config inspector**    | View a clean, sanitized version of the parsed config (`Ctrl+v`)             |
-| **Advanced parsing**    | Full `Include` recursion, cycle detection, glob support, and `#tagorder`    |
-
-### Cloud Sync
-
-| Capability          | Description                                                                 |
-|---------------------|-----------------------------------------------------------------------------|
-| **Provider discovery** | Fetch running servers from Hetzner, AWS, GCP, and Azure with `ssm sync`   |
-| **Per-provider files** | Each provider written to `~/.ssh/config.d/50-ssm-{provider}`              |
-| **Auto-include**        | `Include config.d/*` added to `~/.ssh/config` automatically               |
-| **Defaults**            | `--user` and `--key` flags applied to all synced hosts                     |
-| **Preview mode**        | `--dry-run` shows generated config without writing                         |
-| **Auth: Hetzner**       | `HCLOUD_TOKEN`                                                             |
-| **Auth: AWS**           | Standard SDK chain (`AWS_PROFILE`, env vars, IAM role)                    |
-| **Auth: GCP**           | `GCP_PROJECT` + Application Default Credentials                            |
-| **Auth: Azure**         | `AZURE_SUBSCRIPTION_ID` + Azure SDK auth (env, CLI, managed identity)      |
-
-### Theming & Safety
-
-| Capability          | Description                                                                 |
-|---------------------|-----------------------------------------------------------------------------|
-| **Themes**              | `sky` (default) and `matrix`                                                |
-| **Hardened defaults**   | `BatchMode=yes`, `--` anti-injection delimiter, permission checks, sensitive key filtering |
-
-## Security & Reliability
-
-SSM is designed for people who operate production infrastructure:
-
-- No agents or software installed on remote servers
-- SSH config permissions are checked and warned about
-- Sensitive keys (`IdentityFile`, `ProxyCommand`, etc.) are filtered from the inspector
-- All remote command and SFTP connections use `BatchMode=yes` and the `--` delimiter
-- Stderr is sanitized and truncated
-- Ping uses ordinary TCP connects — no raw sockets or privileges required
+See [SECURITY.md](SECURITY.md) for the full model.
 
 ## Installation
 
-The fastest way
+**Fastest:**
 
 ```bash
 curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
 ```
 
-### Package Managers
+**Package managers:**
 
-| Platform       | Command                                              |
-|----------------|------------------------------------------------------|
-| Go             | `go install github.com/lfaoro/ssm@latest`            |
-| macOS          | `brew install lfaoro/tap/ssm`                        |
-| Arch Linux     | `yay -S ssm-bin` (AUR)                               |
-| Nix            | `nix profile install github:lfaoro/ssm`              |
-| Nix (run)      | `nix run github:lfaoro/ssm -- ssm`                   |
+| Platform       | Command |
+|----------------|---------|
+| Go             | `go install github.com/lfaoro/ssm@latest` |
+| macOS          | `brew install lfaoro/tap/ssm` |
+| Arch Linux     | `yay -S ssm-bin` (AUR) |
+| Nix            | `nix profile install github:lfaoro/ssm` |
+| Nix (run)      | `nix run github:lfaoro/ssm` |
 | Debian / RPM   | Download from [Releases](https://github.com/lfaoro/ssm/releases) |
 
-Pre-built binaries for Linux, macOS, FreeBSD, and OpenBSD (amd64 + arm64) are available on the [releases page](https://github.com/lfaoro/ssm/releases).
+Pre-built static binaries for Linux, macOS, FreeBSD, and OpenBSD (amd64 + arm64) are available on the [releases page](https://github.com/lfaoro/ssm/releases).
 
-## What people are saying
+## Contributing & development
 
-> “This is exactly what I wanted for my fleet.”  
-> — [@hackerschoice](https://x.com/hackerschoice/status/1920899798837711279)
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-> “Finally a TUI that respects how I already manage SSH.”  
-> — [@golangch](https://x.com/golangch/status/1920138613473649150)
+The project follows a strict “never commit unless explicitly told” policy for AI agents and careful humans. Full rules are in [AGENTS.md](AGENTS.md).
 
-If you’re using SSM in production or at scale, I’d love to hear about it.
+Release process is documented in [DEPLOY.md](DEPLOY.md).
 
-## Sponsorship & Support
+## Sponsorship
 
-SSM is developed and maintained in the open.
+SSM is developed in the open.
 
 - [GitHub Sponsors](https://github.com/sponsors/lfaoro)
 - BTC: `bc1qzaqeqwklaq86uz8h2lww87qwfpnyh9fveyh3hs`
 - XMR: `89XCyahmZiQgcVwjrSZTcJepPqCxZgMqwbABvzPKVpzC7gi8URDme8H6UThpCqX69y5i1aA81AKq57Wynjovy7g4K9MeY5c`
 - FIAT: [Revolut](https://revolut.me/matrix)
 - Telegram: [@leonarth](https://t.me/leonarth)
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution workflow.
-
-The project follows a strict “never commit unless explicitly told” policy. See [AGENTS.md](AGENTS.md) for the full rules and rationale.
-
-Releases are performed manually. The exact process is documented in [DEPLOY.md](DEPLOY.md).
 
 ## License
 

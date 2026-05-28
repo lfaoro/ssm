@@ -6,6 +6,13 @@
 ## Fix
 
 ## Docs
+- Major redesign of README.md for better scannability, visual impact, and accuracy:
+  - Prominent hero screenshot using the existing `data/demo.png`
+  - Removed broken "Demo coming soon" asciinema placeholder
+  - Updated ping concurrency description to the current dynamic CPU-based model
+  - Better promotion of recent power features (`-r`/`--command` batch execution, `y`/`Y` clipboard copy, `--ping` startup flag)
+  - Cleaner structure with focused sections instead of repetitive capability tables
+  - Improved quick-start flow and keybindings reference
 
 ## Refactor
 - Remove unused `make stats` target, `scripts/stats.go`, and `data/stats.json`. The README uses GitHub's standard downloads badge (`img.shields.io/github/downloads/lfaoro/ssm/total`); the custom stats generator was no longer referenced by any code, CI, or active documentation. This eliminates a manual post-release step and removes documentation drift.
