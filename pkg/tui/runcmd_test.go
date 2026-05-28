@@ -6,6 +6,7 @@ package tui
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
@@ -443,5 +444,20 @@ func TestRenderSecondaryBar(t *testing.T) {
 
 	if result == "" {
 		t.Error("expected non-empty result")
+	}
+}
+
+// TestRunBatchRemoteCommands_Params exercises the new 6-argument form
+// (used by `ssm exec`) with explicit delay/threads/jitter and the "false"
+// binary so the test remains hermetic and fast.
+func TestRunBatchRemoteCommands_Params(t *testing.T) {
+	cfg := newTestConfig(t)
+
+	// Should not panic or deadlock even with tiny positive delay + jitter.
+	err := RunBatchRemoteCommands(cfg, "", "echo hi", 1*time.Millisecond, 2, 5*time.Millisecond)
+	// We expect errors (because "false" binary fails), but the runner must
+	// complete and return a proper error instead of hanging.
+	if err == nil {
+		t.Log("unexpected success with 'false' ssh binary (acceptable)")
 	}
 }

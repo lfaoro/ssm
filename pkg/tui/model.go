@@ -75,6 +75,7 @@ func (m *Model) Init() tea.Cmd {
 }
 
 // Update handles all messages and returns the updated model.
+//
 //nolint:gocyclo // TEA message dispatchers are naturally complex (large switch); threshold is 55 and this change only added one guarded case.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd

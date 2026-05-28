@@ -8,10 +8,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
@@ -396,20 +398,26 @@ func containsAny(s string, needles []string) bool {
 	return false
 }
 
-// RunBatchRemoteCommands is the entry point called from main.go when
-// --command (or -r) is supplied. It never launches the TUI.
-func RunBatchRemoteCommands(cfg *sshconf.Config, tagFilter, command string) error {
+// RunBatchRemoteCommands runs a command on all (or tag-filtered) hosts.
+// This is the primary entry point used by both the legacy -r/--command flag
+// (passing zeros for the advanced options) and the `ssm exec` subcommand.
+func RunBatchRemoteCommands(cfg *sshconf.Config, tagFilter, command string, delay time.Duration, threads int, jitterMax time.Duration) error {
 	hosts := hostsForBatch(cfg.GetHosts(), tagFilter)
 	if len(hosts) == 0 {
 		fmt.Println("ssm: no matching hosts for command execution")
 		return nil
 	}
 
-	sshBin := "ssh" // batch mode always uses ssh (mosh does not make sense here)
+	sshBin := "ssh"
 	cfgPath := cfg.GetPath()
 
-	limit := ConcurrencyLimit()
+	limit := threads
+	if limit <= 0 {
+		limit = ConcurrencyLimit()
+	}
 	sem := make(chan struct{}, limit)
+
+	const modestAutoJitter = 80 * time.Millisecond
 
 	type hostResult struct {
 		host   string
@@ -425,6 +433,19 @@ func RunBatchRemoteCommands(cfg *sshconf.Config, tagFilter, command string) erro
 		go func(idx int, hostName string) {
 			defer wg.Done()
 			sem <- struct{}{}
+
+			sleep := delay
+			jmax := jitterMax
+			if jmax == 0 {
+				jmax = modestAutoJitter
+			}
+			if jmax > 0 {
+				sleep += time.Duration(rand.Int64N(int64(jmax))) //nolint:gosec // timing jitter only; non-cryptographic use is intentional and safe
+			}
+			if sleep > 0 {
+				time.Sleep(sleep)
+			}
+
 			defer func() { <-sem }()
 
 			out, err := execOnHost(sshBin, cfgPath, hostName, command)
@@ -434,7 +455,6 @@ func RunBatchRemoteCommands(cfg *sshconf.Config, tagFilter, command string) erro
 
 	wg.Wait()
 
-	// Print results in the original (config) order, grouped for readability.
 	failures := 0
 	for _, r := range results {
 		fmt.Printf("[%s]\n", r.host)

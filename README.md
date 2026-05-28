@@ -119,16 +119,17 @@ Emacs navigation (`Ctrl+p/n/b/f`) also works.
 ## CLI flags & batch usage
 
 ```bash
-ssm [tag]                     # launch TUI, optionally filtered
-ssm [tag] -r 'uptime'         # run command on matching hosts and exit
-ssm --ping                    # launch with live pings already running
+ssm [tag]                           # launch TUI, optionally filtered
+ssm exec prod 'uptime'              # run command on matching hosts and exit (recommended)
+ssm e web --delay 150ms 'nginx -t'  # with pacing and concurrency control
+ssm [tag] -r 'uptime'               # legacy form (still works; see --help)
 ssm --exit prod-api           # connect and fully replace the ssm process
 ssm --order production        # show tagged hosts first
 ssm -t matrix                 # use a different theme (sky | matrix)
 ssm -c ~/.ssh/work_config     # use a custom config file
 ```
 
-The `-r` / `--command` flag is fully scriptable and exits non-zero if any host fails.
+The `-r` / `--command` flag (and the newer `ssm exec` subcommand) are fully scriptable and exit non-zero if any host fails. Use `ssm exec --help` for the current options including `--delay`, `--threads`, and jitter control.
 
 ## Security & hardening
 

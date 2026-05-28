@@ -1,11 +1,14 @@
 # [Unreleased]
 
 ## Add
+- `ssm exec [tag] 'command'` subcommand (with short alias `e`) for non-interactive batch execution. Supports `--delay`, `--threads`/`-t` (aliases `-j`, `--jobs`), and `--jitter-max`. A modest automatic jitter is applied by default to avoid connection storms on macOS and hosts with low `MaxStartups`. The previous `-r` / `--command` root flag is preserved as a compatibility shim (its help text now recommends the new subcommand).
 - TUI: `y` / `Y` while scrolling the host list copies the selected host's name (the SSH config `Host` alias / connectable server name) to the system clipboard. Shows transient "Copied: ..." status. Uses `github.com/atotto/clipboard` (pure Go + exec fallbacks, compatible with CGO_ENABLED=0 static builds). Respects filter mode (does not interfere with search input).
 
 ## Fix
+- Batch command execution (`ssm exec` and the legacy `-r` path) now spaces SSH connection attempts with a modest automatic jitter (plus user-tunable `--delay` and `--jitter-max`). This prevents the widespread "exit status 255 / Connection closed" failures previously observed on macOS and other systems when running against fleets of non-trivial size.
 
 ## Docs
+- Root-level TUI-only and legacy flags (`--show`, `--exit`, `--order`, `--ping`, `--theme`, `-r/--command`) are now marked `Local` so they no longer appear in the "GLOBAL OPTIONS" section of `ssm exec --help` / `ssm sync --help`. Only `--debug` and `--config` remain truly global/persistent.
 - Major redesign of README.md for better scannability, visual impact, and accuracy:
   - Prominent hero screenshot using the existing `data/demo.png`
   - Removed broken "Demo coming soon" asciinema placeholder
