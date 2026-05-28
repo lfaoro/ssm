@@ -326,15 +326,20 @@ func (m *Model) connect() tea.Cmd {
 
 // copySelected copies the currently selected host's name (the SSH config "Host" alias)
 // to the system clipboard using atotto/clipboard. On success it shows a transient
-// status message in the list. Errors surface via the normal error log path.
-// Safe to call only when not actively filtering (caller guards).
+// status message. Clipboard unavailability (common in headless/CI/SSH sessions) is
+// handled gracefully with a status message instead of a hard error.
 func (m *Model) copySelected() tea.Cmd {
 	host, ok := m.li.SelectedItem().(item)
 	if !ok {
 		return AddError(errors.New("no host selected"))
 	}
 	if err := clipboard.WriteAll(host.title); err != nil {
-		return AddError(fmt.Errorf("copy to clipboard failed: %w", err))
+		// Graceful degradation for headless environments (no xclip/wl-clipboard etc.)
+		m.li.NewStatusMessage("Clipboard unavailable in this environment")
+		if m.debug {
+			return AddLog("clipboard write failed: %v", err)
+		}
+		return nil
 	}
 	m.li.NewStatusMessage("Copied: " + host.title)
 	if m.debug {

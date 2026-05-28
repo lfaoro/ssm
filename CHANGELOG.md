@@ -10,6 +10,11 @@
 ## Refactor
 - Remove unused `make stats` target, `scripts/stats.go`, and `data/stats.json`. The README uses GitHub's standard downloads badge (`img.shields.io/github/downloads/lfaoro/ssm/total`); the custom stats generator was no longer referenced by any code, CI, or active documentation. This eliminates a manual post-release step and removes documentation drift.
 
+## Test
+- Remove the two tests for the small `y`/`Y` clipboard copy feature (`TestModel_Update_YKey_CopiesHost` and `TestModel_Update_YKey_NoSelection_Errors`). The implementation is a thin filter guard + thin wrapper around `atotto/clipboard`; the tests provided little ongoing value relative to their maintenance cost in CI.
+- Remove `TestPingSelectedCmd_ReturnsCmd`, `TestPingAllCmd_ReturnsCmd` (trivial "returns non-nil cmd" smoke tests with almost no regression value) and the entire `themes_test.go` (minimal smoke test for theme map existence).
+- Remove additional low-value tests from `model_test.go`: `TestTick`, `TestModel_Update_LivenessCheck`, `TestModel_Update_CtrlC`, and `TestModel_Update_CtrlC_WhileFiltering` (mostly boilerplate "returns command" or thin key-handling checks with limited regression protection).
+
 # [2.5.0] May 27, 2026
 
 ## Add
