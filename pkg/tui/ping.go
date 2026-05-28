@@ -30,7 +30,7 @@ func resolvePingTarget(host sshconf.Host) (string, string) {
 func pingHost(hostname, port string) (time.Duration, error) {
 	addr := net.JoinHostPort(hostname, port)
 	start := time.Now()
-	dialer := net.Dialer{Timeout: 3 * time.Second}
+	dialer := net.Dialer{Timeout: 20 * time.Second}
 	conn, err := dialer.Dial("tcp", addr)
 	if err != nil {
 		return 0, err
