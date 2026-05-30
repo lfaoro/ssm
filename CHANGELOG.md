@@ -2,6 +2,7 @@
 
 ## Add
 ## Fix
+- Nix flake: replace hardcoded version `2.2.1` with dynamic derivation from flake metadata (`lastModifiedDate` + `shortRev`); add `BuildDate` and `BuildSHA` ldflags for build info parity with goreleaser; regenerate stale `vendorHash` to match current dependencies.
 ## Docs
 ## Refactor
 ## Test

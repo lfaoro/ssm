@@ -10,16 +10,19 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        version = builtins.substring 0 10 self.lastModifiedDate + "-" + (self.shortRev or "dirty");
       in
       {
         packages.ssm = pkgs.buildGoModule {
           pname = "ssm";
-          version = "2.2.1";
+          inherit version;
           src = self;
-          vendorHash = "sha256-iJVgkKqrDxRASRjEp8SVwFjsLR9l5gsdpFPbewrg9VI=";
+          vendorHash = "sha256-FKQAgmNId+9Pv+gc7QhYT0zu16/4UvEfycQClhlEQWc=";
           ldflags = [
             "-s" "-w"
-            "-X main.BuildVersion=2.2.1"
+            "-X main.BuildVersion=${version}"
+            "-X main.BuildDate=${self.lastModifiedDate}"
+            "-X main.BuildSHA=${self.shortRev or "dirty"}"
           ];
           subPackages = [ "." ];
         };
