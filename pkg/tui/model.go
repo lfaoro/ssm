@@ -125,14 +125,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.li = listFrom(m.config, m.theme)
 		m.li.NewStatusMessage(fmt.Sprintf("[%s]", m.Cmd))
-		return m, AddLog("reloading config")
+		return m, tea.Batch(AddLog("reloading config"), tea.RequestWindowSize)
 	case ShowConfigMsg:
 		m.showConfig = true
 		return m, tea.RequestWindowSize
 	case SetThemeMsg:
 		m.theme = themes[msg.Theme]
 		m.li = listFrom(m.config, m.theme)
-		return m, nil
+		return m, tea.RequestWindowSize
 	case PingResultMsg:
 		m.pingResults[msg.Host] = msg.Latency
 		refreshList(m)

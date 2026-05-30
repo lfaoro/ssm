@@ -2,7 +2,7 @@
 
 ## Add
 ## Fix
-- TUI: `--show`/`-s` flag now triggers a layout refresh so the config panel renders correctly on startup (previously the list was visually squished until Ctrl+v was pressed).
+- TUI: `--show`/`-s`, `--theme`/`-t`, and `Ctrl+e` (reload config) now trigger a layout refresh so the config panel and list render correctly on startup (previously the list was visually squished or 0-sized until the terminal was resized).
 ## Docs
 ## Refactor
 ## Test
