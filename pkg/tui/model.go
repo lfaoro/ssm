@@ -128,7 +128,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, AddLog("reloading config")
 	case ShowConfigMsg:
 		m.showConfig = true
-		return m, nil
+		return m, tea.RequestWindowSize
 	case SetThemeMsg:
 		m.theme = themes[msg.Theme]
 		m.li = listFrom(m.config, m.theme)

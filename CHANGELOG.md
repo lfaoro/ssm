@@ -2,6 +2,7 @@
 
 ## Add
 ## Fix
+- TUI: `--show`/`-s` flag now triggers a layout refresh so the config panel renders correctly on startup (previously the list was visually squished until Ctrl+v was pressed).
 ## Docs
 ## Refactor
 ## Test
