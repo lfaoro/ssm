@@ -6,7 +6,7 @@
 ## Refactor
 ## Test
 
-# [2.5.1] May 30, 2026
+# [2.5.2] May 30, 2026
 
 ## Add
 - `ssm exec [tag] 'command'` subcommand (with short alias `e`) for non-interactive batch execution. Supports `--delay`, `--threads`/`-t` (aliases `-j`, `--jobs`), and `--jitter-max`. A modest automatic jitter is applied by default to avoid connection storms on macOS and hosts with low `MaxStartups`. The previous `-r` / `--command` root flag is preserved as a compatibility shim (its help text now recommends the new subcommand).
