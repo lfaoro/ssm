@@ -16,7 +16,6 @@ Run in this exact order:
 3. `make tag TYPE=patch|minor|major`   # creates annotated tag and pushes it
 4. `make release`                  # pre + nix-lock + goreleaser (local publish)
 5. `make aur-push`                 # only if you want to update the Arch package
-6. `make stats`                    # refresh download counts for README badge
 
 ## What the Commands Do
 
@@ -25,7 +24,6 @@ Run in this exact order:
 | `make tag`        | Calculates next semver, `git tag`, `git push --tags` |
 | `make release`    | Runs goreleaser locally (builds + publishes to GitHub + Homebrew) |
 | `make aur-push`   | Copies goreleaser AUR artifacts and pushes to AUR |
-| `make stats`      | Updates `data/stats.json` (README download badge) |
 
 ## Notes
 
@@ -35,5 +33,5 @@ Run in this exact order:
 ## References
 
 - `AGENTS.md` – Release section
-- `Makefile` – release, tag, aur-push, stats targets
+- `Makefile` – release, tag, aur-push targets
 - `.config/goreleaser.yaml` – packaging configuration

@@ -223,18 +223,21 @@ func TestListFrom_HelpKeys(t *testing.T) {
 func TestInitKeys(t *testing.T) {
 	keys := initKeys()
 
-	if len(keys) != 7 {
-		t.Errorf("expected 7 key bindings, got %d", len(keys))
+	if len(keys) != 9 {
+		t.Errorf("expected 9 key bindings, got %d", len(keys))
 	}
 
 	expectedKeys := map[string]bool{
 		"enter":  false,
 		"tab":    false,
-		"ctrl+s": false,
-		"ctrl+r": false,
+		"p":      false,
+		"y":      false,
+		"Y":      false,
 		"ctrl+e": false,
 		"ctrl+v": false,
-		"p":      false,
+		"ctrl+s": false,
+		"ctrl+r": false,
+		"ctrl+y": false,
 	}
 
 	for _, k := range keys {
@@ -511,6 +514,29 @@ func TestRefreshList_PreservesFilter(t *testing.T) {
 	items := m.li.Items()
 	if len(items) == 0 {
 		t.Error("expected filtered items after refreshList")
+	}
+}
+
+func TestPingAllCmd_Filtered(t *testing.T) {
+	m := newTestModel(t, false)
+
+	totalHosts := len(m.config.GetHosts())
+	visibleBefore := len(m.li.VisibleItems())
+	if visibleBefore != totalHosts {
+		t.Fatalf("expected %d visible items before filter, got %d", totalHosts, visibleBefore)
+	}
+
+	m.li.SetFilterText("test-server")
+	m.li.SetFilteringEnabled(true)
+
+	visibleAfter := len(m.li.VisibleItems())
+	if visibleAfter >= totalHosts {
+		t.Fatalf("expected fewer visible items after filter (%d < %d)", visibleAfter, totalHosts)
+	}
+
+	cmd := pingAllCmd(m)
+	if cmd == nil {
+		t.Error("expected non-nil command from pingAllCmd")
 	}
 }
 

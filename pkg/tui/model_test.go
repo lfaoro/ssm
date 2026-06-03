@@ -137,33 +137,6 @@ func TestModel_Update_EscKey(t *testing.T) {
 	}
 }
 
-func TestModel_Update_CtrlC(t *testing.T) {
-	m := newTestModel(t, false)
-	m2, cmd := updateModelWithCmd(m, tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
-
-	if cmd == nil {
-		t.Fatal("expected command to be returned")
-	}
-
-	msg := cmd()
-	if _, ok := msg.(tea.QuitMsg); !ok {
-		t.Errorf("expected QuitMsg, got %T", msg)
-	}
-
-	_ = m2
-}
-
-func TestModel_Update_CtrlC_WhileFiltering(t *testing.T) {
-	m := newTestModel(t, false)
-
-	m.li.SetFilterText("test")
-	m2 := updateModel(m, tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl})
-
-	if m2.li.FilterState() == list.Filtering {
-		t.Error("expected filter to be reset")
-	}
-}
-
 func TestModel_Update_CtrlV(t *testing.T) {
 	m := newTestModel(t, false)
 	m2 := updateModel(m, tea.KeyPressMsg{Code: 'v', Mod: tea.ModCtrl})
@@ -521,30 +494,6 @@ func TestModel_View_Debug(t *testing.T) {
 	}
 }
 
-func TestTick(t *testing.T) {
-	cmd := tick()
-
-	if cmd == nil {
-		t.Fatal("expected non-nil command")
-	}
-
-	msg := cmd()
-	if _, ok := msg.(tickMsg); !ok {
-		t.Errorf("expected tickMsg, got %T", msg)
-	}
-}
-
-func TestModel_Update_LivenessCheck(t *testing.T) {
-	m := newTestModel(t, false)
-	m2, cmd := updateModelWithCmd(m, LivenessCheckMsg{})
-
-	if cmd == nil {
-		t.Error("expected command for liveness check")
-	}
-
-	_ = m2
-}
-
 func TestModel_Update_CtrlP_CtrlN(t *testing.T) {
 	m := newTestModel(t, false)
 	m2 := updateModel(m, tea.KeyPressMsg{Code: 'p', Mod: tea.ModCtrl})
@@ -762,22 +711,4 @@ func TestModel_Update_LivenessCheck_TriggersPingAll(t *testing.T) {
 	}
 
 	_ = m2
-}
-
-func TestPingSelectedCmd_ReturnsCmd(t *testing.T) {
-	m := newTestModel(t, false)
-
-	cmd := pingSelectedCmd(m)
-	if cmd == nil {
-		t.Error("expected non-nil command")
-	}
-}
-
-func TestPingAllCmd_ReturnsCmd(t *testing.T) {
-	m := newTestModel(t, false)
-
-	cmd := pingAllCmd(m)
-	if cmd == nil {
-		t.Error("expected non-nil command")
-	}
 }

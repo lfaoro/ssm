@@ -30,4 +30,6 @@ type (
 		Host    string
 		Latency string
 	}
+	// SyncProvidersMsg requests the cloud provider sync panel.
+	SyncProvidersMsg struct{}
 )

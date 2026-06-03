@@ -78,11 +78,11 @@ nfpms:
       - sshpass
       - mosh
 
-brews:
+homebrew_casks:
   - name: ssm
     homepage: "https://github.com/lfaoro/ssm"
     description: "SSM | Secure Shell Manager"
-    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
     repository:
       owner: lfaoro
       name: tap

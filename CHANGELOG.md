@@ -1,3 +1,53 @@
+# [Unreleased]
+
+## Add
+## Fix
+- Nix flake: replace hardcoded version `2.2.1` with dynamic derivation from flake metadata (`lastModifiedDate` + `shortRev`); add `BuildDate` and `BuildSHA` ldflags for build info parity with goreleaser; regenerate stale `vendorHash` to match current dependencies.
+## Docs
+## Refactor
+## Test
+
+# [2.5.2] May 30, 2026
+
+## Add
+- `ssm exec [tag] 'command'` subcommand (with short alias `e`) for non-interactive batch execution. Supports `--delay`, `--threads`/`-t` (aliases `-j`, `--jobs`), and `--jitter-max`. A modest automatic jitter is applied by default to avoid connection storms on macOS and hosts with low `MaxStartups`. The previous `-r` / `--command` root flag is preserved as a compatibility shim (its help text now recommends the new subcommand).
+- TUI: `y` / `Y` while scrolling the host list copies the selected host's name (the SSH config `Host` alias / connectable server name) to the system clipboard. Shows transient "Copied: ..." status. Uses `github.com/atotto/clipboard` (pure Go + exec fallbacks, compatible with CGO_ENABLED=0 static builds). Respects filter mode (does not interfere with search input).
+
+## Fix
+- Batch command execution (`ssm exec` and the legacy `-r` path) now spaces SSH connection attempts with a modest automatic jitter (plus user-tunable `--delay` and `--jitter-max`). This prevents the widespread "exit status 255 / Connection closed" failures previously observed on macOS and other systems when running against fleets of non-trivial size.
+- TUI: `--show`/`-s`, `--theme`/`-t`, and `Ctrl+e` (reload config) now trigger a layout refresh so the config panel and list render correctly on startup (previously the list was visually squished or 0-sized until the terminal was resized).
+
+## Docs
+- Root-level TUI-only and legacy flags (`--show`, `--exit`, `--order`, `--ping`, `--theme`, `-r/--command`) are now marked `Local` so they no longer appear in the "GLOBAL OPTIONS" section of `ssm exec --help` / `ssm sync --help`. Only `--debug` and `--config` remain truly global/persistent.
+- Major redesign of README.md for better scannability, visual impact, and accuracy:
+  - Prominent hero screenshot using the existing `data/demo.png`
+  - Removed broken "Demo coming soon" asciinema placeholder
+  - Updated ping concurrency description to the current dynamic CPU-based model
+  - Better promotion of recent power features (`-r`/`--command` batch execution, `y`/`Y` clipboard copy, `--ping` startup flag)
+  - Cleaner structure with focused sections instead of repetitive capability tables
+  - Improved quick-start flow and keybindings reference
+
+## Refactor
+- Remove unused `make stats` target, `scripts/stats.go`, and `data/stats.json`. The README uses GitHub's standard downloads badge (`img.shields.io/github/downloads/lfaoro/ssm/total`); the custom stats generator was no longer referenced by any code, CI, or active documentation. This eliminates a manual post-release step and removes documentation drift.
+
+## Test
+- Remove the two tests for the small `y`/`Y` clipboard copy feature (`TestModel_Update_YKey_CopiesHost` and `TestModel_Update_YKey_NoSelection_Errors`). The implementation is a thin filter guard + thin wrapper around `atotto/clipboard`; the tests provided little ongoing value relative to their maintenance cost in CI.
+- Remove `TestPingSelectedCmd_ReturnsCmd`, `TestPingAllCmd_ReturnsCmd` (trivial "returns non-nil cmd" smoke tests with almost no regression value) and the entire `themes_test.go` (minimal smoke test for theme map existence).
+- Remove additional low-value tests from `model_test.go`: `TestTick`, `TestModel_Update_LivenessCheck`, `TestModel_Update_CtrlC`, and `TestModel_Update_CtrlC_WhileFiltering` (mostly boilerplate "returns command" or thin key-handling checks with limited regression protection).
+
+# [2.5.0] May 27, 2026
+
+## Add
+- `--command` / `-r` flag for non-interactive batch command execution: `ssm [tag] -r 'whoami && pwd'`.
+  Run arbitrary commands across all hosts or a filtered subset (by tag). Fully scriptable, works without a TTY, reuses the project's hardened SSH invocation style (`-T`, `--` delimiter), bounded concurrency, sanitized output, and exits non-zero if any host fails.
+
+## Docs
+- Major redesign of AGENTS.md to be much more effective for AI coding agents and humans: prioritized actionable verification commands, architecture contracts (especially the parser lock model), non-obvious decisions & gotchas, and hard rules. Removed all stale test counts and coverage percentages.
+
+## Internal
+- Extracted reusable `execOnHost` and `hostsForBatch` helpers.
+- Exported `ConcurrencyLimit()` for consistent worker pool sizing across batch features (ping + remote commands).
+
 # [2.3.1] May 25, 2026
 
 ## Fix

@@ -19,9 +19,8 @@ import (
 
 // Config holds parsed SSH config data and provides thread-safe access.
 type Config struct {
-	mu             sync.RWMutex
-	Hosts          []Host
-	secondaryHosts []Host
+	mu    sync.RWMutex
+	Hosts []Host
 
 	order Order
 	path  string
@@ -48,7 +47,9 @@ func New() *Config {
 
 // SetOrder configures the host ordering strategy.
 func (c *Config) SetOrder(o Order) {
+	c.mu.Lock()
 	c.order = o
+	c.mu.Unlock()
 }
 
 // Parse loads and parses the default SSH config file.
@@ -144,11 +145,17 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 		visited[absPath] = true
 	}
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	// Capture order under a brief read lock so SetOrder cannot race with us.
+	c.mu.RLock()
+	order := c.order
+	c.mu.RUnlock()
 
-	c.Hosts = []Host{}
-	c.secondaryHosts = []Host{}
+	// We do the expensive work (file I/O, Include recursion, globbing, host parsing)
+	// without holding the write lock. This dramatically shortens the critical section.
+	// Only at the very end (on success) do we take the lock briefly to publish results.
+	//
+	// Readers (GetHosts, GetParamFor, etc.) will see either the old consistent snapshot
+	// or the new one — never a half-parsed state.
 
 	f, err := os.Open(path) //nolint:gosec
 	if err != nil {
@@ -164,12 +171,16 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 			fmt.Fprintf(os.Stderr, "ssm: warning: %s has insecure permissions %04o (should be 0600)\n", path, perm)
 		}
 	}
-	c.path = path
+
 	scanner := bufio.NewScanner(f)
 	var tagOrder bool
-	if c.order == TagOrder {
+	if order == TagOrder {
 		tagOrder = true
 	}
+
+	newHosts := []Host{}
+	newSecondary := []Host{}
+
 	var currentHost *Host
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -208,7 +219,7 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 				if err != nil {
 					return err
 				}
-				c.Hosts = append(c.Hosts, cfg.Hosts...)
+				newHosts = append(newHosts, cfg.Hosts...)
 			}
 		}
 		if k == "host" {
@@ -216,7 +227,7 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 				continue
 			}
 			if currentHost != nil {
-				newHost(tagOrder, currentHost, c)
+				appendHostToResults(&newHosts, &newSecondary, *currentHost, tagOrder)
 			}
 			currentHost = &Host{
 				Name:    v,
@@ -229,25 +240,20 @@ func (c *Config) parse(path string, depth int, visited map[string]bool) error {
 		}
 	}
 	if currentHost != nil {
-		newHost(tagOrder, currentHost, c)
+		appendHostToResults(&newHosts, &newSecondary, *currentHost, tagOrder)
 	}
 	if err := scanner.Err(); err != nil {
 		return err
 	}
-	c.Hosts = append(c.Hosts, c.secondaryHosts...)
-	return nil
-}
+	newHosts = append(newHosts, newSecondary...)
 
-func newHost(tagOrder bool, currentHost *Host, config *Config) {
-	if tagOrder {
-		if currentHost.Options.Contains("#tag:") {
-			config.Hosts = append(config.Hosts, *currentHost)
-		} else {
-			config.secondaryHosts = append(config.secondaryHosts, *currentHost)
-		}
-		return
-	}
-	config.Hosts = append(config.Hosts, *currentHost)
+	// Publish results under the lock (very short critical section)
+	c.mu.Lock()
+	c.Hosts = newHosts
+	c.path = path
+	c.mu.Unlock()
+
+	return nil
 }
 
 func removeComments(input string) string {
@@ -255,6 +261,21 @@ func removeComments(input string) string {
 		return strings.TrimSpace(before)
 	}
 	return strings.TrimSpace(input)
+}
+
+// appendHostToResults decides whether a host goes into the main list or the
+// secondary (untagged) list, based on the current ordering mode.
+// This is a small internal helper to avoid duplicating the decision logic.
+func appendHostToResults(hosts, secondary *[]Host, h Host, tagOrder bool) {
+	if tagOrder {
+		if h.Options.Contains("#tag:") {
+			*hosts = append(*hosts, h)
+		} else {
+			*secondary = append(*secondary, h)
+		}
+	} else {
+		*hosts = append(*hosts, h)
+	}
 }
 
 var sensitiveKeys = map[string]bool{

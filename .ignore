@@ -1,3 +1,4 @@
 # helix editor ignore
 build/
 bin/
+references/

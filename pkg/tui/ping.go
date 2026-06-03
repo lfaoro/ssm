@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"runtime"
 	"time"
 
 	"charm.land/bubbles/v2/list"
@@ -29,7 +30,7 @@ func resolvePingTarget(host sshconf.Host) (string, string) {
 func pingHost(hostname, port string) (time.Duration, error) {
 	addr := net.JoinHostPort(hostname, port)
 	start := time.Now()
-	dialer := net.Dialer{Timeout: 3 * time.Second}
+	dialer := net.Dialer{Timeout: 20 * time.Second}
 	conn, err := dialer.Dial("tcp", addr)
 	if err != nil {
 		return 0, err
@@ -85,16 +86,28 @@ func pingSelectedCmd(m *Model) tea.Cmd {
 }
 
 func pingAllCmd(m *Model) tea.Cmd {
-	hosts := m.config.GetHosts()
-	cmds := make([]tea.Cmd, 0, len(hosts))
-	const maxConcurrent = 20
-	sem := make(chan struct{}, maxConcurrent)
-	for _, host := range hosts {
-		hostname, port := resolvePingTarget(host)
-		hostName := host.Name
+	items := m.li.VisibleItems()
+	if len(items) == 0 {
+		return nil
+	}
+
+	workers := pingWorkerCount()
+	sem := make(chan struct{}, workers)
+
+	var cmds []tea.Cmd
+	for _, it := range items {
+		hostItem, ok := it.(item)
+		if !ok {
+			continue
+		}
+		hostName := hostItem.title
+		h := m.config.GetHost(hostName)
+		hostname, port := resolvePingTarget(h)
+
 		cmds = append(cmds, func() tea.Msg {
 			sem <- struct{}{}
 			defer func() { <-sem }()
+
 			latency, err := pingHost(hostname, port)
 			if err != nil {
 				return PingResultMsg{Host: hostName, Latency: pingErrorLabel(err)}
@@ -117,3 +130,18 @@ func refreshList(m *Model) {
 		m.li.SetFilterText(m.li.FilterValue())
 	}
 }
+
+// ConcurrencyLimit returns a safe, bounded number of concurrent workers
+// suitable for batch operations (ping, remote command execution, etc.).
+// It is intentionally conservative.
+//
+// We use CPU count as the main signal (cheap and portable) and apply hard
+// bounds so we never launch a ridiculous number of goroutines even on
+// high-core machines or containers that report high CPU counts.
+func ConcurrencyLimit() int {
+	return min(max(runtime.NumCPU()*4, 8), 64)
+}
+
+// pingWorkerCount is the old unexported name; kept for internal ping use
+// during the transition. New code should use ConcurrencyLimit.
+func pingWorkerCount() int { return ConcurrencyLimit() }

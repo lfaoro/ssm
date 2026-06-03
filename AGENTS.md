@@ -1,144 +1,128 @@
-# SSM — Secure Shell Manager
+# SSM — Agent Working Instructions
 
-Go TUI for managing SSH connections via Charmbracelet Bubbletea v2.
+This document exists to make AI coding agents (and humans) effective and safe when modifying the codebase. It prioritizes **actionable rules, invariants, and verification steps** over descriptive snapshots of the current state.
 
-## Rules
+## The Prime Directive
 
-1. **NEVER commit changes unless explicitly instructed.** Prepare the staging area, show the plan, and wait for the user to say "commit" or "go ahead". This overrides all other instructions. The user will tell you when to commit — do not ask.
+**NEVER commit changes unless explicitly instructed.**
 
-## Build
+Prepare the staging area (`git add`), show the plan and the full diff, and wait for the user to explicitly say "commit" or "go ahead". This rule overrides all other instructions. Do not ask the user whether they want to commit.
 
+## 1. Verification — Run These Before Claiming Work Is Complete
+
+An agent must produce clean results from the project's canonical checks before presenting changes as done.
+
+**Primary command (use this most often):**
 ```bash
-go build ./...          # check compilation
-go vet ./...            # static analysis
-make vet                # go vet ./...
-make lint               # golangci-lint (if present) or go fmt + go vet
-make build              # go build -o ./bin/ssm .
-make test               # go test -race ./... with count=1
-make check              # pre-commit: go fmt + lint + go-mod-tidy-check + test + build
-make build-static       # production static binary (CGO_ENABLED=0)
-govulncheck ./...       # vulnerability scan
+make check
 ```
 
-## Dev Environment
+`make check` runs (see Makefile):
+- `gofmt`
+- `lint` (golangci-lint if present, else `go fmt + go vet`)
+- `go-mod-tidy-check`
+- `make test` (`go test -race -count=1 ./...`)
+- `make build`
 
-Pick one:
-
-### mise (recommended)
-
+Individual commands you will use constantly:
 ```bash
-mise install              # install Go + toolchain (via .mise.toml)
-mise trust                # trust the project config
+go build ./...
+go vet ./...
+go test -race -count=1 ./...
+golangci-lint run ./...
+govulncheck ./...
+make build-static
 ```
 
-### Nix
+When touching performance-sensitive code, also consider `make bench` (and the `-cpu` / `-mem` variants).
 
-```bash
-nix develop               # enter Nix shell (via flake.nix)
-```
+**Rule:** If you have not run the relevant verification commands and shown the output, you are not finished.
 
-### Tool Versions
+## 2. Non-Negotiable Rules
 
-| Tool | Version | Source |
-|------|---------|--------|
-| Go | 1.26.2 | `.mise.toml`, `go.mod` |
-| golangci-lint | 2.12.2 | `.mise.toml` |
-| goreleaser | latest | `.mise.toml` |
+- **Changelog discipline**: Any commit that changes code, fixes bugs, adds features, or adjusts tests **must** also update `CHANGELOG.md` with a concise entry under the appropriate keepachangelog.com section (Security, Fix, Add, Refactor, Test, Docs, etc.).
+- **Injection prevention**: The `--` delimiter must appear before every hostname in all SSH, mosh, and `syscall.Exec` invocations. This is non-negotiable.
+- **SFTP connection flags**: SFTP and certain remote operations deliberately use `BatchMode=yes`, `RequestTTY=no`, and `StrictHostKeyChecking=no`. These are intentional (users are connecting to their own servers). See SECURITY.md.
+- **Sensitive data handling**: `IdentityFile`, `ProxyCommand`, `CertificateFile`, and similar keys must remain filtered from any configuration display/viewport.
+- **Parser thread-safety contract**: See Architecture Contracts below. Do not regress the brief-publish-lock model.
 
-## Architecture
+## 3. Architecture Contracts (Must Remain True)
 
-- **Bubbletea v2 (Elm TEA)** — Model-Update-View pattern, message-driven
-- **SSH config parser** — reads `~/.ssh/config`, `Include` recursion (depth limit 10, cycle detection), `#tag:` comments as host metadata, `#tagorder` directive
-- **`syscall.Exec`** used for `--exit` flag (replaces process, no fork+wait)
-- **Thread safety** — `Parse()` writes via `Lock()`, `GetHost()`/`GetParamFor()`/`GetHosts()`/`GetPath()` read via `RLock()` (`sync.RWMutex`)
+### SSH Config Parser (`pkg/sshconf`)
+- `Parse()` and `ParsePath()` do **all** I/O, glob expansion, and recursive Include handling **without** holding the write lock.
+- A very short critical section at the very end (on success path only) publishes the results atomically under `Lock()`.
+- All readers (`GetHosts`, `GetHost`, `GetParamFor`, `GetPath`) use `RLock` and must observe a fully consistent snapshot — either the old complete state or the new complete state. Partial state must never be visible.
+- `SetOrder()` must acquire the write lock.
+- Include recursion is limited to depth 10 with cycle detection via the `visited` map passed through recursive calls.
+- The `secondaryHosts` field no longer exists in the struct (it was an internal implementation detail removed during the lock redesign).
+- `TestParseConcurrentReaders` (and the rest of `parser_test.go`) must continue to pass under `-race`.
 
-### Key Packages
+### TUI & Sub-models (`pkg/tui`)
+- The application uses Bubbletea v2 with `tea.View` struct returns (never raw strings from `View()`).
+- Complex features (run command, SFTP browser, ping) are implemented as sub-models that communicate with the root model exclusively via messages.
+- In-flight external processes are tracked with dedicated mutexes (`currentCmdMu` in runcmd, `connectMutex` in sftp) to allow safe cancellation on exit.
+- Ping concurrency is controlled via `pingWorkerCount()` (CPU-based with hard lower/upper bounds) + semaphore. The mechanism must remain bounded.
 
-| Package | Purpose |
-|---|---|
-| `main.go` | CLI entry, urfave/cli v3 flags, version check goroutine (WaitGroup-tracked, 5s timeout, `atomic.Bool` shutdown guard) |
-| `pkg/sshconf/` | Config parsing, thread-safe, `Parse()`/`ParsePath()`, symlink resolution, permission check |
-| `pkg/tui/` | Bubbletea model, host list, run-command sub-model, SFTP file browser sub-model, ping, logging, themes |
+### Security & Hardening (see also SECURITY.md)
+- No software is ever installed on remote hosts.
+- All remote command output is sanitized (ANSI stripped, stderr truncated).
+- SSH config file permissions are checked on load; warnings are emitted for non-0600 modes.
+- Debug logs are only active when the `--debug` flag is used.
+- In-flight remote processes have explicit tracking + cancellation paths.
 
-## Release
+## 4. Bubbletea v2 + Charm Specifics
 
-```bash
-make tag TYPE=major          # bump version, push tag
-make release-dev             # goreleaser snapshot (dry run)
-make aur-push               # push AUR package (requires goreleaser build/ already present)
-make release                 # pre + nix-lock + release-prod (full release)
-make tag TYPE=major release-prod # release immediately
+- Primary modules: `charm.land/bubbletea/v2`, `charm.land/bubbles/v2`, `charm.land/lipgloss/v2`.
+- The charm.land/v2 packages manage their own transitive dependencies on `github.com/charmbracelet/x/ansi` and `colorprofile`. Do not introduce replaces or pins targeting the old `github.com/charmbracelet` paths unless you have a clear, documented reason.
+- Important API differences from older Bubbletea (common source of agent errors):
+  - `tea.KeyPressMsg` instead of `tea.KeyMsg`
+  - `list.SetFilterText()` instead of `SetFilterValue`
+  - `viewport.GetContent()` instead of `.Content()`
+  - `tea.View` struct cannot be compared to `nil`
 
-make stats                   # refresh download counts in data/stats.json
-```
+## 5. Linting, Suppressions, and Justifications
 
-Any commit that changes code, fixes bugs, adds features, or adjusts tests MUST also update `CHANGELOG.md` with a concise entry under the appropriate section (Security, Fix, Add, Refactor, Test).
+- `.golangci.yml` enables 18 linters (see the file). `gocyclo` minimum complexity is intentionally high (55).
+- Justified `//nolint` directives that must be preserved when touching the relevant code:
+  - `gosec` on `exec.Command*` / file write operations (this is an SSH TUI that legitimately spawns processes and writes to the user's `~/.ssh` area).
+  - `nilerr` at `pkg/sshconf/util.go:15` (deliberate fallback to `/etc/ssh/ssh_config` when `$HOME` cannot be determined).
+- Categories that are intentionally suppressed project-wide (acceptable): `errorlint`, `forcetypeassert`, `goconst`, `gocritic`, `godot`.
 
-Goreleaser config: `.config/goreleaser.yaml` (v2, 4 OS × 2 arches, deb/rpm/homebrew/nix/snap/aur). Requires `GITHUB_TOKEN`.
-- **AUR push** requires SSH key registered in AUR account loaded in ssh-agent (`ssh-add ~/.ssh/aur_key`)
-- **Platforms**: linux, darwin, freebsd, openbsd × amd64, arm64 (static builds, CGO_ENABLED=0)
-- **Install methods**: curl script, Homebrew (`brew install lfaoro/tap/ssm`), AUR (`yay -S ssm-bin`), deb/rpm, Snap, Nix
-- **Download badge** in readme reads from `data/stats.json` (generated by `make stats`, committed to repo)
+When adding a new `//nolint`, add a clear comment explaining why and consider whether the code should be restructured instead.
 
-## Testing
+## 6. Testing Guidelines
 
-- Table-driven with `t.Run()` subtests, standard library assertions
-- `pkg/sshconf/parser_test.go` — integration tests using `data/config_example`
-- `pkg/tui/model_test.go`, `pkg/tui/list_test.go`, `pkg/tui/runcmd_test.go` — TUI model tests
-- `pkg/tui/sftp_test.go` — SFTP sub-model tests (file items, panes, transfers, confirmations, history)
-- `pkg/tui/log_test.go`, `pkg/tui/themes_test.go` — component tests
-- `pkg/tui/testdata/test_config` — shared test fixture (8 tagged hosts)
-- `pkg/tui/test_helpers.go` — shared test helpers (matrixTheme, newTestConfig, etc.)
-- Target 80%+ coverage; skip tests if external commands missing
-- Current: 150+ tests across 8 files (85%+ coverage)
-- `pkg/sshconf/parser_test.go` — Include recursion (depth limit, cycles), glob expansion, `Parse()` default path, path traversal
+- Prefer table-driven tests with `t.Run()` subtests and standard library assertions.
+- `-race` is mandatory (`make test` enforces it).
+- Tests that require external commands (ssh, cloud provider credentials, etc.) may be skipped when those commands are unavailable. Do not make the suite flaky.
+- The goal is high coverage through meaningful tests, especially around the parser (recursion, cycles, globs, thread-safety, permission warnings) and TUI sub-models.
+- **Do not** embed exact current test counts or per-package coverage percentages in this file or in code. They become wrong the moment anyone adds a test. Use them locally during development if helpful; do not commit them as documentation.
 
-## Benchmarking
+## 7. Release & Distribution Mechanics
 
-- `pkg/sshconf/parser_bench_test.go` — `ParsePath`, `GetHost`, `GetHosts`, `GetParamFor`, `RemoveComments`, `IsSensitiveKey`
-- `pkg/tui/bench_test.go` — `setConfig`, `formatHost`, `sanitizeOutput`, `sanitizeStderr`
-- All benchmarks use `b.Loop()` (Go 1.24+) and `-benchmem` for allocation tracking
+- Tagging and full releases are driven by `make release`, `make release-prod`, `make tag TYPE=...`.
+- goreleaser config lives in `.config/goreleaser.yaml` (multi-platform static binaries + many package formats).
+- AUR publishing requires a loaded ssh-agent key (`ssh-add ~/.ssh/aur_key`) and uses the dedicated `scripts/aur-push.sh`.
+- `make nix-lock` is required as part of the release process.
 
-```bash
-make bench            # run all benchmarks (count=10)
-make bench-cpu        # run with CPU profile (cpu.prof)
-make bench-mem        # run with memory profile (mem.prof)
-make bench-compare    # compare bench-old.txt vs bench-new.txt via benchstat
-```
+Any change to release-related files or scripts must be accompanied by a CHANGELOG entry.
 
-## Linting
+## 8. Environment & Tooling
 
-- `.golangci.yml` enables 18 linters: `govet`, `errcheck`, `staticcheck`, `revive`, `ineffassign`, `unused`, `gosec`, `modernize`, `gocyclo`, `misspell`, `unconvert`, `bodyclose`, `noctx`, `nilnil`, `prealloc`, `dupword`, `intrange`, `perfsprint`
-- `//nolint:gosec` used for `exec.Command` calls (expected for SSH TUI)
-- `//nolint:nilerr` at `pkg/sshconf/util.go:15` — intentional fallback to system SSH config when `$HOME` unavailable
-- Suppressed categories (acceptable): `errorlint`, `forcetypeassert`, `goconst`, `gocritic`, `godot`
+- Recommended: `mise` (see `.mise.toml` for exact Go + golangci-lint + goreleaser versions).
+- Alternative: `nix develop` (flake.nix).
+- Do not casually change the pinned tool versions in `.mise.toml` or `go.mod` without understanding the impact on reproducible builds and CI.
 
-## Data Directory
+## 9. Non-Obvious Decisions & Historical Gotchas
 
-- `data/config_example` — SSH config fixture with 8 tagged hosts used by integration tests
-- `data/stats.json` — Download counts for README badge (updated via `make stats`)
+- **Parser lock redesign (2026)**: The write lock used to be held for the entire parse (including all recursive Includes). This was changed to a "do the work, publish briefly at the end" model for both performance and to give stronger consistency guarantees to concurrent readers from the TUI. The new `TestParseConcurrentReaders` exists to protect this contract.
+- `secondaryHosts` field removal: Was only ever an internal detail for TagOrder mode during parsing. After the lock redesign it became dead code and was deleted.
+- `StrictHostKeyChecking=no` for SFTP: Intentional and documented. Users of this tool are connecting to machines they already manage.
+- High `gocyclo` threshold: Some of the TUI message handling and the parser naturally have high cyclomatic complexity. The team prefers readable code over forcing artificial function splits in those areas.
+- The hidden `ssm test` and `ssm generate` subcommands: Legacy placeholders. Treat them as internal and do not build user-facing features on them.
 
-## Constraints
+When you encounter something that looks odd, check this section and the git history before "fixing" it.
 
-- **Charm.land modules** — bubbletea/bubbles/lipgloss v2 migrated from `github.com/charmbracelet` to `charm.land`
-- **View() returns `tea.View`** (struct), not `string` — Init commands replaced by View struct fields (`AltScreen`, `WindowTitle`, etc.)
-- **Pinned**: `charm.land/bubbletea/v2@v2.0.6`, `charm.land/bubbles/v2@v2.1.0`, `charm.land/lipgloss/v2@v2.0.3`
-- **`x/ansi@v0.9.2`, `colorprofile@v0.3.1`** pinned — newer versions break lipgloss compatibility
-- **Segfault.net** support removed in 0.4.1
-- **Sensitive keys** (identityfile, proxycommand, etc.) filtered from config viewport
-- **SFTP** — uses `github.com/pkg/sftp` via `ssh -s` subsystem pipe, `BatchMode=yes` prevents interactive hangs, `StrictHostKeyChecking=no` intentional (users connect to own servers)
-- **`--` delimiter** before hostname in all SSH/mosh/syscall invocations (anti-injection)
-- **Bubbletea v2 API**: `tea.KeyPressMsg` replaces `tea.KeyMsg`, `list.SetFilterText()` not `SetFilterValue`, `viewport.GetContent()` not `Content`, `tea.View` cannot be compared to `nil`
+---
 
-## Security
-
-- Config file permissions checked (warn if not 0600)
-- SSH stderr sanitized (truncated to 500 chars)
-- ANSI escape sequences stripped from remote command output
-- Debug logs only collected when debug mode is active
-- SFTP connections use `BatchMode=yes` + `RequestTTY=no` to prevent interactive prompts
-- In-flight SSH process tracked with `sync.Mutex` for safe cancellation on exit
-- In-flight remote command tracked with `sync.Mutex` (`currentCmdMu`) to prevent data race
-- Ping capped at 50 concurrent TCP dials (semaphore) to prevent unbounded goroutine spawning
-- Changelog formatted per keepachangelog.com, 1.0.0 semver for hardened v1
-- Ping uses TCP dial to SSH port — no raw sockets, no privileges required, works cross-platform without configuration
+**Remember the Prime Directive.** When in doubt, run `make check`, show the diff, and ask.

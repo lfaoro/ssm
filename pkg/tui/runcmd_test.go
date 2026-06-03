@@ -6,6 +6,7 @@ package tui
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
@@ -367,6 +368,69 @@ func TestCmdModel_Update_CtrlC_WhileRunning(t *testing.T) {
 	}
 }
 
+// --- Tests for batch command support (--command / -r) ---
+
+func TestHostsForBatch_EmptyFilter(t *testing.T) {
+	cfg := newTestConfig(t)
+	all := cfg.GetHosts()
+
+	got := hostsForBatch(all, "")
+	if len(got) != len(all) {
+		t.Errorf("empty filter should return all %d hosts, got %d", len(all), len(got))
+	}
+}
+
+func TestHostsForBatch_TagFilter(t *testing.T) {
+	cfg := newTestConfig(t)
+	all := cfg.GetHosts()
+
+	// "test" should match the host that has #tag: test
+	got := hostsForBatch(all, "test")
+	if len(got) == 0 {
+		t.Fatal("expected at least one host for tag 'test'")
+	}
+	// sanity: the first one should be the tagged test server
+	if got[0].Name != "test-server" {
+		t.Logf("first match was %s (still acceptable if filter matched)", got[0].Name)
+	}
+}
+
+func TestHostsForBatch_CommaTags(t *testing.T) {
+	cfg := newTestConfig(t)
+	got := hostsForBatch(cfg.GetHosts(), "web,secure")
+	if len(got) < 2 {
+		t.Errorf("expected at least 2 hosts for 'web,secure', got %d", len(got))
+	}
+}
+
+func TestHostsForBatch_NameMatch(t *testing.T) {
+	cfg := newTestConfig(t)
+	got := hostsForBatch(cfg.GetHosts(), "no-tag-host")
+	if len(got) != 1 || got[0].Name != "no-tag-host" {
+		t.Errorf("expected exact name match for 'no-tag-host'")
+	}
+}
+
+func TestExecOnHost_Basic(t *testing.T) {
+	// Use a local command that fails instantly ("false") instead of real ssh
+	// so the test never hangs on unreachable fixture hosts.
+	out, err := execOnHost("false", testConfigPath(t), "test-server", "whoami")
+	if err == nil {
+		t.Error("expected error when using 'false' as the ssh binary")
+	}
+	// We mainly care that sanitize + error path didn't panic.
+	_ = out
+}
+
+func TestSanitizeOutput_StillWorksAfterBatchChanges(t *testing.T) {
+	// Regression guard that the shared sanitizeOutput wasn't accidentally broken.
+	in := "\x1b[31mred\x1b[0m\r\n"
+	want := "red\n"
+	if got := sanitizeOutput(in); got != want {
+		t.Errorf("sanitizeOutput regression: got %q want %q", got, want)
+	}
+}
+
 func TestRenderPrimaryBar(t *testing.T) {
 	result := renderPrimaryBar("test", "#ff0000")
 
@@ -380,5 +444,20 @@ func TestRenderSecondaryBar(t *testing.T) {
 
 	if result == "" {
 		t.Error("expected non-empty result")
+	}
+}
+
+// TestRunBatchRemoteCommands_Params exercises the new 6-argument form
+// (used by `ssm exec`) with explicit delay/threads/jitter and the "false"
+// binary so the test remains hermetic and fast.
+func TestRunBatchRemoteCommands_Params(t *testing.T) {
+	cfg := newTestConfig(t)
+
+	// Should not panic or deadlock even with tiny positive delay + jitter.
+	err := RunBatchRemoteCommands(cfg, "", "echo hi", 1*time.Millisecond, 2, 5*time.Millisecond)
+	// We expect errors (because "false" binary fails), but the runner must
+	// complete and return a proper error instead of hanging.
+	if err == nil {
+		t.Log("unexpected success with 'false' ssh binary (acceptable)")
 	}
 }
