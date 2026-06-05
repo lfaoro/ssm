@@ -91,6 +91,8 @@ func TestSanitizeOutput_MultipleColors(t *testing.T) {
 
 func TestRunCmdModel_Creation(t *testing.T) {
 	m := newTestModel(t, false)
+	// run submodel always uses ssh for the actual exec, regardless of m.Cmd (mosh only for direct Enter)
+	m.Cmd = MoshCmd
 
 	result := RunCmdModel(m)
 
@@ -213,7 +215,7 @@ func TestCmdModel_Bar(t *testing.T) {
 
 func TestCmdModel_Bar_NoSelection(t *testing.T) {
 	cfg := newTestConfig(t)
-	m := NewModel(cfg, false)
+	m := NewModel(cfg, false, SSHCmd)
 	m.li.SetItems([]list.Item{})
 
 	cmdM := RunCmdModel(m).(*cmdModel)

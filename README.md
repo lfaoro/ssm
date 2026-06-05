@@ -121,6 +121,7 @@ Emacs navigation (`Ctrl+p/n/b/f`) also works.
 
 ```bash
 ssm [tag]                           # launch TUI, optionally filtered
+ssm --backend mosh                  # launch with mosh as default for direct connections (Tab toggles; Ctrl+r and batch stay on ssh)
 ssm exec prod 'uptime'              # run command on matching hosts and exit (recommended)
 ssm e web --delay 150ms 'nginx -t'  # with pacing and concurrency control
 ssm [tag] -r 'uptime'               # legacy form (still works; see --help)
@@ -128,9 +129,12 @@ ssm --exit prod-api           # connect and fully replace the ssm process
 ssm --order production        # show tagged hosts first
 ssm -t matrix                 # use a different theme (sky | matrix)
 ssm -c ~/.ssh/work_config     # use a custom config file
+# env var also works: SSM_BACKEND=mosh ssm
 ```
 
 The `-r` / `--command` flag (and the newer `ssm exec` subcommand) are fully scriptable and exit non-zero if any host fails. Use `ssm exec --help` for the current options including `--delay`, `--threads`, and jitter control.
+
+Note: `--backend` / `SSM_BACKEND` (and the Tab toggle) only affect direct Enter connections in the TUI. Batch execution, the legacy `-r` path, and the Ctrl+r "run command" submodel always use ssh.
 
 ## Security & hardening
 

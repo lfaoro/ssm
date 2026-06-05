@@ -11,6 +11,7 @@ import (
 	"net/mail"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -48,7 +49,7 @@ func main() {
 		Suggest:                true,
 		Copyright:              "(c) Leonardo Faoro & authors",
 		Usage:                  "Secure Shell Manager",
-		UsageText:              "ssm [--options] [tag]\nexample: ssm --show --exit vpn\nexample: ssm -se vpn\nexample: ssm exec prod 'uptime' --delay 200ms\nexample (legacy): ssm dev -r 'whoami && pwd'",
+		UsageText:              "ssm [--options] [tag]\nexample: ssm --show --exit vpn\nexample: ssm -se vpn\nexample: ssm --backend mosh\nexample: ssm exec prod 'uptime' --delay 200ms\nexample (legacy): ssm dev -r 'whoami && pwd'",
 		ArgsUsage:              "[tag]",
 		Description:            "SSM is an open-source terminal UI that sits on top of your existing SSH config to simplify and automate connectivity, data transfer, organization and host discovery.",
 
@@ -130,6 +131,14 @@ func main() {
 				Sources:     cli.EnvVars("SSM_THEME"),
 				Local:       true,
 			},
+			&cli.StringFlag{
+				Name:    "backend",
+				Usage:   "connection backend to use on startup for direct connections: ssh or mosh (default: ssh). Tab still toggles inside the TUI. (mosh only affects Enter; Ctrl+r run-command and batch always use ssh.)",
+				Value:   "ssh",
+				Sources: cli.EnvVars("SSM_BACKEND"),
+				Local:   true,
+				// intentionally Local (TUI-only); distinct from -r/--command (batch) and --config (cross-cutting)
+			},
 			&cli.BoolFlag{
 				Name:    "debug",
 				Aliases: []string{"d"},
@@ -201,7 +210,20 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 		return errors.New("not an interactive terminal :(")
 	}
 
-	m := tui.NewModel(config, debug)
+	// --backend / SSM_BACKEND selects the initial connection backend for the *interactive TUI only*.
+	// (mosh only for direct Enter connections; batch, Ctrl+r, and SFTP always use ssh.)
+	chosen := strings.ToLower(cmd.String("backend"))
+	var initialCmd tui.SysCmd
+	switch chosen {
+	case "", "ssh":
+		initialCmd = tui.SSHCmd
+	case "mosh":
+		initialCmd = tui.MoshCmd
+	default:
+		return fmt.Errorf("--backend value %q invalid (must be ssh or mosh)", chosen)
+	}
+
+	m := tui.NewModel(config, debug, initialCmd)
 	p := tea.NewProgram(
 		m,
 		tea.WithOutput(os.Stderr))
@@ -221,12 +243,21 @@ func mainCmd(_ context.Context, cmd *cli.Command) error {
 			os.Exit(1)
 		}
 		if m.ExitOnCmd && m.ExitHost != "" {
-			sshPath, err := exec.LookPath(m.Cmd.String())
+			bin := m.Cmd.String()
+			binPath, err := exec.LookPath(bin)
 			if err != nil {
 				fmt.Printf("can't find `%s` cmd in your path: %v\n", m.Cmd, err)
 				os.Exit(1)
 			}
-			err = syscall.Exec(sshPath, []string{"ssh", "-F", config.GetPath(), "--", m.ExitHost}, os.Environ()) //nolint:gosec
+			var execArgs []string
+			var execEnv = os.Environ()
+			if m.Cmd == tui.MoshCmd {
+				execArgs = []string{bin, "--", m.ExitHost}
+				execEnv = append(os.Environ(), "SSH_CONFIG="+config.GetPath())
+			} else {
+				execArgs = []string{bin, "-F", config.GetPath(), "--", m.ExitHost}
+			}
+			err = syscall.Exec(binPath, execArgs, execEnv) //nolint:gosec
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)

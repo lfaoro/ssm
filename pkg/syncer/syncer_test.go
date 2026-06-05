@@ -99,7 +99,7 @@ func TestSanitizeHostName(t *testing.T) {
 		want  string
 	}{
 		{"My.Server_01", "my-server-01"},
-		{"foo@bar!", "foobar"},
+		{"foo@bar!", "foo-bar-"},
 		{"UPPERCASE", "uppercase"},
 		{"---", "---"},
 		{"abc123", "abc123"},

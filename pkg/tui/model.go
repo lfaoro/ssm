@@ -46,14 +46,17 @@ type Model struct {
 }
 
 // NewModel creates a new application Model.
-func NewModel(config *sshconf.Config, debug bool) *Model {
+func NewModel(config *sshconf.Config, debug bool, cmd SysCmd) *Model {
 	m := &Model{}
 	m.debug = debug
 	m.config = config
 	m.theme = skyTheme()
-	m.li = listFrom(m.config, m.theme)
+	m.li = listFrom(m.config, m.theme, cmd)
 	m.log = NewLog(WithDebug(debug))
-	m.Cmd = sshCmd // defaults to ssh
+	m.Cmd = SSHCmd // defaults to ssh
+	if cmd == MoshCmd {
+		m.Cmd = cmd
+	}
 	m.pingResults = make(map[string]string)
 	m.vp = viewport.New()
 	m.vp.SetWidth(40)
@@ -123,7 +126,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if err != nil {
 			return m, AddError(err)
 		}
-		m.li = listFrom(m.config, m.theme)
+		m.li = listFrom(m.config, m.theme, m.Cmd)
 		m.li.NewStatusMessage(fmt.Sprintf("[%s]", m.Cmd))
 		return m, tea.Batch(AddLog("reloading config"), tea.RequestWindowSize)
 	case ShowConfigMsg:
@@ -131,7 +134,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.RequestWindowSize
 	case SetThemeMsg:
 		m.theme = themes[msg.Theme]
-		m.li = listFrom(m.config, m.theme)
+		m.li = listFrom(m.config, m.theme, m.Cmd)
 		return m, tea.RequestWindowSize
 	case PingResultMsg:
 		m.pingResults[msg.Host] = msg.Latency
@@ -141,13 +144,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		switch msg.Code {
 		case tea.KeyTab:
-			if m.Cmd == sshCmd {
-				m.Cmd = moshCmd
-				m.li.NewStatusMessage(fmt.Sprintf("[%s]", m.Cmd))
+			if m.Cmd == SSHCmd {
+				m.Cmd = MoshCmd
 			} else {
-				m.Cmd = sshCmd
-				m.li.NewStatusMessage(fmt.Sprintf("[%s]", m.Cmd))
+				m.Cmd = SSHCmd
 			}
+			m.li.NewStatusMessage(fmt.Sprintf("[%s]", m.Cmd))
+			m.li.Title = fmt.Sprintf("%s (%v)", strings.ToUpper(string(m.Cmd)), m.config.GetPath())
 		case tea.KeyEnter:
 			if m.li.FilterState() == list.Filtering {
 				if m.li.FilterValue() == "" {
@@ -302,7 +305,7 @@ func (m *Model) connect() tea.Cmd {
 
 	var cmd *exec.Cmd
 	cmd = exec.CommandContext(context.Background(), cmdPath, "-F", m.config.GetPath(), "--", host.title) //nolint:gosec
-	if m.Cmd == moshCmd {
+	if m.Cmd == MoshCmd {
 		cmd = exec.CommandContext(context.Background(), //nolint:gosec
 			cmdPath,
 			"--",

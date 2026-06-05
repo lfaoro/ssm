@@ -1,7 +1,10 @@
 # [Unreleased]
 
 ## Add
+- `--backend` flag and `SSM_BACKEND` env var to select the default connection backend at TUI startup (`ssh` or `mosh`). Example: `ssm --backend mosh` or `SSM_BACKEND=mosh ssm`. `Tab` continues to toggle at runtime. List title now dynamically reflects active backend (previously always "SSH"). mosh only affects direct Enter connections (Ctrl+r run-command and batch exec remain ssh-only).
+
 ## Fix
+- `--exit` handoff now correctly uses mosh (with `SSH_CONFIG` env + appropriate argv) when the backend is mosh (or defaulted via `--backend`/`SSM_BACKEND`). Previously this path hardcoded ssh argv/flags even when `m.Cmd` was mosh.
 - Nix flake: replace hardcoded version `2.2.1` with dynamic derivation from flake metadata (`lastModifiedDate` + `shortRev`); add `BuildDate` and `BuildSHA` ldflags for build info parity with goreleaser; regenerate stale `vendorHash` to match current dependencies.
 ## Docs
 ## Refactor

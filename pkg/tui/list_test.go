@@ -6,6 +6,7 @@ package tui
 import (
 	"errors"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -173,7 +174,7 @@ func TestFormatHost_NoHostname(t *testing.T) {
 func TestListFrom(t *testing.T) {
 	cfg := newTestConfig(t)
 
-	li := listFrom(cfg, matrixTheme())
+	li := listFrom(cfg, matrixTheme(), SSHCmd)
 
 	items := li.Items()
 	if len(items) == 0 {
@@ -182,6 +183,15 @@ func TestListFrom(t *testing.T) {
 
 	if li.Title == "" {
 		t.Error("expected list title to be set")
+	}
+	if !strings.Contains(li.Title, "SSH") {
+		t.Errorf("list title = %q, want to contain %q", li.Title, "SSH")
+	}
+
+	// mosh title
+	liMosh := listFrom(cfg, matrixTheme(), MoshCmd)
+	if !strings.Contains(liMosh.Title, "MOSH") {
+		t.Errorf("mosh list title = %q, want to contain %q", liMosh.Title, "MOSH")
 	}
 
 	if li.FilterInput.Placeholder == "" {
@@ -197,7 +207,7 @@ func TestListFrom_ItemsMatchHosts(t *testing.T) {
 	cfg := newTestConfig(t)
 	hosts := cfg.GetHosts()
 
-	li := listFrom(cfg, skyTheme())
+	li := listFrom(cfg, skyTheme(), SSHCmd)
 
 	items := li.Items()
 	if len(items) != len(hosts) {
@@ -208,7 +218,7 @@ func TestListFrom_ItemsMatchHosts(t *testing.T) {
 func TestListFrom_HelpKeys(t *testing.T) {
 	cfg := newTestConfig(t)
 
-	li := listFrom(cfg, matrixTheme())
+	li := listFrom(cfg, matrixTheme(), SSHCmd)
 
 	if li.AdditionalFullHelpKeys == nil {
 		t.Error("expected additional help keys to be set")
@@ -258,7 +268,7 @@ func TestInitKeys(t *testing.T) {
 func TestListFrom_FilterInput(t *testing.T) {
 	cfg := newTestConfig(t)
 
-	li := listFrom(cfg, matrixTheme())
+	li := listFrom(cfg, matrixTheme(), SSHCmd)
 
 	if li.FilterInput.Prompt != "Search: " {
 		t.Errorf("filter prompt = %q, want %q", li.FilterInput.Prompt, "Search: ")
@@ -272,7 +282,7 @@ func TestListFrom_FilterInput(t *testing.T) {
 func TestListFrom_StatusBarItemName(t *testing.T) {
 	cfg := newTestConfig(t)
 
-	li := listFrom(cfg, matrixTheme())
+	li := listFrom(cfg, matrixTheme(), SSHCmd)
 
 	view := li.View()
 
@@ -313,7 +323,7 @@ func TestFormatHost_EmptyOptions(t *testing.T) {
 func TestListFrom_SkyTheme(t *testing.T) {
 	cfg := newTestConfig(t)
 
-	li := listFrom(cfg, skyTheme())
+	li := listFrom(cfg, skyTheme(), SSHCmd)
 
 	items := li.Items()
 	if len(items) == 0 {
@@ -324,7 +334,7 @@ func TestListFrom_SkyTheme(t *testing.T) {
 func TestListFrom_EmptyConfig(t *testing.T) {
 	cfg := sshconf.New()
 
-	li := listFrom(cfg, matrixTheme())
+	li := listFrom(cfg, matrixTheme(), SSHCmd)
 
 	items := li.Items()
 	if len(items) != 0 {
@@ -335,7 +345,7 @@ func TestListFrom_EmptyConfig(t *testing.T) {
 func TestListFrom_ListModelType(t *testing.T) {
 	cfg := newTestConfig(t)
 
-	li := listFrom(cfg, matrixTheme())
+	li := listFrom(cfg, matrixTheme(), SSHCmd)
 
 	_ = li
 }

@@ -298,7 +298,9 @@ func runCommand(m *cmdModel, command string) tea.Cmd {
 			return cmdResultMsg{output: "", err: errors.New("no selected host")}
 		}
 
-		// ssh command args to force use of keys
+		// ssh command args to force use of keys.
+		// Note: run-command (Ctrl+r) *always* uses ssh (even if the TUI selection / --backend default is mosh).
+		// mosh is only for direct interactive Enter connections.
 		args := []string{
 			"-T",
 			"-F", prev.config.GetPath(),
@@ -408,7 +410,7 @@ func RunBatchRemoteCommands(cfg *sshconf.Config, tagFilter, command string, dela
 		return nil
 	}
 
-	sshBin := "ssh"
+	sshBin := "ssh" // batch (ssm exec + legacy -r) always uses ssh; mosh only for direct TUI Enter connections
 	cfgPath := cfg.GetPath()
 
 	limit := threads
