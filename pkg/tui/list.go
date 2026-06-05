@@ -5,6 +5,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/list"
@@ -20,7 +21,7 @@ func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title + i.desc }
 
-func listFrom(config *sshconf.Config, theme theme) list.Model {
+func listFrom(config *sshconf.Config, theme theme, cmd SysCmd) list.Model {
 	var li list.Model
 	var c = theme
 	lightDark := lg.LightDark(true)
@@ -55,7 +56,10 @@ func listFrom(config *sshconf.Config, theme theme) list.Model {
 		Foreground(lg.Color("230")).
 		Padding(0, 1)
 	li.SetStatusBarItemName("host", "hosts")
-	li.Title = fmt.Sprintf("SSH servers (%v)", config.GetPath())
+	if cmd == "" {
+		cmd = SSHCmd
+	}
+	li.Title = fmt.Sprintf("%s (%v)", strings.ToUpper(string(cmd)), config.GetPath())
 
 	hosts := config.GetHosts()
 	items := make([]list.Item, 0, len(hosts))

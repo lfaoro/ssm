@@ -35,7 +35,7 @@ func newTestConfig(t *testing.T) *sshconf.Config {
 func newTestModel(t *testing.T, debug bool) *Model {
 	t.Helper()
 	cfg := newTestConfig(t)
-	m := NewModel(cfg, debug)
+	m := NewModel(cfg, debug, SSHCmd)
 	m.li.SetSize(80, 24)
 	return m
 }

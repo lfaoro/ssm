@@ -27,7 +27,7 @@ func updateModelWithCmd(m *Model, msg tea.Msg) (*Model, tea.Cmd) {
 func TestNewModel(t *testing.T) {
 	t.Run("creates model with defaults", func(t *testing.T) {
 		cfg := newTestConfig(t)
-		m := NewModel(cfg, false)
+		m := NewModel(cfg, false, SSHCmd)
 
 		if m == nil {
 			t.Fatal("expected non-nil model")
@@ -38,8 +38,8 @@ func TestNewModel(t *testing.T) {
 		if m.debug {
 			t.Error("debug should be false")
 		}
-		if m.Cmd != sshCmd {
-			t.Errorf("Cmd = %v, want %v", m.Cmd, sshCmd)
+		if m.Cmd != SSHCmd {
+			t.Errorf("Cmd = %v, want %v", m.Cmd, SSHCmd)
 		}
 		if m.ExitOnCmd {
 			t.Error("ExitOnCmd should be false")
@@ -51,7 +51,7 @@ func TestNewModel(t *testing.T) {
 
 	t.Run("debug mode enabled", func(t *testing.T) {
 		cfg := newTestConfig(t)
-		m := NewModel(cfg, true)
+		m := NewModel(cfg, true, SSHCmd)
 
 		if !m.debug {
 			t.Error("debug should be true")
@@ -113,14 +113,14 @@ func TestModel_Update_TabKey(t *testing.T) {
 	m := newTestModel(t, false)
 	m2 := updateModel(m, tea.KeyPressMsg{Code: tea.KeyTab})
 
-	if m2.Cmd != moshCmd {
-		t.Errorf("Cmd = %v, want %v", m2.Cmd, moshCmd)
+	if m2.Cmd != MoshCmd {
+		t.Errorf("Cmd = %v, want %v", m2.Cmd, MoshCmd)
 	}
 
 	m3 := updateModel(m2, tea.KeyPressMsg{Code: tea.KeyTab})
 
-	if m3.Cmd != sshCmd {
-		t.Errorf("Cmd = %v, want %v", m3.Cmd, sshCmd)
+	if m3.Cmd != SSHCmd {
+		t.Errorf("Cmd = %v, want %v", m3.Cmd, SSHCmd)
 	}
 }
 
@@ -283,7 +283,7 @@ func TestModel_Update_UnknownKey(t *testing.T) {
 
 func TestModel_connect_NoSelection(t *testing.T) {
 	cfg := newTestConfig(t)
-	m := NewModel(cfg, false)
+	m := NewModel(cfg, false, SSHCmd)
 
 	m.li.SetItems([]list.Item{})
 
@@ -361,7 +361,7 @@ func TestModel_setConfig(t *testing.T) {
 
 func TestModel_setConfig_SensitiveKeysFiltered(t *testing.T) {
 	cfg := newTestConfig(t)
-	m := NewModel(cfg, false)
+	m := NewModel(cfg, false, SSHCmd)
 
 	m.li.CursorDown()
 	m.li.CursorDown()
@@ -381,7 +381,7 @@ func TestModel_setConfig_SensitiveKeysFiltered(t *testing.T) {
 
 func TestModel_setConfig_OutOfBounds(t *testing.T) {
 	cfg := newTestConfig(t)
-	m := NewModel(cfg, false)
+	m := NewModel(cfg, false, SSHCmd)
 
 	m.li.SetItems([]list.Item{})
 
@@ -565,7 +565,7 @@ func TestModel_Connect_Mosh(t *testing.T) {
 	}
 
 	m := newTestModel(t, false)
-	m.Cmd = moshCmd
+	m.Cmd = MoshCmd
 	m.li.CursorDown()
 
 	cmd := m.connect()

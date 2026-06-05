@@ -11,6 +11,10 @@ func (s SysCmd) String() string {
 }
 
 const (
-	sshCmd  SysCmd = "ssh"
-	moshCmd SysCmd = "mosh"
+	// SSHCmd is the default backend for direct connections.
+	SSHCmd SysCmd = "ssh"
+	// MoshCmd selects the mosh backend for direct interactive Enter connections
+	// (via Tab or --backend/SSM_BACKEND at startup). Batch exec, Ctrl+r run-command,
+	// and SFTP always use ssh regardless.
+	MoshCmd SysCmd = "mosh"
 )

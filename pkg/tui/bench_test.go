@@ -15,7 +15,7 @@ func BenchmarkSetConfig(b *testing.B) {
 	if err := cfg.ParsePath("../../data/config_example"); err != nil {
 		b.Fatalf("ParsePath: %v", err)
 	}
-	m := NewModel(cfg, false)
+	m := NewModel(cfg, false, SSHCmd)
 	m.li.SetSize(80, 24)
 	b.ReportAllocs()
 	for b.Loop() {
