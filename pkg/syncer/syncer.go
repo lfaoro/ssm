@@ -155,7 +155,7 @@ func sanitizeHostName(name string) string {
 	for _, r := range strings.ToLower(name) {
 		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
 			b.WriteRune(r)
-		} else if r == '_' || r == '.' {
+		} else {
 			b.WriteRune('-')
 		}
 	}
@@ -164,7 +164,7 @@ func sanitizeHostName(name string) string {
 
 func writeManagedFile(path, content string) error {
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o750); err != nil {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
 	return os.WriteFile(path, []byte(content), 0o600) //nolint:gosec
@@ -177,7 +177,7 @@ func ensureInclude(configPath string) error {
 			return err
 		}
 		dir := filepath.Dir(configPath)
-		if err := os.MkdirAll(dir, 0o750); err != nil {
+		if err := os.MkdirAll(dir, 0o700); err != nil {
 			return err
 		}
 		return os.WriteFile(configPath, []byte(includeLine+"\n"), 0o600)
