@@ -1,6 +1,14 @@
 # [Unreleased]
 
 ## Add
+## Fix
+## Docs
+## Refactor
+## Test
+
+# [2.6.0] June 5, 2026
+
+## Add
 - `--backend` flag and `SSM_BACKEND` env var to select the default connection backend at TUI startup (`ssh` or `mosh`). Example: `ssm --backend mosh` or `SSM_BACKEND=mosh ssm`. `Tab` continues to toggle at runtime. List title now dynamically reflects active backend (previously always "SSH"). mosh only affects direct Enter connections (Ctrl+r run-command and batch exec remain ssh-only).
 
 ## Fix
