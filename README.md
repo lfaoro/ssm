@@ -181,7 +181,7 @@ git clone https://github.com/lfaoro/ssm.git \
   && bin/ssm
 ```
 
-## Contributing & development
+## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
