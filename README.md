@@ -166,7 +166,7 @@ curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
 | Arch Linux     | `yay -S ssm-bin` (AUR) |
 | Nix            | `nix profile install github:lfaoro/ssm` |
 | Nix (run)      | `nix run github:lfaoro/ssm` |
-| Debian / RPM   | `sudo apt install ./ssm_*_linux_*.deb` download from [Releases](https://github.com/lfaoro/ssm/releases) |
+| Debian         | `sudo apt install ./ssm_*_linux_*.deb` download from [Releases](https://github.com/lfaoro/ssm/releases) |
 | RPM            | `sudo rpm -i ssm_*_linux_*.rpm` download from [Releases](https://github.com/lfaoro/ssm/releases) |
 
 Pre-built static binaries for Linux, macOS, FreeBSD, and OpenBSD (amd64 + arm64) are available on the [releases page](https://github.com/lfaoro/ssm/releases).
