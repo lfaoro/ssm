@@ -6,7 +6,6 @@
 [![Release](https://img.shields.io/github/v/release/lfaoro/ssm?logo=github)](https://github.com/lfaoro/ssm/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/lfaoro/ssm/go-tests.yml?branch=main&label=CI&logo=github)](https://github.com/lfaoro/ssm/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lfaoro/ssm)](https://goreportcard.com/report/github.com/lfaoro/ssm)
-[![License](https://img.shields.io/github/license/lfaoro/ssm)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/lfaoro/ssm/total?logo=github)](https://github.com/lfaoro/ssm/releases)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lfaoro/ssm)
 
@@ -167,7 +166,7 @@ curl -fsSL https://github.com/lfaoro/ssm/raw/main/scripts/get.sh | bash
 | Arch Linux     | `yay -S ssm-bin` (AUR) |
 | Nix            | `nix profile install github:lfaoro/ssm` |
 | Nix (run)      | `nix run github:lfaoro/ssm` |
-| Debian / RPM   | `sudo apt install ./ssm_*_linux_*.deb` download from [Releases](https://github.com/lfaoro/ssm/releases) |
+| Debian         | `sudo apt install ./ssm_*_linux_*.deb` download from [Releases](https://github.com/lfaoro/ssm/releases) |
 | RPM            | `sudo rpm -i ssm_*_linux_*.rpm` download from [Releases](https://github.com/lfaoro/ssm/releases) |
 
 Pre-built static binaries for Linux, macOS, FreeBSD, and OpenBSD (amd64 + arm64) are available on the [releases page](https://github.com/lfaoro/ssm/releases).
@@ -182,7 +181,7 @@ git clone https://github.com/lfaoro/ssm.git \
   && bin/ssm
 ```
 
-## Contributing & development
+## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
