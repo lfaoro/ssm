@@ -14,7 +14,7 @@ require (
 	github.com/hetznercloud/hcloud-go/v2 v2.44.0
 	github.com/pkg/sftp v1.13.10
 	github.com/thalesfsp/go-common-types v0.2.6
-	github.com/urfave/cli/v3 v3.10.0
+	github.com/urfave/cli/v3 v3.10.1
 	golang.org/x/term v0.44.0
 	google.golang.org/api v0.286.0
 )
