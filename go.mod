@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.30
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.316.1
 	github.com/google/go-github/v69 v69.2.0
-	github.com/hetznercloud/hcloud-go/v2 v2.44.0
+	github.com/hetznercloud/hcloud-go/v2 v2.47.0
 	github.com/pkg/sftp v1.13.11
 	github.com/thalesfsp/go-common-types v0.2.6
 	github.com/urfave/cli/v3 v3.10.1
