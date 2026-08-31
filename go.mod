@@ -79,7 +79,7 @@ require (
 
 require (
 	charm.land/bubbles/v2 v2.2.0
-	charm.land/bubbletea/v2 v2.0.8
+	charm.land/bubbletea/v2 v2.0.9
 	charm.land/lipgloss/v2 v2.0.5
 	github.com/atotto/clipboard v0.1.4
 	github.com/charmbracelet/x/term v0.2.2 // indirect
