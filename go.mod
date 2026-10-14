@@ -15,7 +15,7 @@ require (
 	github.com/pkg/sftp v1.13.11
 	github.com/thalesfsp/go-common-types v0.2.6
 	github.com/urfave/cli/v3 v3.14.0
-	golang.org/x/term v0.46.0
+	golang.org/x/term v0.47.0
 	google.golang.org/api v0.299.0
 )
 
@@ -93,5 +93,5 @@ require (
 	github.com/sahilm/fuzzy v0.1.3 // indirect
 	github.com/xo/terminfo v1.0.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
 )
