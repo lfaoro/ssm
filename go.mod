@@ -9,7 +9,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0
 	github.com/aws/aws-sdk-go-v2 v1.48.0
 	github.com/aws/aws-sdk-go-v2/config v1.33.21
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.347.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.349.0
 	github.com/google/go-github/v69 v69.2.0
 	github.com/hetznercloud/hcloud-go/v2 v2.53.0
 	github.com/pkg/sftp v1.13.12
