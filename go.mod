@@ -16,7 +16,7 @@ require (
 	github.com/thalesfsp/go-common-types v0.2.6
 	github.com/urfave/cli/v3 v3.14.0
 	golang.org/x/term v0.48.0
-	google.golang.org/api v0.315.0
+	google.golang.org/api v0.316.0
 )
 
 require (
